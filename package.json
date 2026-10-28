@@ -1,0 +1,23 @@
+{
+  "name": "bidar-render",
+  "private": true,
+  "description": "Renders the Reels of Bidar's social pages from the content the site hands it.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "render": "node render.mjs",
+    "worker": "node worker.mjs --loop",
+    "once": "node worker.mjs",
+    "sfx": "node sfx.mjs"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.531",
+    "@remotion/google-fonts": "4.0.531",
+    "@remotion/renderer": "4.0.531",
+    "d3-geo": "^3.1.1",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "remotion": "4.0.531",
+    "topojson-client": "^3.1.0"
+  }
+}
