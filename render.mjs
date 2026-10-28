@@ -61,8 +61,9 @@ if (stillArg) {
   const inputProps = { ...props, voiceIn, music };
   const composition = await selectComposition({ serveUrl, id, inputProps, timeoutInMilliseconds });
   const outputLocation = `out/${name}.mp4`;
+  let lastStep = -1;
   // a fixed bitrate keeps a 30–40 s Reel near 8–12 MB, what Instagram takes without a second squeeze
-  await renderMedia({ composition, serveUrl, codec: "h264", videoBitrate: process.env.RENDER_VBR ?? "2300k", pixelFormat: "yuv420p", audioCodec: "aac", audioBitrate: "160k", inputProps, outputLocation, concurrency: Number(process.env.RENDER_CONCURRENCY ?? 3), timeoutInMilliseconds, chromiumOptions: { gl: process.env.RENDER_GL || undefined } });
+  await renderMedia({ composition, serveUrl, codec: "h264", videoBitrate: process.env.RENDER_VBR ?? "2300k", pixelFormat: "yuv420p", audioCodec: "aac", audioBitrate: "160k", inputProps, outputLocation, concurrency: Number(process.env.RENDER_CONCURRENCY ?? 3), timeoutInMilliseconds, chromiumOptions: { gl: process.env.RENDER_GL || undefined }, onProgress: ({ renderedFrames, encodedFrames, stitchStage }) => { const step = Math.floor((10 * renderedFrames) / composition.durationInFrames); if (step !== lastStep) { lastStep = step; console.log(`  ${renderedFrames}/${composition.durationInFrames} frames drawn, ${encodedFrames} encoded, ${stitchStage}, ${Math.round((Date.now() - t0) / 1000)} s`); } } });
   fs.rmSync(path.join(publicDir, music), { force: true });
   console.log(finish(outputLocation, seconds));
   console.log("wrote", outputLocation, composition.durationInFrames, "frames,", seconds.toFixed(1), "s,", (fs.statSync(outputLocation).size / 1e6).toFixed(1), "MB, in", Math.round((Date.now() - t0) / 1000), "s");
