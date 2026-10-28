@@ -1,0 +1,28 @@
+{
+  "format": "borders",
+  "series": "مرزهای ایران، دوره به دوره",
+  "episode": 1,
+  "hook": "مرزِ ایران همیشه همین نبود.",
+  "beats": [
+    { "id": "start", "say": "مرزِ ایران همیشه همین نبود. بیا دوره به دوره ببینیم." },
+    { "id": "achaemenid", "say": "دو هزار و پانصد سال پیش، هخامنشیان از بالکان و مصر تا رودِ سِند فرمان می‌راندند؛ بزرگ‌ترین شاهنشاهیِ جهانِ باستان." },
+    { "id": "parthian", "say": "بعد اشکانیان آمدند و نزدیکِ پانصد سال ماندند. مرزِ غربی‌شان رودِ فُرات بود؛ آن سوی رود، روم." },
+    { "id": "sasanian", "say": "ساسانیان از میان‌رودان تا آسیای میانه رسیدند. در کتیبه‌هایشان، نامِ کشور «ایرانشهر» است." },
+    { "id": "today", "say": "و این خطِ طلایی، مرزِ ایرانِ امروز است." },
+    { "id": "end", "say": "این‌ها گستره‌هایی تقریبی‌اند، نه مرزِ دقیق. دوره‌های بعد را هم می‌خواهی؟ بیدار را دنبال کن." }
+  ],
+  "stamp": "گسترهٔ تقریبی",
+  "stops": [
+    { "at": "achaemenid", "era": "achaemenid", "name": "هخامنشیان", "years": "۵۵۰ تا ۳۳۰ پیش از میلاد", "line": "از بالکان و مصر تا رود سند", "tick": "۵۵۰ پ.م", "capital": { "name": "تخت‌جمشید", "lonlat": [52.89, 29.93] } },
+    { "at": "parthian", "era": "parthian", "name": "اشکانیان", "years": "۲۴۷ پیش از میلاد تا ۲۲۴ میلادی", "line": "مرز غربی: رود فرات، روبه‌روی روم", "tick": "۲۴۷ پ.م", "capital": { "name": "تیسفون", "lonlat": [44.58, 33.09] } },
+    { "at": "sasanian", "era": "sasanian", "name": "ساسانیان", "years": "۲۲۴ تا ۶۵۱ میلادی", "line": "از میان‌رودان تا آسیای میانه", "tick": "۲۲۴ م", "capital": { "name": "تیسفون", "lonlat": [44.58, 33.09] } },
+    { "at": "today", "era": "today", "name": "ایرانِ امروز", "years": "امروز", "line": "مرز کنونی؛ ۳۱ استان", "tick": "امروز", "capital": { "name": "تهران", "lonlat": [51.39, 35.69] } }
+  ],
+  "close": "دوره‌های بعد را هم می‌خواهی؟ بیدار را دنبال کن.",
+  "source": "مرزهای تاریخی: historical-basemaps (تقریبی) · مرز امروز: Natural Earth · اطلس تاریخی بیدار",
+  "sources": [
+    "Bidar, historical atlas: lib/atlas/periods.ts and public/data/iran-eras.json (period extents for 500 BCE, 100 CE, 400 CE)",
+    "aourednik/historical-basemaps (approximate extents, simplified), as credited on bidar.ahura.cloud/iran/atlas",
+    "Natural Earth 1:110m countries (today's border)"
+  ]
+}

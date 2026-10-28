@@ -81,7 +81,16 @@ export type WordStop = {
   place: string;
   lonlat: [number, number];
 };
-export type WordProps = Base & { format: "word"; word: string; stops: WordStop[]; cta: string };
+export type WordProps = Base & {
+  format: "word";
+  word: string;
+  /** the word the hook shows big from the first frame, e.g. "paradise" */
+  hookWord?: string;
+  /** where the camera starts while the hook is said (the hook word's home) */
+  hookAt?: [number, number];
+  stops: WordStop[];
+  cta: string;
+};
 
 export type ReelProps = BordersProps | MythProps | WordProps;
 

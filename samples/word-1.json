@@ -1,0 +1,34 @@
+{
+  "format": "word",
+  "series": "سفر یک واژه",
+  "episode": 1,
+  "hook": "این واژه از ایران راه افتاده.",
+  "hookWord": "paradise",
+  "hookAt": [-0.13, 51.51],
+  "word": "پردیس",
+  "beats": [
+    { "id": "start", "say": "واژهٔ انگلیسیِ پارادایس، یعنی بهشت، از ایران راه افتاده." },
+    { "id": "avestan", "say": "در اوستایی می‌گفتند «پَئیری‌دَئِزَه»: جایی که دورش دیوار کشیده‌اند؛ یک باغِ دیواردار." },
+    { "id": "greek", "say": "یونانی‌ها باغ‌های شاهانهٔ پارسی را دیدند و گفتند «پارادِیسوس». گزنفون در سدهٔ چهارمِ پیش از میلاد همین واژه را به کار برد." },
+    { "id": "latin", "say": "ترجمهٔ یونانیِ تورات، باغِ عَدن را هم همین نام داد، و در لاتین شد «پارادیسوس»: بهشت." },
+    { "id": "english", "say": "از آنجا به انگلیسی رسید: «پارادایس»." },
+    { "id": "persian", "say": "و در فارسیِ امروز هم زنده است: «پَردیس»؛ یعنی باغ، و حتی محوطهٔ دانشگاه." },
+    { "id": "end", "say": "برای کسی بفرست که فکر می‌کند پارادایس یک واژهٔ فرنگی است." }
+  ],
+  "stops": [
+    { "at": "avestan", "lang": "اوستایی", "form": "𐬞𐬀𐬌𐬭𐬌⸱𐬛𐬀𐬉𐬰𐬀", "script": "avestan", "roman": "pairi-daēza", "gloss": "جای دیوارکشیده؛ باغِ دیواردار", "when": "ایرانِ باستان", "place": "فلات ایران", "lonlat": [54.5, 32.5] },
+    { "at": "greek", "lang": "یونانی", "form": "παράδεισος", "script": "greek", "roman": "parádeisos", "gloss": "باغ و شکارگاهِ شاهانهٔ پارسی", "when": "سدهٔ ۴ پیش از میلاد · گزنفون", "place": "آتن", "lonlat": [23.73, 37.98] },
+    { "at": "latin", "lang": "لاتین", "form": "paradisus", "script": "latin", "gloss": "بهشت؛ باغِ عدن", "when": "ترجمه‌های کتاب مقدس", "place": "رم", "lonlat": [12.5, 41.9] },
+    { "at": "english", "lang": "انگلیسی", "form": "paradise", "script": "latin", "gloss": "بهشت", "when": "سده‌های میانه", "place": "لندن", "lonlat": [-0.13, 51.51] },
+    { "at": "persian", "lang": "فارسیِ امروز", "form": "پردیس", "script": "persian", "gloss": "باغ؛ بهشت؛ محوطهٔ دانشگاه", "when": "امروز", "place": "تهران", "lonlat": [51.39, 35.69] }
+  ],
+  "cta": "برای کسی بفرست که فکر می‌کند paradise یک واژهٔ فرنگی است.",
+  "source": "دانشنامهٔ ایرانیکا (Paradise؛ Garden) · Etymonline (paradise) · ویکی‌واژه",
+  "sources": [
+    "Encyclopaedia Iranica, 'PARADISE, the concept of' (A. Panaino): Western 'paradise' goes back to an Old Iranian stem *paridaiza-, a garden surrounded by walls; Avestan pairi.daēza-, an enclosure made of walls around (Vendidad)",
+    "Encyclopaedia Iranica, 'GARDEN i. Achaemenid period': Avestan pairidaēza-, Old Persian *paridaida-, Median *paridaiza- 'walled-around, i.e., a walled garden'; Greek paradeisoi, Latin paradisus",
+    "Online Etymology Dictionary, 'paradise': from Old French paradis, Late Latin paradisus, Greek paradeisos, from an Iranian source like Avestan pairidaeza 'enclosure, park' (pairi- 'around' + diz 'to make, form (a wall)')",
+    "Xenophon, Anabasis and Oeconomicus (early 4th century BCE): parádeisos for the parks of the Persian kings and nobles; the Septuagint (Genesis 2:8) uses parádeisos for the Garden of Eden",
+    "Wiktionary, 'پردیس': garden; paradise, heaven; campus (of a university)"
+  ]
+}

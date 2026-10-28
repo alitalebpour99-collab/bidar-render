@@ -1,0 +1,91 @@
+name: Render
+
+# Bidar's Reels, drawn on GitHub's machines (public repository: the jobs cost
+# nothing). Nothing secret is in the files; the one secret, the key the site
+# asks for, is this repository's Actions secret BIDAR_RENDER_SECRET.
+#
+# The job is worker.mjs in one pass: it asks the site what waits
+# (`/api/social/work`, docs/contract.md), draws it, hands the MP4 and the tile
+# back, and ends. It looks every quarter of an hour: GitHub starts a scheduled
+# run late, or now and then not at all, so it looks often. A look that finds
+# nothing ends in seconds, before anything is installed. Until the secret is
+# set (the site's side is not live yet) every look ends at once.
+#
+# GitHub switches off the schedule of a public repository in which nothing
+# happened for sixty days; on the first of each month «alive» makes an empty commit.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "7,22,37,52 * * * *"
+    - cron: "43 3 1 * *"
+
+concurrency:
+  group: render
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  alive:
+    if: github.repository == 'alitalebpour99-collab/bidar-render' && github.event.schedule == '43 3 1 * *'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit --allow-empty -m "Keep the schedule alive"
+          git push
+
+  render:
+    if: github.repository == 'alitalebpour99-collab/bidar-render' && github.event.schedule != '43 3 1 * *'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      BIDAR_URL: https://bidar.ahura.cloud
+      BIDAR_RENDER_SECRET: ${{ secrets.BIDAR_RENDER_SECRET }}
+    steps:
+      - name: Anything to draw?
+        id: look
+        run: |
+          if [ -z "$BIDAR_RENDER_SECRET" ]; then echo "no secret yet: nothing to ask"; echo "waiting=0" >> "$GITHUB_OUTPUT"; exit 0; fi
+          n=$(curl -fsS --retry 3 --retry-delay 5 -H "authorization: Bearer $BIDAR_RENDER_SECRET" "$BIDAR_URL/api/social/work?peek=1&can=" | jq -r '.waiting // 0') || n=0
+          echo "waiting: $n"
+          echo "waiting=$n" >> "$GITHUB_OUTPUT"
+
+      - if: steps.look.outputs.waiting != '0'
+        uses: actions/checkout@v4
+
+      - if: steps.look.outputs.waiting != '0'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - if: steps.look.outputs.waiting != '0'
+        name: The libraries Chrome Headless Shell needs, and ffmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends libnss3 libdbus-1-3 libatk1.0-0 libgbm-dev libxrandr2 libxkbcommon-dev libxfixes3 libxcomposite1 libxdamage1 libatk-bridge2.0-0 libpango-1.0-0 libcairo2 libcups2
+          sudo apt-get install -y -qq --no-install-recommends libasound2t64 || sudo apt-get install -y -qq --no-install-recommends libasound2
+          sudo apt-get install -y -qq --no-install-recommends ffmpeg
+
+      - if: steps.look.outputs.waiting != '0'
+        run: npm ci --no-audit --no-fund
+
+      - if: steps.look.outputs.waiting != '0'
+        name: The browser and the bundle
+        run: |
+          node -e "import('@remotion/renderer').then((m) => m.ensureBrowser())"
+          node build.mjs
+
+      - if: steps.look.outputs.waiting != '0'
+        name: Draw what waits, hand it back
+        env:
+          RENDER_GL: swangle
+        run: node worker.mjs

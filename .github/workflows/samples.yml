@@ -1,0 +1,73 @@
+name: Samples
+
+# Renders Reels from the files in samples/ (props, and the narration made by
+# scripts/narrate.mjs) and keeps the videos and their tiles as the run's
+# artifact: for looking at a format before it goes onto the page. Nothing is
+# sent to the site, and no key is needed.
+#
+# `list` is «composition:sample» pairs separated by spaces, for example
+# «borders:borders-1 myth:myth-1». With `mode: stills` only single frames are
+# drawn (the first frames, the middle of every beat, the close): a quick look.
+
+on:
+  workflow_dispatch:
+    inputs:
+      list:
+        description: "composition:sample pairs"
+        required: true
+        default: "borders:borders-1 myth:myth-1 word:word-1"
+      mode:
+        description: "video or stills"
+        required: true
+        default: "video"
+
+permissions:
+  contents: read
+
+jobs:
+  samples:
+    if: github.repository == 'alitalebpour99-collab/bidar-render'
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: The libraries Chrome Headless Shell needs, and ffmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends libnss3 libdbus-1-3 libatk1.0-0 libgbm-dev libxrandr2 libxkbcommon-dev libxfixes3 libxcomposite1 libxdamage1 libatk-bridge2.0-0 libpango-1.0-0 libcairo2 libcups2
+          sudo apt-get install -y -qq --no-install-recommends libasound2t64 || sudo apt-get install -y -qq --no-install-recommends libasound2
+          sudo apt-get install -y -qq --no-install-recommends ffmpeg
+      - run: npm ci --no-audit --no-fund
+      - name: The browser and the bundle
+        run: |
+          node -e "import('@remotion/renderer').then((m) => m.ensureBrowser())"
+          node build.mjs
+      - name: Render every pair, and its tile
+        env:
+          RENDER_GL: swangle
+          LIST: ${{ inputs.list }}
+          MODE: ${{ inputs.mode }}
+        run: |
+          set -e
+          for pair in $LIST; do
+            comp="${pair%%:*}"; name="${pair#*:}"
+            voice=""; if [ -f "samples/$name.voice.json" ]; then voice="--voice samples/$name.voice.json"; fi
+            echo "== $comp from samples/$name.json $voice"
+            if [ "$MODE" = "stills" ]; then
+              node render.mjs "$comp" --props "samples/$name.json" $voice --bundle bundle --still auto --out "$name"
+            else
+              node render.mjs "$comp" --props "samples/$name.json" $voice --bundle bundle --out "$name"
+              ffprobe -v error -show_entries format=duration,size,bit_rate -show_entries stream=codec_name,width,height -of compact "out/$name.mp4"
+            fi
+            if [ -f "samples/$name.cover.json" ]; then node render.mjs cover --props "samples/$name.cover.json" --bundle bundle --still 0 --out "$name-tile"; fi
+          done
+          ls -la out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: samples-${{ inputs.mode }}
+          path: out/
+          retention-days: 14
