@@ -160,6 +160,7 @@ type Base = {
   beats: Beat[];       // the narration in order; the first is the hook, the last the close
   source: string;      // the source line, on screen in the last seconds
   sources?: string[];  // the full references (for the caption; not drawn)
+  close?: string;      // the last card's line (borders, myth; the word has `cta`)
 };
 
 // «مرزهای ایران، دوره به دوره»
@@ -172,6 +173,8 @@ type BordersProps = Base & {
     name: string;                   // «هخامنشیان»
     years: string;                  // «۵۵۰ تا ۳۳۰ پیش از میلاد»
     line?: string;                  // a short line under the name
+    tick: string;                   // its mark on the line of time, «۵۵۰ پ.م»
+    capital?: { name: string; lonlat: [number, number] }; // marked on the map
   }[];
 };
 
@@ -180,7 +183,7 @@ type MythProps = Base & {
   format: "myth";
   subject: string;                  // «منشورِ کوروش»
   claim: string;                    // the popular claim, drawn in quotes
-  evidence: { at: string; n: string; title: string; text: string }[]; // three
+  evidence: { at: string; n: string; title: string; text: string; chip?: string }[]; // three
   verdict: { at: string; level: "FACT" | "CONTESTED" | "ALLEGATION"; label: string; line: string };
 };
 
@@ -188,6 +191,8 @@ type MythProps = Base & {
 type WordProps = Base & {
   format: "word";
   word: string;                     // «پردیس»
+  hookWord?: string;                // shown big from the first frame, "paradise"
+  hookAt?: [number, number];        // where the camera starts (lon, lat)
   stops: {
     at: string;
     lang: string;                   // «اوستایی»
