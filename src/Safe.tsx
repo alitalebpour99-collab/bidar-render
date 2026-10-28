@@ -51,7 +51,7 @@ export const Captions: React.FC<{ tl: Timeline; look: CaptionLook; bottom?: numb
   if (!c || (until !== undefined && frame >= until)) return null;
   const k = interpolate(frame, [c.from, c.from + 5], [0.9, 1], clamped);
   const o = interpolate(frame, [c.from, c.from + 3], [0.2, 1], clamped);
-  const size = look.size ?? 58;
+  const size = look.size ?? 64;
   return (
     <div style={{ position: "absolute", left: SIDE, right: RAIL - 20, bottom: H - bottom, display: "flex", justifyContent: "center", direction: "rtl" }}>
       <div

@@ -29,7 +29,7 @@ export const Cover: React.FC<CoverProps> = ({ format, series, title, mark }) => 
         <span style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 36, color: l.sub }}>{series}</span>
       </div>
       <div style={{ position: "absolute", top: TOP + 290, bottom: H - TOP - W + 190, right: 116, left: 116, display: "flex", flexDirection: "column", justifyContent: "center", gap: 26 }}>
-        <div style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: size, lineHeight: 1.35, color: l.ink }}>{title}</div>
+        <div style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: size, lineHeight: 1.35, color: l.ink, textWrap: "balance" } as React.CSSProperties}>{title}</div>
         {mark ? <div style={{ fontFamily: VAZIR, fontWeight: 800, fontSize: 56, color: l.accent }}>{mark}</div> : null}
       </div>
       <div style={{ position: "absolute", top: TOP + W - 160, right: 116, left: 116, fontFamily: VAZIR, fontWeight: 700, fontSize: 34, color: l.ink, direction: "ltr", textAlign: "right" }}>bidar.ahura.cloud</div>

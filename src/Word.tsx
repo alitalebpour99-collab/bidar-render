@@ -17,13 +17,13 @@ const { fontFamily: SERIF } = loadSerif("normal", { weights: ["400", "600"], sub
 loadSerif("italic", { weights: ["400", "600"], subsets: ["latin", "latin-ext", "greek"] });
 const { fontFamily: AVESTAN } = loadAvestan("normal", { weights: ["400"], subsets: ["avestan"] });
 
-export const NIGHT = { sky: "#04191d", deep: "#020c0f", land: "#0c363c", land2: "#124650", ink: "#e9f6f4", muted: "#8fb8b3", mint: "#5fe0cf", amber: "#f2c46d", line: "rgba(233,246,244,.12)" };
+export const NIGHT = { sky: "#04191d", deep: "#020c0f", land: "#0f444b", land2: "#145560", ink: "#e9f6f4", muted: "#8fb8b3", mint: "#5fe0cf", amber: "#f2c46d", line: "rgba(233,246,244,.12)" };
 
 // where the stop sits on the screen: under the card, over the captions
 const CX = 540;
 const CY = 1010;
 // how wide a stop's view is, in degrees of longitude
-const SPAN = 24;
+const SPAN = 38;
 const scaleOf = (deg: number) => W / ((deg * Math.PI) / 180);
 
 const viewAt = ([lon, lat]: [number, number], deg = SPAN): View => ({ lon, lat, scale: scaleOf(deg) });
@@ -84,7 +84,7 @@ const Ground: React.FC<{ p: WordProps }> = ({ p }) => {
           <circle key={i} cx={s.x} cy={s.y} r={s.r} fill={NIGHT.ink} opacity={0.12 + 0.12 * Math.sin(frame / 18 + s.ph)} />
         ))}
         <path d={m.d(GRATICULE)} fill="none" stroke="rgba(95,224,207,.06)" strokeWidth="1.2" />
-        <path d={m.d(LAND)} fill={NIGHT.land} stroke="rgba(95,224,207,.22)" strokeWidth="1.4" />
+        <path d={m.d(LAND)} fill={NIGHT.land} stroke="rgba(95,224,207,.32)" strokeWidth="1.5" />
         <path d={m.d(BORDERS)} fill="none" stroke="rgba(233,246,244,.08)" strokeWidth="1.1" />
         {/* the trail: each hop draws as the camera flies it, then stays */}
         {legs.slice(1).map((l, i) => {
@@ -205,12 +205,12 @@ export const Word: React.FC<WordProps> = (p) => {
         <div style={{ position: "absolute", top: DESIGN_TOP + 140, right: SIDE, left: SIDE, direction: "rtl", opacity: fade(frame, close.from, 10) }}>
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "14px 10px", direction: "rtl" }}>
             {p.stops.map((s, i) => (
-              <React.Fragment key={s.at}>
+              <span key={s.at} style={{ display: "inline-flex", alignItems: "center", gap: 10, whiteSpace: "nowrap" }}>
                 <span style={{ padding: "6px 22px 10px", borderRadius: 30, border: `2px solid ${i === p.stops.length - 1 ? NIGHT.amber : "rgba(95,224,207,.55)"}`, background: "rgba(2,12,15,.6)", color: i === p.stops.length - 1 ? NIGHT.amber : NIGHT.ink, fontFamily: s.script === "persian" ? VAZIR : SERIF, fontStyle: s.script === "latin" ? "italic" : "normal", fontWeight: s.script === "persian" ? 900 : 600, fontSize: 40, direction: s.script === "persian" || s.script === "avestan" ? "rtl" : "ltr", opacity: fade(frame, close.from + 16 + i * 7, 6), transform: `scale(${slam(frame, close.from + 16 + i * 7, 1.4)})` }}>
                   {s.script === "avestan" ? s.roman ?? s.form : s.form}
                 </span>
                 {i < p.stops.length - 1 ? <span style={{ color: NIGHT.mint, fontFamily: VAZIR, fontSize: 40, opacity: fade(frame, close.from + 20 + i * 7, 6) }}>←</span> : null}
-              </React.Fragment>
+              </span>
             ))}
           </div>
           <div style={{ marginTop: 44, display: "flex", alignItems: "center", gap: 26, opacity: fade(frame, close.from + 54, 10), transform: `translateY(${rise(frame, close.from + 54, 30, 14)}px)` }}>

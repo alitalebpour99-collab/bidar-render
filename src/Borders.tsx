@@ -175,7 +175,7 @@ const TimeLine: React.FC<{ p: BordersProps }> = ({ p }) => {
         <circle cx={bead} cy="20" r="14" fill={LAPIS.gold} opacity=".35" />
       </svg>
       {p.stops.map((s, i) => (
-        <div key={s.at} style={{ position: "absolute", top: 40, left: xs[i] - 110, width: 220, textAlign: "center", fontFamily: VAZIR, fontWeight: i === k ? 800 : 500, fontSize: 27, color: i === k ? LAPIS.ink : LAPIS.muted, direction: "rtl", whiteSpace: "nowrap" }}>
+        <div key={s.at} style={{ position: "absolute", top: 40, left: xs[i] - 110, width: 220, textAlign: "center", fontFamily: VAZIR, fontWeight: i === k ? 800 : 500, fontSize: 31, color: i === k ? LAPIS.ink : LAPIS.muted, direction: "rtl", whiteSpace: "nowrap" }}>
           {s.tick}
         </div>
       ))}
@@ -212,7 +212,7 @@ export const Borders: React.FC<BordersProps> = (p) => {
 
       {/* the hook: readable on the very first frame, the map already moving under it */}
       <div style={{ position: "absolute", top: DESIGN_TOP + 150, right: SIDE, left: SIDE, direction: "rtl", opacity: leave(frame, hook.to + 4, 10), transform: `translateY(${-interpolate(frame, [hook.to - 6, hook.to + 4], [0, 50], clamped)}px)` }}>
-        <div style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 104, lineHeight: 1.3, color: LAPIS.ink }}>{p.hook}</div>
+        <div style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 104, lineHeight: 1.3, color: LAPIS.ink, textWrap: "balance" } as React.CSSProperties}>{p.hook}</div>
         <div style={{ height: 10, marginTop: 18, width: `${interpolate(frame, [0, hook.to], [18, 64], clamped)}%`, background: LAPIS.gold, borderRadius: 5 }} />
       </div>
 
@@ -237,7 +237,7 @@ export const Borders: React.FC<BordersProps> = (p) => {
       {frame >= close.from ? (
         <div style={{ position: "absolute", top: DESIGN_TOP + 150, right: SIDE, left: SIDE, direction: "rtl", opacity: fade(frame, close.from, 10), transform: `translateY(${rise(frame, close.from, 50, 16)}px)` }}>
           <div style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 44, color: LAPIS.turq }}>{p.series}</div>
-          <div style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 84, lineHeight: 1.35, color: LAPIS.ink, marginTop: 6 }}>{p.close}</div>
+          <div style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 84, lineHeight: 1.35, color: LAPIS.ink, marginTop: 6, textWrap: "balance" } as React.CSSProperties}>{p.close}</div>
         </div>
       ) : null}
 

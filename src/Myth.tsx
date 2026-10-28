@@ -72,7 +72,7 @@ const Verdict: React.FC<{ level: Confidence; label: string; at: number; scale?: 
   const frame = useCurrentFrame();
   const color = CONFIDENCE[level];
   const s = slam(frame, at, 2.6) * scale;
-  const size = 470;
+  const size = 540;
   return (
     <div style={{ width: size, height: size, position: "relative", opacity: fade(frame, at, 2), transform: `rotate(-9deg) scale(${s})` }}>
       <svg width={size} height={size} viewBox="0 0 470 470" style={{ position: "absolute", inset: 0, overflow: "visible" }}>
@@ -89,7 +89,7 @@ const Verdict: React.FC<{ level: Confidence; label: string; at: number; scale?: 
       <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", direction: "rtl", color: PARCH.ink }}>
         <div style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 32, opacity: 0.8 }}>{kicker}</div>
         <span style={{ width: 26, height: 26, borderRadius: 13, background: PARCH.ink, opacity: 0.8, marginTop: 16 }} />
-        <div style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: label.length > 12 ? 50 : 62, lineHeight: 1.3, marginTop: 10, textAlign: "center", maxWidth: 350 }}>{label}</div>
+        <div style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: label.length > 12 ? 50 : 62, lineHeight: 1.3, marginTop: 10, textAlign: "center", maxWidth: 400 }}>{label}</div>
       </div>
     </div>
   );
@@ -103,7 +103,7 @@ export const Myth: React.FC<MythProps> = (p) => {
   const closeId = p.beats[p.beats.length - 1].id;
   const close = beatAt(tl, closeId);
   const firstCard = beatAt(tl, p.evidence[0].at).from;
-  const slamAt = v.from + 12;
+  const slamAt = v.from + 6;
   const sh = shake(frame, slamAt + 5, 14);
   const sourceFrom = tl.total - Math.round(2.6 * FPS);
   const flip = Math.floor(frame / 14) % 2;
@@ -127,7 +127,6 @@ export const Myth: React.FC<MythProps> = (p) => {
       <div style={{ position: "absolute", top: DESIGN_TOP + 140, right: SIDE + 40, left: SIDE, direction: "rtl", opacity: leave(frame, hook.to + 6, 10), transform: `translateY(${-interpolate(frame, [hook.to - 6, hook.to + 6], [0, 80], clamped)}px)` }}>
         <div style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 46, color: PARCH.red }}>{p.subject}</div>
         <div style={{ position: "relative", marginTop: 10 }}>
-          <span style={{ position: "absolute", right: -60, top: -110, fontFamily: VAZIR, fontWeight: 900, fontSize: 300, color: PARCH.red, opacity: 0.16, lineHeight: 1 }}>«</span>
           <div style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 112, lineHeight: 1.28, color: PARCH.ink, transform: `scale(${interpolate(frame, [0, hook.to], [1.04, 1], clamped)})`, transformOrigin: "right top" }}>«{p.claim}»</div>
         </div>
         {/* the question flickers between its two words: which is it? */}
@@ -144,7 +143,7 @@ export const Myth: React.FC<MythProps> = (p) => {
       </div>
 
       {/* the claim as a header while the evidence is read */}
-      <div style={{ position: "absolute", top: DESIGN_TOP + 130, right: SIDE + 40, left: SIDE, direction: "rtl", opacity: Math.min(fade(frame, firstCard, 12), leave(frame, v.from + 6, 10)) }}>
+      <div style={{ position: "absolute", top: DESIGN_TOP + 130, right: SIDE + 40, left: SIDE, direction: "rtl", opacity: Math.min(fade(frame, firstCard, 12), leave(frame, slamAt + 2, 6)) }}>
         <div style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 36, color: PARCH.red }}>{p.subject} · ادعا</div>
         <div style={{ fontFamily: VAZIR, fontWeight: 800, fontSize: 60, lineHeight: 1.35, color: PARCH.ink }}>«{p.claim}»</div>
       </div>
@@ -175,7 +174,7 @@ export const Myth: React.FC<MythProps> = (p) => {
       })}
 
       {/* how far the evidence has come: three tabs */}
-      <div style={{ position: "absolute", top: 1150, right: SIDE + 30, display: "flex", gap: 16, direction: "rtl", opacity: Math.min(fade(frame, firstCard, 10), leave(frame, v.from + 8, 10)) }}>
+      <div style={{ position: "absolute", top: 1150, right: SIDE + 30, display: "flex", gap: 16, direction: "rtl", opacity: Math.min(fade(frame, firstCard, 10), leave(frame, slamAt + 2, 6)) }}>
         {p.evidence.map((e) => {
           const done = frame >= beatAt(tl, e.at).from;
           return (
@@ -186,14 +185,20 @@ export const Myth: React.FC<MythProps> = (p) => {
         })}
       </div>
 
+      {/* the stamp's shadow, coming down before the blow */}
+      {frame >= v.from - 8 && frame < slamAt + 3 ? (
+        <div style={{ position: "absolute", top: 300, left: 0, right: 0, display: "flex", justifyContent: "center" }}>
+          <div style={{ width: 540, height: 540, borderRadius: 270, background: "rgba(60,35,10,.5)", filter: "blur(28px)", opacity: interpolate(frame, [v.from - 8, slamAt], [0, 0.55], clamped), transform: `scale(${interpolate(frame, [v.from - 8, slamAt], [1.7, 1], clamped)})` }} />
+        </div>
+      ) : null}
       {/* the stamp: Bidar's word on the claim */}
       {frame >= slamAt ? (
-        <div style={{ position: "absolute", top: interpolate(frame, [close.from, close.from + 20], [330, 230], { ...clamped, easing: ease }), left: 0, right: 0, display: "flex", justifyContent: "center", transform: `scale(${interpolate(frame, [close.from, close.from + 20], [1, 0.72], { ...clamped, easing: ease })})` }}>
+        <div style={{ position: "absolute", top: interpolate(frame, [close.from, close.from + 20], [300, 210], { ...clamped, easing: ease }), left: 0, right: 0, display: "flex", justifyContent: "center", transform: `scale(${interpolate(frame, [close.from, close.from + 20], [1, 0.72], { ...clamped, easing: ease })})` }}>
           <Verdict level={p.verdict.level} label={p.verdict.label} at={slamAt} kicker="سنجشِ بیدار" />
         </div>
       ) : null}
       {frame >= v.from ? (
-        <div style={{ position: "absolute", top: 900, right: SIDE + 30, left: SIDE + 10, direction: "rtl", textAlign: "center", opacity: Math.min(fade(frame, slamAt + 30, 12), leave(frame, close.from + 4, 10)), transform: `translateY(${rise(frame, slamAt + 30, 30, 14)}px)` }}>
+        <div style={{ position: "absolute", top: 950, right: SIDE + 30, left: SIDE + 10, direction: "rtl", textAlign: "center", opacity: Math.min(fade(frame, slamAt + 30, 12), leave(frame, close.from + 4, 10)), transform: `translateY(${rise(frame, slamAt + 30, 30, 14)}px)` }}>
           <div style={{ fontFamily: VAZIR, fontWeight: 800, fontSize: 54, lineHeight: 1.6, color: PARCH.ink }}>{p.verdict.line}</div>
         </div>
       ) : null}

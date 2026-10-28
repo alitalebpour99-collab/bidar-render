@@ -127,21 +127,41 @@ export function timeline(beats: Beat[], voiceIn: VoiceIn[] | undefined): Timelin
   return { total, beats: span, order, words, voice, speechEnd: end, duck };
 }
 
-/** The captions: a few words at a time, cut at punctuation and never across a beat. */
+/**
+ * The captions: a few words at a time. A clause (up to a punctuation mark) is
+ * never mixed with the next one and never crosses a beat; a long clause is cut
+ * into even pieces (five words: three and two), so no word is left alone.
+ */
 export type Chunk = { words: Word[]; from: number; to: number };
-export function chunks(ws: Word[], maxWords = 4, maxChars = 24): Chunk[] {
-  const out: Chunk[] = [];
+export function chunks(ws: Word[], maxWords = 4, maxChars = 26): Chunk[] {
+  const clauses: Word[][] = [];
   let cur: Word[] = [];
-  const flush = () => {
-    if (cur.length) out.push({ words: cur, from: cur[0].from, to: cur[cur.length - 1].to });
-    cur = [];
-  };
   for (const w of ws) {
-    if (cur.length && (cur[0].beat !== w.beat || cur.length >= maxWords || [...cur, w].map((x) => x.text).join(" ").length > maxChars)) flush();
+    if (cur.length && cur[0].beat !== w.beat) {
+      clauses.push(cur);
+      cur = [];
+    }
     cur.push(w);
-    if (/[.،؛؟!:…»]$/.test(w.text) && cur.length >= 2) flush();
+    if (/[.،؛؟!:…»]$/.test(w.text)) {
+      clauses.push(cur);
+      cur = [];
+    }
   }
-  flush();
+  if (cur.length) clauses.push(cur);
+  const out: Chunk[] = [];
+  const len = (g: Word[]) => g.map((x) => x.text).join(" ").length;
+  for (const c of clauses) {
+    // as few pieces as fit the limits, each about as long as the others
+    let n = Math.max(1, Math.ceil(c.length / maxWords), Math.ceil(len(c) / maxChars));
+    n = Math.min(n, c.length);
+    let at = 0;
+    for (let k = 0; k < n; k += 1) {
+      const size = Math.round((c.length - at) / (n - k));
+      const g = c.slice(at, at + size);
+      at += size;
+      out.push({ words: g, from: g[0].from, to: g[g.length - 1].to });
+    }
+  }
   // each chunk stays until the next one comes, unless the voice pauses long
   for (let i = 0; i < out.length; i += 1) {
     const next = out[i + 1];
