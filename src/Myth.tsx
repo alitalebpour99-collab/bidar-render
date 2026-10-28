@@ -158,10 +158,10 @@ export const Myth: React.FC<MythProps> = (p) => {
         const tilt = i % 2 ? 1.4 : -1.2;
         return (
           <div key={e.at} style={{ position: "absolute", top: 420, right: SIDE + 30, left: SIDE + 10, perspective: 1400, opacity: o }}>
-            <div style={{ transform: `rotateY(${turn}deg) rotate(${tilt}deg) translateX(${-out * 120}px) translateY(${rise(frame, from, 30, 14)}px)`, transformOrigin: "right center", background: PARCH.card, borderRadius: 18, border: `2px solid rgba(43,30,18,.22)`, boxShadow: "0 24px 60px rgba(70,45,15,.28)", padding: "40px 52px 46px", direction: "rtl", minHeight: 560 }}>
+            <div style={{ transform: `rotateY(${turn}deg) rotate(${tilt}deg) translateX(${-out * 120}px) translateY(${rise(frame, from, 30, 14)}px) scale(${1 + 0.025 * Math.min(1, (frame - from) / Math.max(1, to - from))})`, transformOrigin: "right center", background: PARCH.card, borderRadius: 18, border: `2px solid rgba(43,30,18,.22)`, boxShadow: "0 24px 60px rgba(70,45,15,.28)", padding: "40px 52px 46px", direction: "rtl", minHeight: 560 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
                 <span style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 150, lineHeight: 1, color: PARCH.red }}>{e.n}</span>
-                <span style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 70, lineHeight: 1.25, color: PARCH.ink }}>{e.title}</span>
+                <span style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 70, lineHeight: 1.25, color: PARCH.ink, padding: "0 8px", backgroundImage: "linear-gradient(transparent 58%, rgba(232,181,74,.55) 58%, rgba(232,181,74,.55) 92%, transparent 92%)", backgroundRepeat: "no-repeat", backgroundPosition: "right center", backgroundSize: `${100 * grow(frame, from + 105, 18)}% 100%` }}>{e.title}</span>
               </div>
               <div style={{ height: 3, background: PARCH.red, opacity: 0.5, width: `${100 * grow(frame, from + 10, 30)}%`, margin: "22px 0 26px" }} />
               <div style={{ fontFamily: VAZIR, fontWeight: 500, fontSize: 48, lineHeight: 1.65, color: PARCH.ink2, opacity: fade(frame, from + 14, 12) }}>{e.text}</div>
