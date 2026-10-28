@@ -1,0 +1,26 @@
+{
+  "characters": 1502,
+  "calls": [
+    {
+      "name": "borders-1",
+      "characters": 481,
+      "at": "2026-10-28T17:50:41.159Z",
+      "model": "eleven_v3",
+      "voice": "rNb3hdSf0n4ROIbYC8Bl"
+    },
+    {
+      "name": "myth-1",
+      "characters": 503,
+      "at": "2026-10-28T17:51:05.077Z",
+      "model": "eleven_v3",
+      "voice": "rNb3hdSf0n4ROIbYC8Bl"
+    },
+    {
+      "name": "word-1",
+      "characters": 518,
+      "at": "2026-10-28T17:51:29.224Z",
+      "model": "eleven_v3",
+      "voice": "rNb3hdSf0n4ROIbYC8Bl"
+    }
+  ]
+}

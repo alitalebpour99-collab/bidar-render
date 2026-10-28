@@ -102,6 +102,12 @@ The renderer finds every beat's `say` in that text and starts the beat's
 picture where its first character is said, so the picture follows the voice.
 The captions are burned in from the same alignment, word by word.
 
+The site sends the take as ElevenLabs returns it. The renderer shortens its
+pauses and, by at most 15 % of tempo (pitch kept), brings it toward its
+series' length (`VOICE_TARGET` in `voice.mjs`: borders 36 s, myth 32 s, word
+36 s of voice), and moves the alignment with it; Shahram's raw takes of
+about 500 characters run 45 s.
+
 Lines with a beat id as cue are also accepted (one call per beat, as Divan
 makes them): each beat then lasts as long as its line.
 

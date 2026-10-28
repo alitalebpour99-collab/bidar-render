@@ -100,7 +100,7 @@ async function render(job) {
     const tile = await selectComposition({ serveUrl: serve, id: "cover", inputProps: job.cover, chromiumOptions, timeoutInMilliseconds });
     await renderStill({ composition: tile, serveUrl: serve, output: cover, inputProps: job.cover, imageFormat: "jpeg", jpegQuality: 92, chromiumOptions, timeoutInMilliseconds });
     // the narrator first: its alignment sets every beat and the Reel's length (src/timeline.ts)
-    const voiceIn = voiceFiles(job.voice, publicDir, job.name);
+    const voiceIn = voiceFiles(job.voice, publicDir, job.name, { format: job.format });
     const first = await selectComposition({ serveUrl: serve, id: job.format, inputProps: { ...job.props, voiceIn }, chromiumOptions, timeoutInMilliseconds });
     const seconds = first.durationInFrames / first.fps;
     fs.writeFileSync(path.join(publicDir, music), score({ id: job.format, seconds, duck: duckOf(first) }));
