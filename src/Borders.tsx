@@ -20,12 +20,16 @@ const DRIFT = 0.045;
 
 type Shot = { id: string; view: View; stop?: BordersStop };
 
+/** A stop's extent: the geometry the site sent, else the era of src/data/iran-eras.json. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const stopShape = (s: BordersStop): any => (s.geometry ? { type: "Feature", properties: {}, geometry: s.geometry } : shapeOf(s.era));
+
 function shots(p: BordersProps): Shot[] {
   const iranClose = fit(IRAN, 520, 420);
   const list: Shot[] = [{ id: p.beats[0].id, view: iranClose }];
   for (const b of p.beats.slice(1)) {
     const stop = p.stops.find((s) => s.at === b.id);
-    if (stop) list.push({ id: b.id, view: stop.era === "today" ? fit(IRAN, 700, 560) : fit(shapeOf(stop.era), 1000, 720), stop });
+    if (stop) list.push({ id: b.id, view: stop.era === "today" ? fit(IRAN, 700, 560) : fit(stopShape(stop), 1000, 720), stop });
     else list.push({ id: b.id, view: push(list[list.length - 1].view, 0.82) });
   }
   return list;
@@ -83,7 +87,7 @@ const Ground: React.FC<{ p: BordersProps; list: Shot[] }> = ({ p, list }) => {
           // the line before stays one beat as a dashed ghost, so the change is seen
           const ghost = !shown && next && frame >= next.from && frame < next.to ? interpolate(frame, [next.from, next.from + 20], [0.9, 0.5], clamped) : 0;
           if (!shown && !ghost) return null;
-          const d = m.d(shapeOf(s.era));
+          const d = m.d(stopShape(s));
           return (
             <g key={s.at}>
               {shown ? (
@@ -176,7 +180,7 @@ const TimeLine: React.FC<{ p: BordersProps }> = ({ p }) => {
       </svg>
       {p.stops.map((s, i) => (
         <div key={s.at} style={{ position: "absolute", top: 40, left: xs[i] - 110, width: 220, textAlign: "center", fontFamily: VAZIR, fontWeight: i === k ? 800 : 500, fontSize: 31, color: i === k ? LAPIS.ink : LAPIS.muted, direction: "rtl", whiteSpace: "nowrap" }}>
-          {s.tick}
+          {p.stops.length <= 6 || i === k || i === 0 || i === p.stops.length - 1 ? s.tick : ""}
         </div>
       ))}
     </div>

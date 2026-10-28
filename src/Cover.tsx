@@ -18,7 +18,7 @@ const LOOK: Record<string, { ground: string; ink: string; accent: string; sub: s
 
 const TOP = (H - W) / 2;
 
-export const Cover: React.FC<CoverProps> = ({ format, series, title, mark }) => {
+export const Cover: React.FC<CoverProps> = ({ format, series, title, mark, kicker }) => {
   const l = LOOK[format] ?? LOOK.borders;
   const size = title.length > 40 ? 84 : title.length > 26 ? 100 : 122;
   return (
@@ -26,7 +26,7 @@ export const Cover: React.FC<CoverProps> = ({ format, series, title, mark }) => 
       <div style={{ position: "absolute", top: TOP + 56, left: 56, right: 56, height: W - 112, borderRadius: 40, border: `3px solid ${l.frame}` }} />
       <div style={{ position: "absolute", top: TOP + 96, right: 116, left: 116, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontFamily: GULZAR, fontSize: 96, color: l.accent, lineHeight: 1.2 }}>بیدار</span>
-        <span style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 36, color: l.sub }}>{series}</span>
+        <span style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 36, color: l.sub }}>{kicker ?? series}</span>
       </div>
       <div style={{ position: "absolute", top: TOP + 290, bottom: H - TOP - W + 190, right: 116, left: 116, display: "flex", flexDirection: "column", justifyContent: "center", gap: 26 }}>
         <div style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: size, lineHeight: 1.35, color: l.ink, textWrap: "balance" } as React.CSSProperties}>{title}</div>

@@ -8,8 +8,9 @@ import { Borders } from "./Borders";
 import { Cover } from "./Cover";
 import { Myth } from "./Myth";
 import { Word } from "./Word";
-import type { Base, BordersProps, CoverProps, MythProps, WordProps } from "./props";
+import type { Base, BordersProps, CoverProps, MythProps, ReelProps, WordProps } from "./props";
 import { timeline } from "./timeline";
+import { adapt } from "./adapt";
 
 // One composition per format (the id is the format the site names in a job,
 // docs/contract.md), all 1080 × 1920 at 30 fps, plus the still grid tile.
@@ -18,7 +19,9 @@ import { timeline } from "./timeline";
 const frame = { width: 1080, height: 1920, fps: 30 };
 
 /** A Reel's clock: its beats and captions from its narrator (timeline.ts), its length from the last word. */
-const timed = <P extends Base>({ props }: { props: P }) => {
+const timed = <P extends Base>({ props: given }: { props: P }) => {
+  // the site's own shape (lib/social/props.ts of bidar) or the samples' (src/props.ts)
+  const props = adapt<P & ReelProps>(given) as P;
   const tl = timeline(props.beats, props.voiceIn);
   return { durationInFrames: tl.total, props: { ...props, tl } as P };
 };

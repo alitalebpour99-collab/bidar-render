@@ -213,12 +213,12 @@ export const Word: React.FC<WordProps> = (p) => {
               </span>
             ))}
           </div>
-          <div style={{ marginTop: 44, display: "flex", alignItems: "center", gap: 26, opacity: fade(frame, close.from + 54, 10), transform: `translateY(${rise(frame, close.from + 54, 30, 14)}px)` }}>
+          {p.cta ? <div style={{ marginTop: 44, display: "flex", alignItems: "center", gap: 26, opacity: fade(frame, close.from + 54, 10), transform: `translateY(${rise(frame, close.from + 54, 30, 14)}px)` }}>
             <svg width="96" height="96" viewBox="0 0 24 24" style={{ flex: "none", transform: `translate(${-interpolate(frame, [close.from + 60, close.from + 100], [0, 26], { ...clamped, easing: ease })}px, ${-interpolate(frame, [close.from + 60, close.from + 100], [0, 14], { ...clamped, easing: ease })}px) rotate(-12deg)` }}>
               <path d="M21 3 3 10.5l7 2.5 2.5 7L21 3Z M10 13l4.5-4.5" fill="none" stroke={NIGHT.amber} strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" />
             </svg>
             <div style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 62, lineHeight: 1.4, color: NIGHT.ink }}>{p.cta}</div>
-          </div>
+          </div> : null}
         </div>
       ) : null}
 

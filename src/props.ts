@@ -39,6 +39,8 @@ export type Base = {
   sources?: string[];
   /** the last card's line (borders, myth; the word has its cta) */
   close?: string;
+  /** the address under the source line (the site sends «bidar.ahura.cloud») */
+  foot?: string;
   /** set by the renderer */
   music?: string;
   voiceIn?: VoiceIn[];
@@ -51,6 +53,8 @@ export type BordersStop = {
   at: string;
   /** a key of src/data/iran-eras.json, or "today" */
   era: string;
+  /** the extent itself, when the site sends it (GeoJSON); else the era key is drawn */
+  geometry?: unknown;
   name: string;
   years: string;
   line?: string;
@@ -94,4 +98,5 @@ export type WordProps = Base & {
 
 export type ReelProps = BordersProps | MythProps | WordProps;
 
-export type CoverProps = { format: string; series: string; title: string; mark?: string };
+/** the site sends `kicker` (the series' name) beside `series` («بیدار · حقیقت، با سند»); the tile shows the kicker when there is one */
+export type CoverProps = { format: string; series: string; title: string; mark?: string; kicker?: string };
