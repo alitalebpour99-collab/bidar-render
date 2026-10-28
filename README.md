@@ -21,7 +21,7 @@ renamed for Bidar.
 | `music.mjs`, `sfx.mjs` | the bed and the effects, synthesized (no sample, no licence) |
 | `worker.mjs` | asks the site for work, renders, hands the files back |
 | `scripts/narrate.mjs` | narrates a sample with ElevenLabs (eleven_v3, voice Shahram), as the site does |
-| `samples/` | one episode of each series: props, narration (MP3 + alignment), tile |
+| `samples/` | one episode of each series: props, narration (MP3 + alignment), tile; `samples/site/` the same kinds in the site's own shape (bidar `lib/social/props.ts`), silent, for `src/adapt.ts` |
 
 ## Where it runs
 

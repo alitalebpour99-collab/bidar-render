@@ -1,0 +1,16 @@
+{
+  "format": "borders",
+  "series": "بیدار · حقیقت، با سند",
+  "lang": "fa",
+  "hook": { "text": "مرزهای ایران از هخامنشی تا ساسانی، دوره به دوره", "figure": null },
+  "source": "منبع: اطلسِ تاریخیِ بیدار · گستره‌ها: historical-basemaps (CC BY-SA)",
+  "foot": "bidar.ahura.cloud",
+  "title": "ایران روی نقشه: از هخامنشی تا ساسانی",
+  "frames": [
+    { "id": "achaemenid", "name": "هخامنشی", "years": "۵۵۰–۳۳۰ پ.م", "government": "شاهنشاهیِ هخامنشی", "extent": "از بالکان و مصر تا رودِ سند — بزرگ‌ترین امپراتوریِ باستان", "capitals": [{ "name": "پاسارگاد", "lon": 53.18, "lat": 30.19 }], "geometry": null },
+    { "id": "parthian", "name": "اشکانی", "years": "۲۴۷ پ.م – ۲۲۴ م", "government": "سلسلهٔ اشکانی", "extent": "فلاتِ ایران و میان‌رودان؛ مرزِ غربی با روم روی فرات", "capitals": [{ "name": "تیسفون", "lon": 44.58, "lat": 33.09 }], "geometry": null },
+    { "id": "sasanian", "name": "ساسانی", "years": "۲۲۴–۶۵۱ م", "government": "سلسلهٔ ساسانی", "extent": "فلاتِ ایران، میان‌رودان، قفقاز، بخشی از آسیای میانه و شبه‌جزیره", "capitals": [{ "name": "تیسفون", "lon": 44.58, "lat": 33.09 }], "geometry": null }
+  ],
+  "today": { "label": "مرزهای امروز", "geometry": null },
+  "caveat": "مرزهای باستان قطعی نیستند؛ گستره‌ها تقریبی‌اند."
+}

@@ -54,16 +54,16 @@ jobs:
         run: |
           set -e
           for pair in $LIST; do
-            comp="${pair%%:*}"; name="${pair#*:}"
+            comp="${pair%%:*}"; name="${pair#*:}"; out="${name////-}"
             voice=""; if [ -f "samples/$name.voice.json" ]; then voice="--voice samples/$name.voice.json"; fi
             echo "== $comp from samples/$name.json $voice"
             if [ "$MODE" = "stills" ]; then
-              node render.mjs "$comp" --props "samples/$name.json" $voice --bundle bundle --still auto --out "$name"
+              node render.mjs "$comp" --props "samples/$name.json" $voice --bundle bundle --still auto --out "$out"
             else
-              node render.mjs "$comp" --props "samples/$name.json" $voice --bundle bundle --out "$name"
-              ffprobe -v error -show_entries format=duration,size,bit_rate -show_entries stream=codec_name,width,height -of compact "out/$name.mp4"
+              node render.mjs "$comp" --props "samples/$name.json" $voice --bundle bundle --out "$out"
+              ffprobe -v error -show_entries format=duration,size,bit_rate -show_entries stream=codec_name,width,height -of compact "out/$out.mp4"
             fi
-            if [ -f "samples/$name.cover.json" ]; then node render.mjs cover --props "samples/$name.cover.json" --bundle bundle --still 0 --out "$name-tile"; fi
+            if [ -f "samples/$name.cover.json" ]; then node render.mjs cover --props "samples/$name.cover.json" --bundle bundle --still 0 --out "$out-tile"; fi
           done
           ls -la out
       - uses: actions/upload-artifact@v4

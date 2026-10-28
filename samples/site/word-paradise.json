@@ -1,0 +1,18 @@
+{
+  "format": "word",
+  "series": "بیدار · حقیقت، با سند",
+  "lang": "fa",
+  "hook": { "text": "واژهٔ انگلیسیِ «paradise» یعنی بهشت. ریشه‌اش ایرانی است.", "figure": "paradise" },
+  "source": "منبع: Etymonline، «paradise» · Merriam-Webster، «paradise» · Encyclopaedia Iranica، «PARADISE, the concept of»",
+  "foot": "bidar.ahura.cloud",
+  "word": "paradise",
+  "persian": "پردیس",
+  "chain": [
+    { "lang": "اوستایی", "form": "pairi-daēza", "meaning": "جای محصور؛ «پیرامون» + «دیوار»" },
+    { "lang": "یونانی", "form": "parádeisos", "meaning": "باغ و شکارگاهِ شاهان و بزرگانِ ایران، در نوشته‌های گزنفون" },
+    { "lang": "یونانیِ کتابِ مقدس", "form": "parádeisos", "meaning": "باغِ عدن، در ترجمهٔ هفتادتنان" },
+    { "lang": "لاتین", "form": "paradisus", "meaning": "بهشت" },
+    { "lang": "انگلیسی", "form": "paradise", "meaning": "بهشت" }
+  ],
+  "note": "«پردیس» در فارسیِ امروز از همین ریشه است: باغی که دیوار دورش را گرفته بود، در زبان‌های دیگر نامِ بهشت شد."
+}
