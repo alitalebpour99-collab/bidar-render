@@ -237,6 +237,18 @@ const TextPage: React.FC<{ p: BookProps; page: PageWords; timed: Word[]; first: 
   );
 };
 
+/** The inside of the back board: lapis leather in a gold frame, what the last page uncovers before the book closes. */
+const Endpaper: React.FC = () => (
+  <div style={{ position: "absolute", inset: 0, borderRadius: 12, overflow: "hidden", background: LEAF.leather, boxShadow: "inset 0 0 0 2px rgba(214,176,92,.35), inset 0 0 120px rgba(0,0,0,.45)" }}>
+    <div style={{ position: "absolute", inset: 34, borderRadius: 6, border: "3px solid rgba(214,176,92,.7)" }} />
+    <div style={{ position: "absolute", inset: 50, borderRadius: 4, border: "2px solid rgba(201,162,77,.35)" }} />
+    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.85 }}>
+      <Shamseh size={200} color={LEAF.gold2} />
+    </div>
+    <div style={{ position: "absolute", top: 0, bottom: 0, right: 0, width: 90, background: "linear-gradient(to left, rgba(0,0,0,.45), rgba(0,0,0,0))" }} />
+  </div>
+);
+
 /** The closed book: lapis leather, a double gold frame, the shamseh and the title in gold, a slow glint over the foil. */
 const Cover: React.FC<{ title: string; w: number; h: number; glint: number }> = ({ title, w, h, glint }) => (
   <div style={{ position: "relative", width: w, height: h, borderRadius: 14, background: LEAF.leather, boxShadow: "0 50px 90px rgba(0,0,0,.6), inset 0 1px 0 rgba(120,150,220,.25), inset 0 0 0 2px rgba(0,0,0,.35)", overflow: "hidden" }}>
@@ -278,13 +290,13 @@ export const Book: React.FC<BookProps> = (p) => {
   // the leaf turns: the title page just before the first word, each page just before the first word of the next, the last onto the cover
   const firstWord = (pg: PageWords) => timed[pg.from]?.from ?? read.from;
   const turns: number[] = [Math.max(6, read.from - 8), ...pages.slice(1).map((pg) => firstWord(pg) - 12), close.from - 4];
-  const leaves: React.ReactNode[] = [<TitlePage key="title" p={p} />, ...pages.map((pg, i) => <TextPage key={`page-${pg.from}`} p={p} page={pg} timed={timed} first={i === 0} />)];
+  const leaves: React.ReactNode[] = [<TitlePage key="title" p={p} />, ...pages.map((pg, i) => <TextPage key={`page-${pg.from}`} p={p} page={pg} timed={timed} first={i === 0} />), <Endpaper key="end" />];
   const shut = turns[turns.length - 1];
   // the leaf on top: the first one not yet turned over
   const current = turns.filter((t) => frame >= t + TURN).length;
-  // the book leaves the stage as its last leaf turns, and the closed cover comes up
-  const bookOut = interpolate(frame, [shut + TURN * 0.3, shut + TURN * 0.75], [1, 0], clamped);
-  const coverIn = fade(frame, shut + TURN * 0.75, 12);
+  // the last page uncovers the back board; the book leaves the stage and the closed cover comes up
+  const bookOut = interpolate(frame, [shut + TURN + 2, shut + TURN + 12], [1, 0], clamped);
+  const coverIn = fade(frame, shut + TURN + 4, 12);
   const sourceFrom = tl.total - Math.round(2.6 * FPS);
   return (
     <Stage ground={<Ground total={tl.total} />} tl={tl} music={p.music}>
@@ -301,7 +313,7 @@ export const Book: React.FC<BookProps> = (p) => {
           {leaves.map((leaf, i) =>
             // only the leaf on top and the one under it are drawn
             i === current || i === current + 1 ? (
-              <Leaf key={i} turnAt={turns[i]} z={100 - i}>
+              <Leaf key={i} turnAt={turns[i] ?? null} z={100 - i}>
                 {leaf}
               </Leaf>
             ) : null,
@@ -313,12 +325,12 @@ export const Book: React.FC<BookProps> = (p) => {
       {coverIn > 0 ? (
         <div style={{ position: "absolute", top: DESIGN_TOP + 190, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", direction: "rtl", opacity: coverIn }}>
           <div style={{ perspective: 2200 }}>
-            <div style={{ transform: `rotateY(${interpolate(frame, [shut + TURN * 0.75, tl.total], [-16, -6], clamped)}deg) scale(${interpolate(frame, [shut + TURN * 0.75, shut + TURN * 0.75 + 22], [0.92, 1], { ...clamped, easing: ease })})` }}>
+            <div style={{ transform: `rotateY(${interpolate(frame, [shut + TURN + 4, tl.total], [-16, -6], clamped)}deg) scale(${interpolate(frame, [shut + TURN + 4, shut + TURN + 26], [0.92, 1], { ...clamped, easing: ease })})` }}>
               <Cover title={p.book} w={520} h={720} glint={interpolate(frame, [shut, tl.total], [-20, 130], clamped)} />
             </div>
           </div>
-          <div style={{ fontFamily: VAZIR, fontWeight: 800, fontSize: 74, color: LEAF.cream, marginTop: 64, opacity: fade(frame, shut + TURN + 4, 10), transform: `translateY(${rise(frame, shut + TURN + 4, 24, 14)}px)` }}>{p.closeLine}</div>
-          <div style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 44, color: LEAF.gold, direction: "ltr", marginTop: 12, opacity: fade(frame, shut + TURN + 12, 10) }}>{p.closeUrl}</div>
+          <div style={{ fontFamily: VAZIR, fontWeight: 800, fontSize: 74, color: LEAF.cream, marginTop: 64, opacity: fade(frame, shut + TURN + 10, 10), transform: `translateY(${rise(frame, shut + TURN + 10, 24, 14)}px)` }}>{p.closeLine}</div>
+          <div style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 44, color: LEAF.gold, direction: "ltr", marginTop: 12, opacity: fade(frame, shut + TURN + 18, 10) }}>{p.closeUrl}</div>
         </div>
       ) : null}
 
