@@ -67,7 +67,7 @@ export function paginate(words: BookWord[]): PageWords[] {
 }
 
 /** The text's size for a page of `n` words, so that it fills the leaf without spilling. */
-const sizeFor = (n: number) => (n <= 34 ? 54 : n <= 42 ? 50 : n <= 50 ? 46 : n <= 60 ? 42 : 38);
+const sizeFor = (n: number) => (n <= 34 ? 52 : n <= 42 ? 49 : n <= 50 ? 45 : n <= 60 ? 41 : 38);
 
 // ---------- the pieces ----------
 const Ground: React.FC<{ total: number }> = ({ total }) => {
@@ -183,7 +183,7 @@ const TitlePage: React.FC<{ p: BookProps }> = ({ p }) => {
         {/* the hook: readable from the first frame; its words settle one after another */}
         <div style={{ fontFamily: NASKH, fontWeight: 700, fontSize: size, lineHeight: 1.65, color: LEAF.ink, textWrap: "balance", maxWidth: 700 } as React.CSSProperties}>
           {words.map((w, i) => (
-            <span key={i} style={{ display: "inline-block", marginInline: "0.13em", opacity: interpolate(frame, [i * 2, i * 2 + 8], [0.55, 1], clamped), transform: `translateY(${interpolate(frame, [i * 2, i * 2 + 10], [10, 0], { ...clamped, easing: ease })}px)` }}>
+            <span key={i} style={{ display: "inline-block", marginInline: "0.13em", opacity: interpolate(frame, [i * 2, i * 2 + 8], [0.92, 1], clamped), transform: `translateY(${interpolate(frame, [i * 2, i * 2 + 10], [8, 0], { ...clamped, easing: ease })}px)` }}>
               {w}
             </span>
           ))}
@@ -221,7 +221,7 @@ const TextPage: React.FC<{ p: BookProps; page: PageWords; timed: Word[]; first: 
               const past = t ? frame >= t.to - 1 : false;
               return (
                 <React.Fragment key={i}>
-                  <span style={{ borderRadius: 8, padding: "0 0.1em", background: now ? LEAF.gold : "transparent", color: now ? LEAF.lapis : LEAF.ink, boxShadow: now ? `0 0 0 4px ${LEAF.gold}, 0 0 18px rgba(232,197,106,.45)` : "none", opacity: now || past ? 1 : 0.74 }}>{w.w}</span>{" "}
+                  <span style={{ borderRadius: 8, padding: "0 0.02em", background: now ? LEAF.gold : "transparent", color: now ? LEAF.lapis : LEAF.ink, boxShadow: now ? `0 0 0 4px ${LEAF.gold}, 0 0 18px rgba(232,197,106,.45)` : "none", opacity: now || past ? 1 : 0.74 }}>{w.w}</span>{" "}
                 </React.Fragment>
               );
             })}
@@ -253,7 +253,7 @@ const Cover: React.FC<{ title: string; w: number; h: number; glint: number }> = 
     {/* the spine on the right, with its raised bands */}
     <div style={{ position: "absolute", top: 0, bottom: 0, right: 0, width: 46, background: "linear-gradient(to left, rgba(0,0,0,.5), rgba(0,0,0,0))" }} />
     {[18, 34, 62, 78].map((y) => (
-      <div key={y} style={{ position: "absolute", right: 3, top: `${y}%`, width: 38, height: 6, borderRadius: 3, background: "linear-gradient(180deg, rgba(214,176,92,.55), rgba(90,60,20,.65))" }} />
+      <div key={y} style={{ position: "absolute", right: 8, top: `${y}%`, width: 26, height: 5, borderRadius: 3, opacity: 0.6, background: "linear-gradient(180deg, rgba(214,176,92,.55), rgba(90,60,20,.65))" }} />
     ))}
     <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 34 }}>
       <div style={{ width: 190, height: 190, borderRadius: 95, display: "flex", alignItems: "center", justifyContent: "center", border: "3px solid rgba(214,176,92,.6)", background: "radial-gradient(circle, rgba(232,197,106,.14), rgba(232,197,106,.02) 70%)", boxShadow: "inset 0 4px 12px rgba(0,0,0,.5)" }}>
@@ -283,8 +283,8 @@ export const Book: React.FC<BookProps> = (p) => {
   // the leaf on top: the first one not yet turned over
   const current = turns.filter((t) => frame >= t + TURN).length;
   // the book leaves the stage as its last leaf turns, and the closed cover comes up
-  const bookOut = interpolate(frame, [shut + TURN * 0.45, shut + TURN], [1, 0], clamped);
-  const coverIn = fade(frame, shut + TURN * 0.5, 14);
+  const bookOut = interpolate(frame, [shut + TURN * 0.3, shut + TURN * 0.75], [1, 0], clamped);
+  const coverIn = fade(frame, shut + TURN * 0.75, 12);
   const sourceFrom = tl.total - Math.round(2.6 * FPS);
   return (
     <Stage ground={<Ground total={tl.total} />} tl={tl} music={p.music}>
@@ -296,7 +296,7 @@ export const Book: React.FC<BookProps> = (p) => {
       <Mark color={LEAF.gold} sub={p.series} subColor={LEAF.gold2} />
 
       {bookOut > 0 ? (
-        <div style={{ position: "absolute", inset: 0, opacity: bookOut, transform: `translateY(${rise(frame, 0, 30, 18)}px)` }}>
+        <div style={{ position: "absolute", inset: 0, opacity: bookOut, transform: `translateY(${rise(frame, 0, 30, 18)}px) scale(${interpolate(bookOut, [0, 1], [0.95, 1])})`, transformOrigin: "50% 45%" }}>
           <Block />
           {leaves.map((leaf, i) =>
             // only the leaf on top and the one under it are drawn
@@ -313,7 +313,7 @@ export const Book: React.FC<BookProps> = (p) => {
       {coverIn > 0 ? (
         <div style={{ position: "absolute", top: DESIGN_TOP + 190, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", direction: "rtl", opacity: coverIn }}>
           <div style={{ perspective: 2200 }}>
-            <div style={{ transform: `rotateY(${interpolate(frame, [shut + TURN * 0.5, tl.total], [-16, -6], clamped)}deg) scale(${interpolate(frame, [shut + TURN * 0.5, shut + TURN * 0.5 + 22], [0.92, 1], { ...clamped, easing: ease })})` }}>
+            <div style={{ transform: `rotateY(${interpolate(frame, [shut + TURN * 0.75, tl.total], [-16, -6], clamped)}deg) scale(${interpolate(frame, [shut + TURN * 0.75, shut + TURN * 0.75 + 22], [0.92, 1], { ...clamped, easing: ease })})` }}>
               <Cover title={p.book} w={520} h={720} glint={interpolate(frame, [shut, tl.total], [-20, 130], clamped)} />
             </div>
           </div>
