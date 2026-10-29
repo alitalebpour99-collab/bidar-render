@@ -157,9 +157,65 @@ function book(p: Site): BookProps {
   };
 }
 
+// ---------- the three formats that keep the site's own shape ----------
+// (bidar lib/social/beats.ts flagBeats, treatyBeats, cityBeats, line by line)
+
+/** «پرچم‌های ایران»: the hook, the name and years (the field), the colours (the stripes), the emblem, the meaning, the stamp or trust label, a silent close (the flag waves). */
+export function flagBeats(p: Site): Beat[] {
+  const f = p.flag ?? {};
+  const basis = f.approx?.basis ? `${f.approx.basisLabel} ${f.approx.basis}` : "";
+  return [
+    { id: "start", say: end(hookText(p, f.name ?? "")) },
+    { id: "field", say: end(`${f.name}، ${f.years}`) },
+    { id: "colors", say: end(`رنگ‌ها: ${(f.colors ?? []).map((c: Site) => c.label).join("، ")}`) },
+    { id: "emblem", say: end(`نشان: ${f.symbols}`) },
+    ...((f.meaning ?? []) as string[]).slice(0, 3).map((text, i) => ({ id: `m${i + 1}`, say: String(text) })),
+    { id: "stamp", say: f.approx ? end([f.approx.stamp, basis].filter(Boolean).join("؛ ")) : end(String(f.tierLabel ?? "")), min: 2.6 },
+    { id: "end", say: "", min: 3.5 },
+  ];
+}
+
+/** «آنچه از دست رفت»: the hook, the document, the record, today's countries, the note or the trust label, a silent close. */
+export function treatyBeats(p: Site): Beat[] {
+  const t = p.treaty ?? {};
+  const todays = [...new Set(((p.places ?? []) as Site[]).map((x) => String(x.today)))];
+  const note = ((t.note ?? []) as string[]).slice(0, 2);
+  return [
+    { id: "start", say: end(hookText(p, t.name ?? "")) },
+    { id: "doc", say: end(`${t.name}، ${t.year}. ${t.sealed ? `${t.toLabel} ${t.to}` : t.to}`) },
+    ...((t.body ?? []) as string[]).slice(0, 4).map((text, i) => ({ id: `b${i + 1}`, say: String(text) })),
+    { id: "today", say: end(`${p.todayLabel}: ${todays.join("، ")}`) },
+    ...(note.length ? note.map((text, i) => ({ id: `n${i + 1}`, say: String(text) })) : [{ id: "verdict", say: end(String(t.tierLabel ?? "")), min: 2.4 }]),
+    { id: "end", say: "", min: 3 },
+  ];
+}
+
+/** Where a span of years begins, with its era: «۵۵۰–۳۳۰ پ.م» → «۵۵۰ پ.م», «≈۸۲۰–۱۲۱۹ م» → «≈۸۲۰ م». */
+export function startOf(years: string): string {
+  const first = years.split(/\s*[–—-]\s*/)[0].trim();
+  if (/پ\.?\s*م$|\sم$/.test(first)) return first;
+  const era = /پ\.?\s*م/.test(years) && !/[–—-].*\sم$/.test(years) ? "پ.م" : "م";
+  return `${first} ${era}`;
+}
+
+/** «شهرها در گذرِ دوره‌ها»: the hook, one beat per period that held the city, where it is, a silent close. */
+export function cityBeats(p: Site): Beat[] {
+  const c = p.city ?? {};
+  return [
+    { id: "start", say: end(hookText(p, c.name ?? "")) },
+    ...((p.periods ?? []) as Site[]).filter((x) => x.held).map((x) => ({ id: String(x.id), say: end(`${x.name}، از ${startOf(String(x.years))}${x.capital ? `. ${p.capitalLabel}` : ""}`) })),
+    { id: "note", say: end([`${c.name}، ${c.note}`, c.outside].filter(Boolean).join(". ")) },
+    { id: "end", say: "", min: 3 },
+  ];
+}
+
 /** Props in either shape → the compositions' own. */
 export function adapt<P extends ReelProps>(p: P | Site): P {
   const s = p as Site;
+  // the site's own shape, its beats (or the same ones made here)
+  if (s.format === "flag" && s.flag) return { ...s, beats: beatsOr(s, flagBeats(s)) } as P;
+  if (s.format === "treaty" && s.treaty && Array.isArray(s.places)) return { ...s, beats: beatsOr(s, treatyBeats(s)) } as P;
+  if (s.format === "city" && s.city && Array.isArray(s.periods)) return { ...s, beats: beatsOr(s, cityBeats(s)) } as P;
   if (s.format === "book" && Array.isArray(s.words)) return { ...book(s), music: s.music, voiceIn: s.voiceIn } as unknown as P;
   if (Array.isArray(s.beats) && s.beats.length && (s.stops || s.evidence)) return { ...s, source: sourceText(s.source) } as P;
   if (s.format === "borders" && Array.isArray(s.frames)) return { ...borders(s), music: s.music, voiceIn: s.voiceIn } as unknown as P;

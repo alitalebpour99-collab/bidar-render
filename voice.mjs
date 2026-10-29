@@ -17,7 +17,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 /** How long the narration of a Reel should run, at most (seconds); the Reel adds its close of about 3 s. */
-export const VOICE_TARGET = { borders: 36, myth: 32, word: 36 };
+export const VOICE_TARGET = { borders: 36, myth: 32, word: 36, flag: 33, treaty: 34, city: 34 };
 const MAX_TEMPO = 1.15;
 /** what is left of a pause between two sentences */
 const KEEP_PAUSE = 0.2;

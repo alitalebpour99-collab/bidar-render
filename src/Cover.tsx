@@ -6,6 +6,9 @@ import React from "react";
 import { AbsoluteFill } from "remotion";
 import { LEAF, NASKH } from "./Book";
 import { LAPIS } from "./Borders";
+import { CityTile } from "./City";
+import { FlagTile } from "./Flag";
+import { TreatyTile } from "./Treaty";
 import { GULZAR, H, VAZIR, W } from "./kit";
 import { PARCH } from "./Myth";
 import type { CoverProps } from "./props";
@@ -46,6 +49,9 @@ const BookTile: React.FC<CoverProps> = ({ title, mark, kicker, series }) => {
 export const Cover: React.FC<CoverProps> = (props) => {
   const { format, series, title, mark, kicker } = props;
   if (format === "book") return <BookTile {...props} />;
+  if (format === "flag") return <FlagTile {...props} />;
+  if (format === "treaty") return <TreatyTile {...props} />;
+  if (format === "city") return <CityTile {...props} />;
   const l = LOOK[format] ?? LOOK.borders;
   const size = title.length > 40 ? 84 : title.length > 26 ? 100 : 122;
   return (

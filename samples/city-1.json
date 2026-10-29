@@ -1,0 +1,167 @@
+{
+ "format": "city",
+ "series": "بیدار · حقیقت، با سند",
+ "lang": "fa",
+ "hook": {
+  "text": "اصفهان در کدام دوره‌های تاریخِ ایران حاضر بود؟",
+  "figure": "۸ از ۱۴ دوره"
+ },
+ "source": "منبع: اطلسِ تاریخیِ بیدار: دوره‌ها، پایتخت‌ها و شهرهای هر دوره",
+ "foot": "bidar.ahura.cloud",
+ "city": {
+  "id": "isfahan",
+  "name": "اصفهان",
+  "note": "مرکز",
+  "outside": null
+ },
+ "periods": [
+  {
+   "id": "elam",
+   "name": "عیلام",
+   "years": "≈۳۲۰۰–۵۴۰ پ.م",
+   "held": false,
+   "capital": false
+  },
+  {
+   "id": "median",
+   "name": "ماد",
+   "years": "≈۶۷۸–۵۵۰ پ.م",
+   "held": false,
+   "capital": false
+  },
+  {
+   "id": "achaemenid",
+   "name": "هخامنشی",
+   "years": "۵۵۰–۳۳۰ پ.م",
+   "held": false,
+   "capital": false
+  },
+  {
+   "id": "seleucid",
+   "name": "سلوکی",
+   "years": "۳۳۰–≈۱۵۰ پ.م",
+   "held": false,
+   "capital": false
+  },
+  {
+   "id": "parthian",
+   "name": "اشکانی",
+   "years": "۲۴۷ پ.م – ۲۲۴ م",
+   "held": false,
+   "capital": false
+  },
+  {
+   "id": "sasanian",
+   "name": "ساسانی",
+   "years": "۲۲۴–۶۵۱ م",
+   "held": false,
+   "capital": false
+  },
+  {
+   "id": "caliphate",
+   "name": "فتحِ اسلامی و خلافت",
+   "years": "۶۵۱–≈۹۰۰ م",
+   "held": true,
+   "capital": false
+  },
+  {
+   "id": "intermezzo",
+   "name": "فترتِ ایرانی",
+   "years": "≈۸۲۰–۱۲۱۹ م",
+   "held": true,
+   "capital": true
+  },
+  {
+   "id": "ilkhanate",
+   "name": "ایلخانانِ مغول",
+   "years": "۱۲۵۶–۱۳۳۵ م",
+   "held": true,
+   "capital": false
+  },
+  {
+   "id": "timurid",
+   "name": "تیموریان",
+   "years": "۱۳۷۰–۱۵۰۷ م",
+   "held": true,
+   "capital": false
+  },
+  {
+   "id": "safavid",
+   "name": "صفویان",
+   "years": "۱۵۰۱–۱۷۳۶ م",
+   "held": true,
+   "capital": true
+  },
+  {
+   "id": "afsharid-zand",
+   "name": "افشاریان و زندیان",
+   "years": "۱۷۳۶–۱۷۹۶ م",
+   "held": true,
+   "capital": false
+  },
+  {
+   "id": "qajar",
+   "name": "قاجار",
+   "years": "۱۷۸۹–۱۹۲۵ م",
+   "held": true,
+   "capital": false
+  },
+  {
+   "id": "pahlavi",
+   "name": "پهلوی",
+   "years": "۱۹۲۵–۱۹۷۹ م",
+   "held": true,
+   "capital": false
+  }
+ ],
+ "label": "حاضر در دوره‌ها",
+ "count": "۸ از ۱۴ دوره",
+ "capitalLabel": "پایتخت",
+ "beats": [
+  {
+   "id": "start",
+   "say": "اصفهان در کدام دوره‌های تاریخِ ایران حاضر بود؟"
+  },
+  {
+   "id": "caliphate",
+   "say": "فتحِ اسلامی و خلافت، از ۶۵۱ م."
+  },
+  {
+   "id": "intermezzo",
+   "say": "فترتِ ایرانی، از ≈۸۲۰ م. پایتخت."
+  },
+  {
+   "id": "ilkhanate",
+   "say": "ایلخانانِ مغول، از ۱۲۵۶ م."
+  },
+  {
+   "id": "timurid",
+   "say": "تیموریان، از ۱۳۷۰ م."
+  },
+  {
+   "id": "safavid",
+   "say": "صفویان، از ۱۵۰۱ م. پایتخت."
+  },
+  {
+   "id": "afsharid-zand",
+   "say": "افشاریان و زندیان، از ۱۷۳۶ م."
+  },
+  {
+   "id": "qajar",
+   "say": "قاجار، از ۱۷۸۹ م."
+  },
+  {
+   "id": "pahlavi",
+   "say": "پهلوی، از ۱۹۲۵ م."
+  },
+  {
+   "id": "note",
+   "say": "اصفهان، مرکز."
+  },
+  {
+   "id": "end",
+   "say": "",
+   "min": 3
+  }
+ ]
+}

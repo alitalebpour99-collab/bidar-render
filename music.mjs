@@ -24,6 +24,14 @@ const MOODS = {
   myth: { root: 45, bpm: 66, voice: "pluck" },
   // E, bells over a soft pad: a journey
   word: { root: 52, bpm: 72, voice: "bell" },
+  // the three drawn formats: restrained, dark and minimal, no line and no plucked or struck voice
+  // (the owner disliked cartoonish piano and santur): only held tones under the narrator
+  // G, an open pad that barely moves: a quiet drawing room
+  flag: { root: 43, bpm: 58, voice: "air" },
+  // C, a low drone and a slow sub pulse once a bar: the archive
+  treaty: { root: 36, bpm: 50, voice: "dark", sub: true },
+  // E, a drone and a high fifth that swells and fades each bar, like a ring turning
+  city: { root: 40, bpm: 52, voice: "orbit" },
 };
 
 // i  VI  III  VII
@@ -163,6 +171,32 @@ export function score({ id, seconds, duck = [] }) {
         if (q % 2 === 1 && (q + b) % 3 === 0) continue;
         pluck(L, R, from + q * (beat / 2), root + 12 + deg, q === 0 ? 0.34 : 0.22, q % 2 ? 0.3 : -0.3);
       }
+    } else if (mood.voice === "air") {
+      // the key note low, the chord an octave up and very soft; it moves only every second bar
+      pad(L, R, from, to, root, 0.045);
+      const soft = chordOf(b - (b % 2));
+      soft.forEach((o) => pad(L, R, from, to, root + 12 + o, 0.017, 1.4));
+    } else if (mood.voice === "dark") {
+      // one held low fifth, and the minor third far above it, barely there
+      pad(L, R, from, to, root, 0.08);
+      pad(L, R, from, to, root + 7, 0.032);
+      pad(L, R, from, to, root + 15, 0.01, 1.6);
+    } else if (mood.voice === "orbit") {
+      pad(L, R, from, to, root, 0.062);
+      pad(L, R, from, to, root + 7, 0.026);
+      // a high fifth that rises and falls once a bar, panned slowly from side to side
+      const f = hz(root + 19);
+      const a = Math.floor(from * RATE);
+      const z = Math.min(L.length, Math.ceil(to * RATE));
+      for (let n = a; n < z; n += 1) {
+        const t = n / RATE;
+        const u = (t - from) / (to - from);
+        const env = 0.016 * Math.sin(Math.PI * u) ** 2;
+        const pan = 0.5 + 0.4 * Math.sin(TAU * (b / 4 + u / 4));
+        const s = env * Math.sin(TAU * f * t);
+        L[n] += s * (1 - pan);
+        R[n] += s * pan;
+      }
     } else {
       chord.forEach((o) => pad(L, R, from, to, root + o, 0.032));
       // a bell on the first and third beat, one note of the chord, an octave up
@@ -188,6 +222,23 @@ export function score({ id, seconds, duck = [] }) {
           L[start + n] += s;
           R[start + n] += s;
         }
+      }
+    }
+  }
+
+  if (mood.sub) {
+    // a deep, slow sub pulse once a bar, longer and lower than the borders' heartbeat; none in the last bar
+    for (let b = 0; b < bars - 1; b += 1) {
+      const start = Math.round(b * bar * RATE);
+      const length = Math.min(total - start, Math.round(1.1 * RATE));
+      let phase = 0;
+      for (let n = 0; n < length; n += 1) {
+        const t = n / RATE;
+        const f = 34 + 18 * Math.exp(-t / 0.08);
+        phase += (TAU * f) / RATE;
+        const s = 0.24 * Math.exp(-t / 0.36) * Math.sin(phase) * (t < 0.01 ? t / 0.01 : 1);
+        L[start + n] += s;
+        R[start + n] += s;
       }
     }
   }

@@ -120,6 +120,65 @@ export type BookProps = Omit<Base, "close"> & {
   closeUrl: string;
 };
 
+/**
+ * The site's own shape, as the three formats drawn from its pictures and atlas
+ * send it (bidar lib/social/props.ts): the compositions read it as it comes,
+ * with the beats the site sends (or the ones adapt.ts makes the same way).
+ */
+export type SiteBase = {
+  series: string;
+  lang?: "fa";
+  hook: { text: string; figure: string | null } | null;
+  /** the source line, «منبع: …» (SourceLine takes the word off) */
+  source: string;
+  foot?: string;
+  beats: Beat[];
+  music?: string;
+  voiceIn?: VoiceIn[];
+  tl?: Timeline;
+};
+
+/** «پرچم‌های ایران»: one flag of the site's /iran/flags, built layer by layer from the site's own picture (src/data/flags.json). */
+export type FlagProps = SiteBase & {
+  format: "flag";
+  title: string;
+  flag: {
+    id: string;
+    name: string;
+    years: string;
+    /** the site's file, «/flags/flag_04_safavid.svg»: its layers are in src/data/flags.json under its name */
+    file: string;
+    colors: { hex: string; label: string }[];
+    symbols: string;
+    meaning: string[];
+    tier: Confidence;
+    tierLabel: string;
+    approx: { stamp: string; basisLabel: string; basis: string | null } | null;
+    tricolor: string | null;
+  };
+  sheet: string;
+};
+
+/** «آنچه از دست رفت»: a treaty of the atlas as a document, then its places on a light regional map. */
+export type TreatyProps = SiteBase & {
+  format: "treaty";
+  title: string;
+  treaty: { id: string; name: string; year: string; toLabel: string; to: string; sealed: boolean; body: string[]; tier: Confidence; tierLabel: string; note: string[] | null };
+  places: { id: string; name: string; today: string; lat: number; lon: number }[];
+  todayLabel: string;
+  reference: string;
+};
+
+/** «شهرها در گذرِ دوره‌ها»: a city of the atlas on a brass astrolabe, the periods before 1979 on its rim. */
+export type CityProps = SiteBase & {
+  format: "city";
+  city: { id: string; name: string; note: string; outside: string | null };
+  periods: { id: string; name: string; years: string; held: boolean; capital: boolean }[];
+  label: string;
+  count: string;
+  capitalLabel: string;
+};
+
 export type ReelProps = BordersProps | MythProps | WordProps | BookProps;
 
 /** the site sends `kicker` (the series' name) beside `series` («بیدار · حقیقت، با سند»); the tile shows the kicker when there is one */
