@@ -4,13 +4,19 @@ import bordersSample from "../samples/borders-1.json";
 import mythSample from "../samples/myth-1.json";
 import wordSample from "../samples/word-1.json";
 import bookSample from "../samples/book-1.json";
+import quoteSample from "../samples/quote-1.json";
+import figureSample from "../samples/figure-1.json";
+import quizSample from "../samples/quiz-1.json";
 import coverSample from "../samples/borders-1.cover.json";
 import { Book } from "./Book";
 import { Borders } from "./Borders";
 import { Cover } from "./Cover";
+import { Figure } from "./Figure";
 import { Myth } from "./Myth";
+import { Quiz } from "./Quiz";
+import { Quote } from "./Quote";
 import { Word } from "./Word";
-import type { Base, BookProps, BordersProps, CoverProps, MythProps, ReelProps, WordProps } from "./props";
+import type { Base, BookProps, BordersProps, CoverProps, FigureProps, MythProps, QuizProps, QuoteProps, ReelProps, WordProps } from "./props";
 import { timeline } from "./timeline";
 import { adapt } from "./adapt";
 
@@ -35,6 +41,9 @@ export const Root: React.FC = () => (
     <Composition id="myth" component={Myth} {...frame} durationInFrames={900} defaultProps={as<MythProps>(mythSample)} calculateMetadata={(x: { props: MythProps }) => timed(x)} />
     <Composition id="word" component={Word} {...frame} durationInFrames={900} defaultProps={as<WordProps>(wordSample)} calculateMetadata={(x: { props: WordProps }) => timed(x)} />
     <Composition id="book" component={Book} {...frame} durationInFrames={1200} defaultProps={as<BookProps>(bookSample)} calculateMetadata={(x: { props: BookProps }) => timed(x)} />
+    <Composition id="quote" component={Quote} {...frame} durationInFrames={600} defaultProps={as<QuoteProps>(quoteSample)} calculateMetadata={(x: { props: QuoteProps }) => timed(x)} />
+    <Composition id="figure" component={Figure} {...frame} durationInFrames={1050} defaultProps={as<FigureProps>(figureSample)} calculateMetadata={(x: { props: FigureProps }) => timed(x)} />
+    <Composition id="quiz" component={Quiz} {...frame} durationInFrames={690} defaultProps={as<QuizProps>(quizSample)} calculateMetadata={(x: { props: QuizProps }) => timed(x)} />
     <Composition id="cover" component={Cover} {...frame} durationInFrames={1} defaultProps={as<CoverProps>(coverSample)} />
   </>
 );

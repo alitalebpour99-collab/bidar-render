@@ -1,7 +1,9 @@
 // The low bed under a Reel, synthesized: no sample, no licence, no download.
 // Each series has its own sound as it has its own look (the owner disliked
 // formats that look and sound alike): the borders a slow drone with a deep
-// pulse, the myth a plucked string like a tar's, the word a few bells.
+// pulse, the myth a plucked string like a tar's, the word a few bells; the
+// quote, the figure and the quiz only dark, minimal drones (with a sub pulse
+// for the last two): no piano, no santur, nothing busy.
 // The bar is stretched so the Reel is a whole number of bars, the last bar
 // comes home, and the bed steps down to a quarter under the narrator.
 //   score({ id, seconds, duck }) -> Buffer (WAV, 44.1 kHz stereo 16-bit)
@@ -24,6 +26,12 @@ const MOODS = {
   myth: { root: 45, bpm: 66, voice: "pluck" },
   // E, bells over a soft pad: a journey
   word: { root: 52, bpm: 72, voice: "bell" },
+  // «سخنِ ماندگار»: a low D drone and nothing else, kept far under the reading (no pulse, no melody)
+  quote: { root: 38, bpm: 48, voice: "drone", level: 0.62 },
+  // «چهره‌ها»: a dark F drone with a slow sub pulse, like a print room
+  figure: { root: 41, bpm: 60, voice: "drone", pulse: true, level: 0.8 },
+  // «حدس بزن»: an A drone over a quicker sub pulse; it rises when the voice stops for the countdown
+  quiz: { root: 45, bpm: 96, voice: "drone", pulse: true, level: 0.9 },
 };
 
 // i  VI  III  VII
@@ -203,7 +211,7 @@ export function score({ id, seconds, duck = [] }) {
     R[n] = (R[n] + 0.3 * wetR[n]) * level;
     peak = Math.max(peak, Math.abs(L[n]), Math.abs(R[n]));
   }
-  const gain = peak ? 0.5 / peak : 1;
+  const gain = (peak ? 0.5 / peak : 1) * (mood.level ?? 1);
   const data = Buffer.alloc(total * 4);
   for (let n = 0; n < total; n += 1) {
     data.writeInt16LE(Math.round(Math.max(-1, Math.min(1, L[n] * gain)) * 32767), n * 4);

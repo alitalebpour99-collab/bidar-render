@@ -72,7 +72,7 @@ can (Divan keeps the last `can` it saw).
 ```ts
 type RenderJob = {
   id: number;            // the post's row id
-  format: string;        // the composition: "borders" | "myth" | "word" | "book"
+  format: string;        // the composition: "borders" | "myth" | "word" | "book" | "quote" | "figure" | "quiz"
   name: string;          // a file-safe name, e.g. "reel-7"
   props: object;         // the composition's props (below), built by the site from its own data
   cover: CoverProps;     // the still tile for the profile grid
@@ -146,6 +146,33 @@ serves publicly, and the renderer cuts it (the site's server has no ffmpeg).
   passage's words joined by spaces) and `end` (the close, silent).
 - No bed (`music.mjs` `hasBed`): the book is read with nothing under it; only
   a soft paper sound at each turn of the leaf.
+
+### «سخنِ ماندگار», «چهره‌ها», «حدس بزن»: the site's shape, and holds
+
+Jobs of `format: "quote"`, `"figure"` and `"quiz"` are narrated like the
+first three (one take, `cue: "all"`) and drawn in the site's own shape (bidar
+`lib/social/props.ts`; `src/props.ts` QuoteProps, FigureProps, QuizProps). Their
+beats are the site's (`src/adapt.ts` derives the same ones when a sample has
+none):
+
+- quote: `start` (the name and the epithet), `l1…` (each line of the saying: a
+  verse's half or a sentence), `rest` (silent, 1.6 s), `seal` (the name and the
+  years), `end` (silent);
+- figure: `start`, `life` (silent, 2.6 s: the ruler lights the years up),
+  `def`, `f1…` (the facts), `q1…` (a saying, when there is one), `end`;
+- quiz: `start` (the question), `o1`–`o3` («یک: …»), `count` (silent, 5 s),
+  `answer` («پاسخ: …»), `why`, `end` («تو درست زدی؟ در کامنت بنویس»).
+
+**A hold**: a beat whose `say` is empty, with `min`, between two beats that are
+said. In the narrator's one take it is an empty line; `src/timeline.ts` cuts
+the take in the pause before the next said beat and plays the rest `min`
+seconds later (the voice in pieces: `tl.voice[{file, from, trim, frames}]`). A
+silent Reel times it like any silent beat.
+
+A quiz of `kind: "flag"` carries `flag.svg`, the site's own drawing
+(`https://bidar.ahura.cloud/flags/<name>.svg`); only such an address is drawn.
+The render fetches it like a font: without it the render fails and is tried
+again.
 
 ## `POST /api/social/work?id=<id>&file=video`
 

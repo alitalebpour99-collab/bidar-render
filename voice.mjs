@@ -17,7 +17,9 @@ import fs from "node:fs";
 import path from "node:path";
 
 /** How long the narration of a Reel should run, at most (seconds); the Reel adds its close of about 3 s. */
-export const VOICE_TARGET = { borders: 36, myth: 32, word: 36 };
+export const VOICE_TARGET = { borders: 36, myth: 32, word: 36, quote: 0, figure: 34, quiz: 18 };
+/** What is left of a pause, per series: a saying (often a verse) keeps its breath between its lines. */
+export const KEEP_PAUSES = { quote: 0.5 };
 const MAX_TEMPO = 1.15;
 /** what is left of a pause between two sentences */
 const KEEP_PAUSE = 0.2;
@@ -39,13 +41,13 @@ function silences(file) {
  * place. Returns the moved alignment and the take's new length, or null when
  * nothing was done.
  */
-export function tighten(file, alignment, target) {
+export function tighten(file, alignment, target, keepPause = KEEP_PAUSE) {
   if (!alignment?.characters?.length || !hasFfmpeg()) return null;
   const { length, quiet } = silences(file);
   if (!length) return null;
   // each pause keeps a little on both sides; the very start and end keep less
   const cuts = quiet
-    .map(([a, b]) => (a < 0.05 ? [0, Math.max(0, b - 0.05)] : b > length - 0.05 ? [a + 0.12, length] : [a + KEEP_PAUSE / 2, b - KEEP_PAUSE / 2]))
+    .map(([a, b]) => (a < 0.05 ? [0, Math.max(0, b - 0.05)] : b > length - 0.05 ? [a + 0.12, length] : [a + keepPause / 2, b - keepPause / 2]))
     .filter(([a, b]) => b - a > 0.03);
   const removed = cuts.reduce((s, [a, b]) => s + (b - a), 0);
   const tight = length - removed;
@@ -99,7 +101,7 @@ export function voiceFiles(lines, publicDir, name, { fps = 30, baseDir = ".", fo
     let seconds = Number(line.seconds) || (ends.length ? ends[ends.length - 1] : 0);
     let alignment = line.alignment ?? null;
     // one take for the whole Reel is tightened toward its series' length; separate lines only lose their long pauses
-    const t = tighten(out, alignment, one ? (VOICE_TARGET[format] ?? 0) : 0);
+    const t = tighten(out, alignment, one ? (VOICE_TARGET[format] ?? 0) : 0, KEEP_PAUSES[format] ?? KEEP_PAUSE);
     if (t) {
       alignment = t.alignment;
       seconds = t.seconds;

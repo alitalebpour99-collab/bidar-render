@@ -20,7 +20,8 @@ export type Timeline = {
   beats: Record<string, { from: number; to: number }>;
   order: string[];
   words: Word[];
-  voice: { file: string; from: number }[];
+  /** the narrator's file, where it starts on the film, and for a take cut at a hold: where in the file the piece starts and how long it plays (frames) */
+  voice: { file: string; from: number; trim?: number; frames?: number }[];
   speechEnd: number;
   duck: [number, number][];
 };
@@ -120,7 +121,68 @@ export type BookProps = Omit<Base, "close"> & {
   closeUrl: string;
 };
 
-export type ReelProps = BordersProps | MythProps | WordProps | BookProps;
+/**
+ * The formats of 2026-10-29 («سخنِ ماندگار», «چهره‌ها», «حدس بزن») are drawn in
+ * the site's own shape (bidar lib/social/props.ts), with the beats the site sends
+ * or src/adapt.ts derives the same way.
+ */
+export type SiteBase = {
+  series: string;
+  hook: { text: string; figure: string | null } | null;
+  beats: Beat[];
+  /** the source line, «منبع: » taken off by adapt */
+  source: string;
+  foot?: string;
+  music?: string;
+  voiceIn?: VoiceIn[];
+  tl?: Timeline;
+};
+/** A person of the site's dictionary: its id, its term, the profile's epithet, its years in Persian («ح. ۹۴۰–۱۰۲۰ م»). */
+export type Who = { id: string; name: string; epithet: string; life: string };
+
+/** «سخنِ ماندگار»: one sourced saying on an illuminated page. Beats: start, l1…, rest (a hold), seal, end. */
+export type QuoteProps = SiteBase & {
+  format: "quote";
+  kicker: string;
+  who: Who;
+  /** a verse's halves or prose's sentences, as the site writes them */
+  lines: string[];
+  verse: boolean;
+  /** where the saying is written, as the site holds it (English) */
+  cite: string;
+};
+
+/** «چهره‌ها»: one person as an editorial poster of type (no face, no picture). Beats: start, life (a hold), def, f1…, q1…, end. */
+export type FigureProps = SiteBase & {
+  format: "figure";
+  kicker: string;
+  who: Who;
+  def: string;
+  /** their years; before the common era negative */
+  span: { from: number; to: number; about: boolean };
+  ruler: { from: number; to: number; end: string };
+  eras: { id: string; name: string; from: number; to: number }[];
+  /** label "" for a sentence of the profile */
+  facts: { label: string; value: string }[];
+  quote: { lines: string[]; verse: boolean; cite: string } | null;
+};
+
+/** «حدس بزن»: a question with three options and a silent countdown. Beats: start, o1–o3, count (a hold), answer, why, end. */
+export type QuizProps = SiteBase & {
+  format: "quiz";
+  kind: "capital" | "country" | "treaty" | "flag";
+  kicker: string;
+  question: string;
+  options: string[];
+  answer: number;
+  count: number;
+  reveal: string;
+  /** the site's own drawing of a flag (https://bidar.ahura.cloud/flags/….svg) */
+  flag: { svg: string; name: string } | null;
+  cta: string;
+};
+
+export type ReelProps = BordersProps | MythProps | WordProps | BookProps | QuoteProps | FigureProps | QuizProps;
 
 /** the site sends `kicker` (the series' name) beside `series` («بیدار · حقیقت، با سند»); the tile shows the kicker when there is one */
 export type CoverProps = { format: string; series: string; title: string; mark?: string; kicker?: string };

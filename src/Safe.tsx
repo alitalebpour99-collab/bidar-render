@@ -19,9 +19,10 @@ export const Stage: React.FC<{ ground: React.ReactNode; children: React.ReactNod
     {ground}
     <div style={{ position: "absolute", left: STAGE_X + offset[0], top: STAGE_Y + offset[1], width: W, height: H, transform: `scale(${STAGE_K})`, transformOrigin: "0 0" }}>{children}</div>
     {music ? <Audio src={staticFile(music)} /> : null}
-    {tl.voice.map((v) => (
-      <Sequence key={v.file} from={v.from} layout="none">
-        <Audio src={staticFile(v.file)} />
+    {tl.voice.map((v, i) => (
+      // a take cut at a hold plays in pieces: each from its place in the file, for its length
+      <Sequence key={`${v.file}-${i}`} from={v.from} durationInFrames={v.frames ?? Infinity} layout="none">
+        <Audio src={staticFile(v.file)} {...(v.trim ? { trimBefore: v.trim } : {})} />
       </Sequence>
     ))}
   </AbsoluteFill>
