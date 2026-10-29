@@ -9,6 +9,9 @@
 // toward its series' length; the alignment is moved with it, so the captions
 // and the cuts still land on their words. Needs ffmpeg (the workflows install
 // it); without it the take is used as it came.
+//
+// A book Reel («از کتاب») has no narrator: bookVoice (below) cuts the book's own
+// recording instead, and changes nothing of its pace.
 import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
@@ -104,6 +107,103 @@ export function voiceFiles(lines, publicDir, name, { fps = 30, baseDir = ".", fo
     }
     return { file, cue: line.cue ?? "all", frames: Math.ceil(seconds * fps), text: line.text, alignment };
   });
+}
+
+// ---------- the book («از کتاب») ----------
+// A book Reel has no narrator: its sound is the book's own recording of the
+// section (Shahram's, made for the book), which the site names in the props
+// (`audioUrl`, public on the site) with the cut (`from`, `to`, seconds). It is
+// fetched and cut here, with no change of pace and no pause taken out (only
+// 30 ms in and 180 ms out, so the cut does not click), and the karaoke's timing
+// is built from the passage's own words, each with its start after `from`
+// (docs/contract.md). The line is the beat «read»: src/timeline.ts plays it
+// after the silent hook and lights each word from its start to the next one's.
+
+/** The hosts the book's recording may come from: the site, and the address the worker was given. */
+const BOOK_HOSTS = () => new Set(["bidar.ahura.cloud", ...[process.env.BIDAR_URL].filter(Boolean).map((u) => { try { return new URL(u).hostname; } catch { return ""; } })]);
+const MAX_BOOK_MB = 25;
+
+/** Seconds of an audio file (ffprobe), or 0. */
+function lengthOf(file) {
+  const r = spawnSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", file], { encoding: "utf8" });
+  const s = Number(String(r.stdout ?? "").trim());
+  return Number.isFinite(s) ? s : 0;
+}
+
+/**
+ * The character timing of the passage, as ElevenLabs' alignment is shaped:
+ * every letter of a word from its start to the next word's start (the last
+ * word to the end of the cut), the space after it at that moment.
+ */
+export function bookAlignment(words, seconds) {
+  const characters = [];
+  const s = [];
+  const e = [];
+  words.forEach((w, k) => {
+    const from = Math.max(0, Math.min(seconds, Number(w.t) || 0));
+    const next = k + 1 < words.length ? Math.max(from, Math.min(seconds, Number(words[k + 1].t) || from)) : seconds;
+    for (const ch of String(w.w).split("")) {
+      characters.push(ch);
+      s.push(from);
+      e.push(next);
+    }
+    if (k + 1 < words.length) {
+      characters.push(" ");
+      s.push(next);
+      e.push(next);
+    }
+  });
+  return { characters, character_start_times_seconds: s, character_end_times_seconds: e };
+}
+
+/**
+ * Fetches the book's recording named in a book Reel's props, cuts the passage
+ * into the public folder (as the Reel's voice file, so dropVoice takes it away)
+ * and returns it as the composition takes its lines in.
+ */
+export async function bookVoice(props, publicDir, name, { fps = 30 } = {}) {
+  let url;
+  try {
+    url = new URL(String(props?.audioUrl ?? ""));
+  } catch {
+    throw new Error("the book Reel names no recording");
+  }
+  if (url.protocol !== "https:" || !BOOK_HOSTS().has(url.hostname) || !/^\/book\/audio\/[a-z]{2}\/[a-z0-9-]+\.mp3$/i.test(url.pathname)) throw new Error("the book's recording is not one of the site's");
+  if (!hasFfmpeg()) throw new Error("ffmpeg is needed to cut the book's recording");
+  const words = Array.isArray(props.words) ? props.words : [];
+  if (!words.length) throw new Error("the book Reel has no words");
+  let res;
+  for (let n = 1; n <= 3; n += 1) {
+    try {
+      res = await fetch(url, { signal: AbortSignal.timeout(60_000) });
+      if (res.ok || (res.status >= 400 && res.status < 500)) break;
+    } catch {
+      res = null;
+    }
+    await new Promise((r) => setTimeout(r, 3000 * n));
+  }
+  if (!res?.ok) throw new Error(`the book's recording could not be fetched (${res ? `HTTP ${res.status}` : "no answer"})`);
+  const bytes = Buffer.from(await res.arrayBuffer());
+  if (bytes.length < 1000 || bytes.length > MAX_BOOK_MB * 1e6) throw new Error("the book's recording is not a sound file of the right size");
+  const src = path.join(publicDir, `voice-${name}-src.mp3`);
+  const file = `voice-${name}-0.mp3`;
+  const out = path.join(publicDir, file);
+  fs.writeFileSync(src, bytes);
+  try {
+    const length = lengthOf(src);
+    const from = Math.max(0, Number(props.from) || 0);
+    // `to` may pass the end of the file (a passage that ends its section): the file's end is the cut
+    const to = Math.min(Number(props.to) || 0, length || Number(props.to) || 0);
+    const seconds = Math.round((to - from) * 1000) / 1000;
+    if (!(seconds > 5)) throw new Error("the book's cut is too short");
+    const fadeOut = Math.max(0, seconds - 0.18).toFixed(3);
+    execFileSync("ffmpeg", ["-v", "error", "-y", "-i", src, "-ss", from.toFixed(3), "-t", seconds.toFixed(3), "-af", `afade=t=in:st=0:d=0.03,afade=t=out:st=${fadeOut}:d=0.18`, "-c:a", "libmp3lame", "-b:a", "128k", "-ar", "44100", out]);
+    console.log(`book: ${url.pathname.split("/").pop()} cut ${from.toFixed(2)}–${to.toFixed(2)} s (${seconds.toFixed(1)} s of ${length.toFixed(1)} s), ${words.length} words`);
+    const text = words.map((w) => String(w.w)).join(" ");
+    return [{ file, cue: "read", frames: Math.ceil(seconds * fps), text, alignment: bookAlignment(words, seconds) }];
+  } finally {
+    fs.rmSync(src, { force: true });
+  }
 }
 
 /** The narrator's files of one Reel, taken away after its render. */

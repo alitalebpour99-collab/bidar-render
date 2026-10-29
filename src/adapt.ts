@@ -1,7 +1,7 @@
 // The site's props (bidar, lib/social/props.ts, docs/social.md) as the
 // compositions read them (src/props.ts). The site sends its own shape: borders
-// as `frames`, a myth as `claim` and `reality[]`, a word as `chain[]`, and a
-// hook as {text, figure}. This turns that into beats (what is said, or shown as
+// as `frames`, a myth as `claim` and `reality[]`, a word as `chain[]`, a passage
+// of the book as `words[]` with its recording's cut, and a hook as {text, figure}. This turns that into beats (what is said, or shown as
 // captions when the Reel has no narrator) and the stops each layout draws. It
 // adds no fact: every text comes from the props; only the map places of a
 // word's languages and the scripts are the renderer's (LANG_PLACE below).
@@ -9,7 +9,7 @@
 // as do the site's own `beats` when it sends them (docs/contract.md).
 import { ERAS } from "./geo";
 import { faDigits } from "./kit";
-import type { Beat, BordersProps, BordersStop, MythProps, ReelProps, WordProps, WordStop } from "./props";
+import type { Beat, BookProps, BookWord, BordersProps, BordersStop, MythProps, ReelProps, WordProps, WordStop } from "./props";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Site = Record<string, any>;
@@ -124,9 +124,43 @@ function word(p: Site): WordProps {
   } as WordProps;
 }
 
+/**
+ * «از کتاب»: the passage as the site sends it (lib/social/props.ts BookProps).
+ * Beats: the hook (silent), the passage's words joined by spaces (played by the
+ * book's recording, voice.mjs bookVoice), the close (silent), exactly as the
+ * site's lib/social/beats.ts makes them.
+ */
+function book(p: Site): BookProps {
+  const words: BookWord[] = (p.words ?? []).map((w: Site) => ({ w: String(w.w), t: Number(w.t) || 0, ...(w.p ? { p: 1 as const } : {}) }));
+  const made: Beat[] = [
+    { id: "start", say: end(hookText(p, p.chapter?.title ?? "")), min: 3 },
+    { id: "read", say: words.map((w) => w.w).join(" ") },
+    { id: "end", say: "", min: 1.5 },
+  ];
+  return {
+    format: "book",
+    series: String(p.series ?? ""),
+    episode: 0,
+    hook: hookText(p, String(p.chapter?.title ?? "")),
+    hookFigure: String(p.hook?.figure ?? p.chapter?.name ?? ""),
+    beats: beatsOr(p, made),
+    source: sourceText(p.source),
+    foot: p.foot,
+    book: String(p.book ?? "روایتِ ایران"),
+    chapter: { slug: String(p.chapter?.slug ?? ""), num: String(p.chapter?.num ?? ""), name: String(p.chapter?.name ?? ""), title: String(p.chapter?.title ?? ""), heading: p.chapter?.heading ? String(p.chapter.heading) : null },
+    audioUrl: String(p.audioUrl ?? ""),
+    from: Number(p.from) || 0,
+    to: Number(p.to) || 0,
+    words,
+    closeLine: String(p.close?.line ?? p.closeLine ?? "ادامه‌اش در کتاب"),
+    closeUrl: String(p.close?.url ?? p.closeUrl ?? "bidar.ahura.cloud/book"),
+  };
+}
+
 /** Props in either shape → the compositions' own. */
 export function adapt<P extends ReelProps>(p: P | Site): P {
   const s = p as Site;
+  if (s.format === "book" && Array.isArray(s.words)) return { ...book(s), music: s.music, voiceIn: s.voiceIn } as unknown as P;
   if (Array.isArray(s.beats) && s.beats.length && (s.stops || s.evidence)) return { ...s, source: sourceText(s.source) } as P;
   if (s.format === "borders" && Array.isArray(s.frames)) return { ...borders(s), music: s.music, voiceIn: s.voiceIn } as unknown as P;
   if (s.format === "myth" && Array.isArray(s.reality)) return { ...myth(s), music: s.music, voiceIn: s.voiceIn } as unknown as P;

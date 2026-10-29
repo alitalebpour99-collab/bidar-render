@@ -11,8 +11,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { renderMedia, renderStill, selectComposition } from "@remotion/renderer";
 import { finish } from "./finish.mjs";
-import { score } from "./music.mjs";
-import { dropVoice, duckOf, voiceFiles } from "./voice.mjs";
+import { hasBed, score } from "./music.mjs";
+import { bookVoice, dropVoice, duckOf, voiceFiles } from "./voice.mjs";
 
 const args = process.argv.slice(2);
 const flag = (name) => (args.includes(name) ? args[args.indexOf(name) + 1] : null);
@@ -34,7 +34,8 @@ const timeoutInMilliseconds = 120_000;
 const t0 = Date.now();
 const voiceFile = flag("--voice");
 const lines = voiceFile ? [JSON.parse(fs.readFileSync(voiceFile, "utf8"))].flat() : [];
-const voiceIn = voiceFiles(lines, publicDir, name, { baseDir: voiceFile ? path.dirname(voiceFile) : ".", format: id });
+// a book Reel plays the book's own recording, cut from the file its props name (voice.mjs bookVoice)
+const voiceIn = id === "book" ? await bookVoice(props, publicDir, name) : voiceFiles(lines, publicDir, name, { baseDir: voiceFile ? path.dirname(voiceFile) : ".", format: id });
 const first = await selectComposition({ serveUrl, id, inputProps: { ...props, voiceIn }, timeoutInMilliseconds });
 const seconds = first.durationInFrames / first.fps;
 const tl = first.props.tl;
@@ -56,15 +57,15 @@ if (stillArg) {
     console.log("wrote", output);
   }
 } else {
-  const music = `music-${name}.wav`;
-  fs.writeFileSync(path.join(publicDir, music), score({ id, seconds, duck: duckOf(first) }));
-  const inputProps = { ...props, voiceIn, music };
+  const music = hasBed(id) ? `music-${name}.wav` : null;
+  if (music) fs.writeFileSync(path.join(publicDir, music), score({ id, seconds, duck: duckOf(first) }));
+  const inputProps = { ...props, voiceIn, ...(music ? { music } : {}) };
   const composition = await selectComposition({ serveUrl, id, inputProps, timeoutInMilliseconds });
   const outputLocation = `out/${name}.mp4`;
   let lastStep = -1;
   // a fixed bitrate keeps a 30–40 s Reel near 8–12 MB, what Instagram takes without a second squeeze
   await renderMedia({ composition, serveUrl, codec: "h264", videoBitrate: process.env.RENDER_VBR ?? "2300k", pixelFormat: "yuv420p", audioCodec: "aac", audioBitrate: "160k", inputProps, outputLocation, concurrency: Number(process.env.RENDER_CONCURRENCY ?? 3), timeoutInMilliseconds, chromiumOptions: { gl: process.env.RENDER_GL || undefined }, onProgress: ({ renderedFrames, encodedFrames, stitchStage }) => { const step = Math.floor((10 * renderedFrames) / composition.durationInFrames); if (step !== lastStep) { lastStep = step; console.log(`  ${renderedFrames}/${composition.durationInFrames} frames drawn, ${encodedFrames} encoded, ${stitchStage}, ${Math.round((Date.now() - t0) / 1000)} s`); } } });
-  fs.rmSync(path.join(publicDir, music), { force: true });
+  if (music) fs.rmSync(path.join(publicDir, music), { force: true });
   console.log(finish(outputLocation, seconds));
   console.log("wrote", outputLocation, composition.durationInFrames, "frames,", seconds.toFixed(1), "s,", (fs.statSync(outputLocation).size / 1e6).toFixed(1), "MB, in", Math.round((Date.now() - t0) / 1000), "s");
 }

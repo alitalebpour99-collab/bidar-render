@@ -17,8 +17,8 @@ import path from "node:path";
 import { bundle } from "@remotion/bundler";
 import { makeCancelSignal, renderMedia, renderStill, selectComposition } from "@remotion/renderer";
 import { finish } from "./finish.mjs";
-import { dropVoice, duckOf, voiceFiles } from "./voice.mjs";
-import { score } from "./music.mjs";
+import { bookVoice, dropVoice, duckOf, voiceFiles } from "./voice.mjs";
+import { hasBed, score } from "./music.mjs";
 
 const SITE = (process.env.BIDAR_URL ?? "https://bidar.ahura.cloud").replace(/\/+$/, "");
 const SECRET = process.env.BIDAR_RENDER_SECRET ?? "";
@@ -80,7 +80,7 @@ async function render(job) {
   const publicDir = path.join(serve, "public");
   const video = path.resolve("out", `${job.name}.mp4`);
   const cover = path.resolve("out", `${job.name}.jpg`);
-  const music = `music-${job.name}.wav`;
+  const music = hasBed(job.format) ? `music-${job.name}.wav` : null;
   const chromiumOptions = { gl: GL };
   const timeoutInMilliseconds = 120_000;
   const { cancelSignal, cancel } = makeCancelSignal();
@@ -99,12 +99,13 @@ async function render(job) {
     // the tile for the profile grid
     const tile = await selectComposition({ serveUrl: serve, id: "cover", inputProps: job.cover, chromiumOptions, timeoutInMilliseconds });
     await renderStill({ composition: tile, serveUrl: serve, output: cover, inputProps: job.cover, imageFormat: "jpeg", jpegQuality: 92, chromiumOptions, timeoutInMilliseconds });
-    // the narrator first: its alignment sets every beat and the Reel's length (src/timeline.ts)
-    const voiceIn = voiceFiles(job.voice, publicDir, job.name, { format: job.format });
+    // the narrator first: its alignment sets every beat and the Reel's length (src/timeline.ts);
+    // a book Reel has none: the book's own recording is cut instead (voice.mjs bookVoice)
+    const voiceIn = job.format === "book" ? await bookVoice(job.props, publicDir, job.name) : voiceFiles(job.voice, publicDir, job.name, { format: job.format });
     const first = await selectComposition({ serveUrl: serve, id: job.format, inputProps: { ...job.props, voiceIn }, chromiumOptions, timeoutInMilliseconds });
     const seconds = first.durationInFrames / first.fps;
-    fs.writeFileSync(path.join(publicDir, music), score({ id: job.format, seconds, duck: duckOf(first) }));
-    const inputProps = { ...job.props, voiceIn, music };
+    if (music) fs.writeFileSync(path.join(publicDir, music), score({ id: job.format, seconds, duck: duckOf(first) }));
+    const inputProps = { ...job.props, voiceIn, ...(music ? { music } : {}) };
     const composition = await selectComposition({ serveUrl: serve, id: job.format, inputProps, chromiumOptions, timeoutInMilliseconds });
     await renderMedia({ composition, serveUrl: serve, codec: "h264", videoBitrate: process.env.RENDER_VBR ?? "2300k", pixelFormat: "yuv420p", audioCodec: "aac", audioBitrate: "160k", inputProps, outputLocation: video, concurrency: CONCURRENCY, chromiumOptions, cancelSignal, timeoutInMilliseconds });
     console.log(`Reel ${job.id}: ${finish(video, seconds)}`);
@@ -125,7 +126,7 @@ async function render(job) {
     await call(`?id=${job.id}&failed=1`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ error: reason }) }).catch(() => undefined);
   } finally {
     clearInterval(watch);
-    for (const file of [video, cover, path.join(publicDir, music)]) fs.rmSync(file, { force: true });
+    for (const file of [video, cover, ...(music ? [path.join(publicDir, music)] : [])]) fs.rmSync(file, { force: true });
     dropVoice(publicDir, job.name);
   }
 }

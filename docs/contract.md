@@ -72,11 +72,11 @@ can (Divan keeps the last `can` it saw).
 ```ts
 type RenderJob = {
   id: number;            // the post's row id
-  format: string;        // the composition: "borders" | "myth" | "word"
+  format: string;        // the composition: "borders" | "myth" | "word" | "book"
   name: string;          // a file-safe name, e.g. "reel-7"
   props: object;         // the composition's props (below), built by the site from its own data
   cover: CoverProps;     // the still tile for the profile grid
-  voice?: VoiceLine[] | null; // the narrator; null or absent = a silent Reel (still made)
+  voice?: VoiceLine[] | null; // the narrator; null or absent = a silent Reel (still made); always null for "book"
 };
 
 type VoiceLine = {
@@ -116,6 +116,36 @@ Voice settings Bidar uses for the narrated book and these Reels: model
 `output_format=mp3_44100_128`. Diacritics (ـَ ـِ ـُ) may be put into `say` where
 the voice misreads a name (سِند, اَکَدی, بابِل …); the captions drop them.
 `scripts/narrate.mjs` in this repository is the reference call.
+
+### A book Reel: the book's own recording, cut here
+
+A job of `format: "book"` («از کتاب») is a passage of about forty seconds of
+the site's narrated book «روایتِ ایران». It has **no narrator** (`voice: null`):
+its sound is the book's own recording of the section, which the site already
+serves publicly, and the renderer cuts it (the site's server has no ffmpeg).
+
+- `props.audioUrl` names the recording:
+  `https://bidar.ahura.cloud/book/audio/fa/<chapter>-<section>.mp3` (44.1 kHz
+  mono, 64 kbit/s). Only an `https` file under `/book/audio/` of the site (or
+  of `BIDAR_URL`'s host) is fetched.
+- `props.from` and `props.to` are the cut, in seconds of that file. `to` may
+  pass the file's end (a passage that ends its section): the file's end is
+  then the cut. The site has already put both in pauses (a paragraph's start,
+  a sentence's end).
+- `voice.mjs` `bookVoice` fetches the file, cuts it with ffmpeg (`-ss from -t
+  to−from`, a 30 ms fade in and a 180 ms fade out, nothing else: **no change
+  of pace and no pause taken out**, unlike a narrator's take) and writes it as
+  the Reel's one voice line, cue `read`.
+- **The captions follow the recorded words**: `props.words` holds every word
+  of the passage as the book writes it with its start in seconds after `from`
+  (from the site's `public/book/audio/fa/words.json`, the book reader's own
+  timing). `bookVoice` turns them into an alignment of ElevenLabs' shape
+  (every letter of a word from its start to the next word's start), so
+  `src/timeline.ts` times the karaoke as it times a narrator.
+- The beats are `start` (the hook, silent, at least 3 s), `read` (the
+  passage's words joined by spaces) and `end` (the close, silent).
+- No bed (`music.mjs` `hasBed`): the book is read with nothing under it; only
+  a soft paper sound at each turn of the leaf.
 
 ## `POST /api/social/work?id=<id>&file=video`
 
@@ -207,7 +237,24 @@ type WordProps = Base & {
   cta: string;                      // «برای کسی بفرست که …»
 };
 
-type CoverProps = { format: string; series: string; title: string; mark?: string };
+// «از کتاب»: a passage of the narrated book (no narrator; see above)
+type BookProps = {
+  format: "book";
+  series: string;
+  hook: { text: string; figure: string }; // the chapter's teaser, the section's heading, or a phrase of the passage in «»; «فصلِ سوم»
+  source: string;                   // «منبع: از کتابِ روایتِ ایران، فصلِ سوم («…»)»
+  foot: string;
+  book: string;                     // «روایتِ ایران»
+  chapter: { slug: string; num: string; name: string; title: string; heading: string | null };
+  audioUrl: string;                 // the section's recording on the site
+  from: number;                     // the cut, seconds of that file
+  to: number;
+  words: { w: string; t: number; p?: 1 }[]; // the passage, timed from `from`; p on a new paragraph's first word
+  close: { line: string; url: string };     // «ادامه‌اش در کتاب», «bidar.ahura.cloud/book»
+  beats: Beat[];                    // start, read, end
+};
+
+type CoverProps = { format: string; series: string; title: string; mark?: string; kicker?: string };
 ```
 
 The confidence wording and colours of `MythProps.verdict` are Bidar's own

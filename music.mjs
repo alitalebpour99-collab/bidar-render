@@ -125,6 +125,12 @@ function room(channel, spread) {
   return allpass(allpass(wet, 556 + spread), 441 + spread);
 }
 
+/**
+ * Whether a Reel gets a bed at all. The book («از کتاب») gets none: it is the
+ * book's own reading, and the owner is strict about music under a voice.
+ */
+export const hasBed = (id) => id !== "book";
+
 export function score({ id, seconds, duck = [] }) {
   const mood = MOODS[id] ?? MOODS.borders;
   const { root, bpm } = mood;

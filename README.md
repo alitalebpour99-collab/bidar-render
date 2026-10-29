@@ -14,6 +14,7 @@ renamed for Bidar.
 | `src/Borders.tsx` | «مرزهای ایران، دوره به دوره»: Bidar's period extents on a lapis sea, today's border drawn in gold |
 | `src/Myth.tsx` | «باور یا سند؟»: a claim, three pieces of evidence, Bidar's confidence stamp, on parchment |
 | `src/Word.tsx` | «سفر یک واژه»: a word travelling over a night-teal map, in each language's own script |
+| `src/Book.tsx` | «از کتاب»: a passage of the narrated book «روایتِ ایران» on a parchment leaf, its words lit as the book's own recording reads them, the leaf turning on its spine, the closed lapis cover at the end |
 | `src/Cover.tsx` | the still tile for the profile grid, in each series' look |
 | `src/timeline.ts` | every beat's start and the burned-in captions, from the narrator's character alignment |
 | `src/Safe.tsx` | the safe stage (Instagram's 4:5 feed crop, the viewers' buttons) and the captions |
@@ -21,7 +22,7 @@ renamed for Bidar.
 | `music.mjs`, `sfx.mjs` | the bed and the effects, synthesized (no sample, no licence) |
 | `worker.mjs` | asks the site for work, renders, hands the files back |
 | `scripts/narrate.mjs` | narrates a sample with ElevenLabs (eleven_v3, voice Shahram), as the site does |
-| `samples/` | one episode of each series: props, narration (MP3 + alignment), tile; `samples/site/` the same kinds in the site's own shape (bidar `lib/social/props.ts`), silent, for `src/adapt.ts` |
+| `samples/` | one episode of each series: props, narration (MP3 + alignment), tile; `samples/site/` the same kinds in the site's own shape (bidar `lib/social/props.ts`), silent, for `src/adapt.ts`; `book-1` (chapter 3) and `book-2` (chapter 8) are the book's, made by the site's own code, with no narration file: their sound is fetched from the site |
 
 ## Where it runs
 
@@ -45,7 +46,8 @@ Chrome drawing for minutes.
 - The hook is on screen from the first frame and the picture already moves.
 - One idea; a cut or a change of motion about every two seconds.
 - Captions burned in, word by word with the narrator; the source line on
-  screen in the last seconds.
+  screen in the last seconds. The book («از کتاب») has no narrator and no
+  bed: its page is its caption, lit word by word with the book's recording.
 - Designed on the full frame, drawn on the safe stage (`STAGE_K`): nothing to
   read outside y 290–1590 of the screen, nothing in the lower right rail.
 

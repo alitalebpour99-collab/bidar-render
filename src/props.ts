@@ -26,7 +26,7 @@ export type Timeline = {
 };
 
 export type Base = {
-  format: "borders" | "myth" | "word";
+  format: "borders" | "myth" | "word" | "book";
   /** the series' name, small beside the mark */
   series: string;
   episode: number;
@@ -96,7 +96,31 @@ export type WordProps = Base & {
   cta: string;
 };
 
-export type ReelProps = BordersProps | MythProps | WordProps;
+/** A word of the book's passage: as the book writes it, its start in seconds after the cut's `from`, `p` on a new paragraph's first word. */
+export type BookWord = { w: string; t: number; p?: 1 };
+/**
+ * «از کتاب»: a passage of the narrated book «روایتِ ایران», read by the book's
+ * own recording (no narrator). voice.mjs `bookVoice` fetches `audioUrl`, cuts it
+ * between `from` and `to` and times the words for the karaoke; the beats are
+ * `start` (the hook, silent), `read` (the passage) and `end` (the close, silent).
+ */
+export type BookProps = Omit<Base, "close"> & {
+  format: "book";
+  /** «فصلِ سوم», shown with the hook */
+  hookFigure?: string;
+  /** «روایتِ ایران» */
+  book: string;
+  chapter: { slug: string; num: string; name: string; title: string; heading: string | null };
+  audioUrl: string;
+  from: number;
+  to: number;
+  words: BookWord[];
+  /** the close: «ادامه‌اش در کتاب» and the book's address */
+  closeLine: string;
+  closeUrl: string;
+};
+
+export type ReelProps = BordersProps | MythProps | WordProps | BookProps;
 
 /** the site sends `kicker` (the series' name) beside `series` («بیدار · حقیقت، با سند»); the tile shows the kicker when there is one */
 export type CoverProps = { format: string; series: string; title: string; mark?: string; kicker?: string };
