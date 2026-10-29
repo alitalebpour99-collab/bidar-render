@@ -228,8 +228,9 @@ export const City: React.FC<CityProps> = (p) => {
           {p.periods.map((x, i) => {
             const a0 = -90 - i * step - 0.8;
             const a1 = -90 - (i + 1) * step + 0.8;
-            const at = x.held ? beatAt(tl, x.id).from + 6 : Infinity;
-            const u = interpolate(frame, [at, at + 12], [0, 1], { ...clamped, easing: ease });
+            // a period that never held the city stays dark (no lighting is timed for it)
+            const at = x.held ? beatAt(tl, x.id).from + 6 : 0;
+            const u = x.held ? interpolate(frame, [at, at + 12], [0, 1], { ...clamped, easing: ease }) : 0;
             const fill = x.capital ? BRASS.gold : "url(#litSeg)";
             return (
               <g key={x.id}>
