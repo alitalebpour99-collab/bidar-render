@@ -173,16 +173,20 @@ export async function bookVoice(props, publicDir, name, { fps = 30 } = {}) {
   const words = Array.isArray(props.words) ? props.words : [];
   if (!words.length) throw new Error("the book Reel has no words");
   let res;
+  let why = "";
   for (let n = 1; n <= 3; n += 1) {
     try {
-      res = await fetch(url, { signal: AbortSignal.timeout(60_000) });
+      res = await fetch(url, { headers: { "user-agent": "bidar-render (book)" }, signal: AbortSignal.timeout(60_000) });
       if (res.ok || (res.status >= 400 && res.status < 500)) break;
-    } catch {
+    } catch (e) {
       res = null;
+      // what went wrong on the way (never the content): the network error's code
+      why = String(e?.cause?.code ?? e?.cause?.name ?? e?.name ?? "error");
+      console.log(`book: fetching the recording, try ${n}: ${why}`);
     }
     await new Promise((r) => setTimeout(r, 3000 * n));
   }
-  if (!res?.ok) throw new Error(`the book's recording could not be fetched (${res ? `HTTP ${res.status}` : "no answer"})`);
+  if (!res?.ok) throw new Error(`the book's recording could not be fetched (${res ? `HTTP ${res.status}` : `no answer: ${why}`})`);
   const bytes = Buffer.from(await res.arrayBuffer());
   if (bytes.length < 1000 || bytes.length > MAX_BOOK_MB * 1e6) throw new Error("the book's recording is not a sound file of the right size");
   const src = path.join(publicDir, `voice-${name}-src.mp3`);
