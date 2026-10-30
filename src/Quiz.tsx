@@ -170,13 +170,13 @@ export const Quiz: React.FC<QuizProps> = (p) => {
 
       {/* the countdown ring: five silent seconds */}
       {frame >= count.from - 6 && frame < answer.from + 8 ? (
-        <div style={{ position: "absolute", top: ringY - 120, left: 0, right: 0, display: "flex", justifyContent: "center", opacity: Math.min(fade(frame, count.from - 6, 6), leave(frame, answer.from + 8, 8)) }}>
-          <div style={{ position: "relative", width: 240, height: 240, transform: `scale(${1 + 0.08 * pulse})` }}>
-            <svg width={240} height={240} viewBox="0 0 240 240" style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}>
-              <circle cx={120} cy={120} r={100} fill={SHOW.panel} stroke="rgba(244,246,255,.12)" strokeWidth={18} />
-              <circle cx={120} cy={120} r={100} fill="none" stroke={ringColor} strokeWidth={18} strokeLinecap="round" pathLength={1} strokeDasharray={`${ringP} 1`} />
+        <div style={{ position: "absolute", top: ringY - 140, left: 0, right: 0, display: "flex", justifyContent: "center", opacity: Math.min(fade(frame, count.from - 6, 6), leave(frame, answer.from + 8, 8)) }}>
+          <div style={{ position: "relative", width: 280, height: 280, transform: `scale(${1 + 0.08 * pulse})` }}>
+            <svg width={280} height={280} viewBox="0 0 280 280" style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}>
+              <circle cx={140} cy={140} r={118} fill={SHOW.panel} stroke="rgba(244,246,255,.12)" strokeWidth={22} />
+              <circle cx={140} cy={140} r={118} fill="none" stroke={ringColor} strokeWidth={22} strokeLinecap="round" pathLength={1} strokeDasharray={`${ringP} 1`} />
             </svg>
-            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: VAZIR, fontWeight: 900, fontSize: 120, color: ringColor, lineHeight: 1 }}>{faDigits(left)}</div>
+            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: VAZIR, fontWeight: 900, fontSize: 140, color: ringColor, lineHeight: 1 }}>{faDigits(left)}</div>
           </div>
         </div>
       ) : null}

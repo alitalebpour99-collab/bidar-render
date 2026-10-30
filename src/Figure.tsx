@@ -12,7 +12,7 @@ import { NASKH } from "./Book";
 import { DESIGN_BOTTOM, DESIGN_TOP, FPS, H, Mark, RAIL, SIDE, Sfx, VAZIR, W, clamped, ease, fade, faDigits, grow, leave, rise, slam } from "./kit";
 import type { FigureProps } from "./props";
 import { Stage, beatAt } from "./Safe";
-import { SourceBlock } from "./cite";
+import { SourceBlock, SourceText } from "./cite";
 
 export const SWISS = { paper: "#ECE8DF", paper2: "#E2DDD2", ink: "#131313", ink2: "#3B3A37", grey: "#8B877E", faint: "rgba(19,19,19,.08)" };
 
@@ -232,7 +232,9 @@ export const Figure: React.FC<FigureProps> = (p) => {
                 {l}
               </Read>
             ))}
-            <div style={{ fontFamily: VAZIR, fontWeight: 500, fontSize: 26, color: SWISS.grey, direction: "ltr", textAlign: "right", opacity: fade(frame, q.from + 20, 10) }}>{p.quote.cite}</div>
+            <div style={{ fontFamily: VAZIR, fontWeight: 500, fontSize: 26, lineHeight: 1.5, color: SWISS.grey, direction: "rtl", textAlign: "right", opacity: fade(frame, q.from + 20, 10) }}>
+              <SourceText text={p.quote.cite} />
+            </div>
           </div>
         </Card>
       ) : null}

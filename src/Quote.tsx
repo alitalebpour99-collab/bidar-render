@@ -304,7 +304,7 @@ export const Quote: React.FC<QuoteProps> = (p) => {
       </div>
 
       {/* the saying, written as it is read */}
-      <div style={{ position: "absolute", left: F.x + INSET + 46, right: F.x + INSET + 46, top: 450, bottom: H - 1170, display: "flex", flexDirection: "column", justifyContent: "center", direction: "rtl", opacity: fade(frame, first.from - 14, 8) }}>
+      <div style={{ position: "absolute", left: F.x + INSET + 46, right: F.x + INSET + 46, top: 450, bottom: H - 1240, display: "flex", flexDirection: "column", justifyContent: "center", direction: "rtl", opacity: fade(frame, first.from - 14, 8) }}>
         {placed.map((ws, k) => (
           <div
             key={k}
