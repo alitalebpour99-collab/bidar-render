@@ -71,3 +71,12 @@ jobs:
           name: samples-${{ inputs.mode }}
           path: out/
           retention-days: 14
+      - name: Frame strips of the stills (small JPEGs, an artifact of their own)
+        if: inputs.mode == 'stills'
+        run: node scripts/sheets.mjs out sheets
+      - uses: actions/upload-artifact@v4
+        if: inputs.mode == 'stills'
+        with:
+          name: sheets
+          path: sheets/
+          retention-days: 14
