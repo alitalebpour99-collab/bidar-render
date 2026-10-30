@@ -52,7 +52,8 @@ const asImage = (f: FlagFile) =>
 const CX = 540;
 const MAX_W = 860;
 const MAX_H = 520;
-const COLUMN = { top: 470, bottom: 1300 };
+/** (it ends above where a caption of two lines begins) */
+const COLUMN = { top: 466, bottom: 1250 };
 /** below the flag: the swatches, then the emblem's line */
 const SWATCH_GAP = 66;
 const LEGEND_GAP = 130;

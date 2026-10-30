@@ -7,6 +7,9 @@
 // word's languages and the scripts are the renderer's (LANG_PLACE below).
 // Props that already carry `beats` (samples/*.json) pass through unchanged,
 // as do the site's own `beats` when it sends them (docs/contract.md).
+// The flag, the treaty and the city keep the site's shape as it comes; only
+// their beats are made here when the site sends none (flagBeats, treatyBeats,
+// cityBeats: bidar lib/social/beats.ts line by line).
 import { ERAS } from "./geo";
 import { faDigits } from "./kit";
 import type { Beat, BookProps, BookWord, BordersProps, BordersStop, MythProps, ReelProps, WordProps, WordStop } from "./props";

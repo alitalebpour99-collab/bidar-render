@@ -69,7 +69,8 @@ function regionOf(lon0: number, lat0: number, lon1: number, lat1: number): any[]
 }
 
 /** The card the map is drawn in, on the design frame. */
-const CARD = { x: 56, y: 372, w: 968, h: 924 };
+/** (it ends above where a caption of two lines begins) */
+const CARD = { x: 56, y: 372, w: 968, h: 864 };
 const INSET = 22;
 
 /** The view of a Reel: the places, with room around them and a strip of Iran to the south, at least 9° by 7°. */
@@ -100,9 +101,9 @@ type Box = { x: number; y: number; w: number; h: number };
 const overlaps = (a: Box, b: Box, m: number) => a.x < b.x + b.w + m && a.x + a.w + m > b.x && a.y < b.y + b.h + m && a.y + a.h + m > b.y;
 /** Whether the segment p–q crosses box b (a few samples along it are enough at this scale). */
 const crosses = (px: number, py: number, qx: number, qy: number, b: Box) => {
-  for (let i = 1; i < 12; i += 1) {
-    const x = px + ((qx - px) * i) / 12;
-    const y = py + ((qy - py) * i) / 12;
+  for (let i = 1; i < 24; i += 1) {
+    const x = px + ((qx - px) * i) / 24;
+    const y = py + ((qy - py) * i) / 24;
     if (x > b.x - 4 && x < b.x + b.w + 4 && y > b.y - 4 && y < b.y + b.h + 4) return true;
   }
   return false;
@@ -123,10 +124,24 @@ export function placeLabels(pins: { x: number; y: number; texts: string[] }[], s
   const inside = (b: Box) => b.x >= card.x + INSET + 8 && b.y >= card.y + INSET + 8 && b.x + b.w <= card.x + card.w - INSET - 8 && b.y + b.h <= card.y + card.h - INSET - 8;
   const crowd = (i: number) => pins.filter((q, j) => j !== i && Math.hypot(q.x - pins[i].x, q.y - pins[i].y) < 260).length;
   const order = pins.map((_, i) => i).sort((a, b) => crowd(b) - crowd(a) || a - b);
-  for (const i of order) {
+  // the most crowded first, then a few passes in which each label moves to its best spot among all the others
+  const passes = [order, order, order, order, order];
+  let total = Infinity;
+  for (const [pass, list] of passes.entries()) {
+    let sum = 0;
+    for (const i of list) {
+      const { label, cost } = bestSpot(i, out.filter((x, j): x is Label => Boolean(x) && j !== i));
+      out[i] = label;
+      sum += cost;
+    }
+    if (pass > 0 && sum >= total) break;
+    total = sum;
+  }
+  return out as Label[];
+
+  function bestSpot(i: number, placed: Label[]): { label: Label; cost: number } {
     const pin = pins[i];
     const w = Math.max(...pin.texts.map((t) => textW(t, size))) + 30;
-    const placed = out.filter((x): x is Label => Boolean(x));
     let best: Label | null = null;
     let bestCost = Infinity;
     for (const g of [20, 48, 84, 130, 190]) {
@@ -147,8 +162,8 @@ export function placeLabels(pins: { x: number; y: number; texts: string[] }[], s
         let cost = (inside(b) ? 0 : 100) + g / 60;
         for (const o of placed) {
           if (overlaps(b, o, 10)) cost += 40;
-          if (lead && crosses(pin.x, pin.y, ex, ey, o)) cost += 25;
-          if (o.lead && crosses(o.px, o.py, ...nearest(o, o.px, o.py), b)) cost += 25;
+          if (lead && crosses(pin.x, pin.y, ex, ey, o)) cost += 60;
+          if (o.lead && crosses(o.px, o.py, ...nearest(o, o.px, o.py), b)) cost += 60;
         }
         for (const [j, q] of pins.entries()) if (j !== i && q.x > b.x - 20 && q.x < b.x + b.w + 20 && q.y > b.y - 20 && q.y < b.y + b.h + 20) cost += 30;
         if (cost < bestCost) {
@@ -158,9 +173,8 @@ export function placeLabels(pins: { x: number; y: number; texts: string[] }[], s
       }
       if (bestCost < 10) break;
     }
-    out[i] = best;
+    return { label: best!, cost: bestCost };
   }
-  return out as Label[];
 }
 
 // ---------- the pieces ----------
