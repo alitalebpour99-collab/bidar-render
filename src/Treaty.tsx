@@ -272,7 +272,8 @@ export const Treaty: React.FC<TreatyProps> = (p) => {
   const rollUp = interpolate(frame, [body0 - 2, body0 + 14], [1, 0], { ...clamped, easing: ease });
   const open = interpolate(frame, [4, Math.max(30, hook.to - 4)], [0.06, 1], { ...clamped, easing: ease }) * rollUp;
   const scrollO = leave(frame, body0 + 12, 8);
-  const sealAt = Math.max(doc.from + 34, doc.to - 30);
+  // the seal comes once the party is written, so it stays a while before the scroll rolls up
+  const sealAt = Math.max(doc.from + 30, Math.min(doc.from + 40, doc.to - 24));
   const sh = shake(frame, sealAt + 5, 8);
   const mapIn = grow(frame, body0 + 2, 20);
   const pushK = interpolate(frame, [body0, tl.total], [1, 1.03], clamped);

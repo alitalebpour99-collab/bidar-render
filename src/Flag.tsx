@@ -47,11 +47,15 @@ export function flagFile(file: string): FlagFile {
 const asImage = (f: FlagFile) =>
   `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${f.box.join(" ")}" preserveAspectRatio="none">${f.defs}${f.layers.map((l) => l.svg).join("")}</svg>`)}`;
 
-// the drawing on the design frame: its centre, the largest box it may fill
+// the drawing on the design frame: its middle, the largest box it may fill, and the column it
+// shares with the swatches and the emblem's line, between the title and the captions
 const CX = 540;
-const CY = 690;
-const MAX_W = 740;
-const MAX_H = 460;
+const MAX_W = 860;
+const MAX_H = 520;
+const COLUMN = { top: 470, bottom: 1300 };
+/** below the flag: the swatches, then the emblem's line */
+const SWATCH_GAP = 66;
+const LEGEND_GAP = 130;
 
 /** A wedge from the top, clockwise, of `deg` degrees, in the flag's own units: the compass's sweep. */
 function sector(cx: number, cy: number, r: number, deg: number): string {
@@ -167,8 +171,10 @@ const Stamp: React.FC<{ text: string; color: string; at: number; size: number }>
 /** The finished flag on its pole, waving: the site's picture cut in narrow strips, each lifted on a travelling wave and shaded by its slope. */
 const Waving: React.FC<{ src: string; w: number; h: number; from: number }> = ({ src, w, h, from }) => {
   const frame = useCurrentFrame();
-  const n = 56;
+  // strips on whole pixels, each a pixel wider than its share, so no seam of the paper shows between them
+  const n = Math.max(24, Math.round(w / 13));
   const sw = w / n;
+  const edge = (i: number) => Math.round(i * sw);
   const full = h * 0.045;
   const amp = interpolate(frame, [from, from + 24], [0, full], { ...clamped, easing: ease });
   const t = (frame - from) / FPS;
@@ -182,12 +188,14 @@ const Waving: React.FC<{ src: string; w: number; h: number; from: number }> = ({
   return (
     <div style={{ position: "relative", width: w, height: h }}>
       {Array.from({ length: n }, (_, i) => {
-        const a = at(i * sw);
-        const b = at((i + 1) * sw);
-        const m = at((i + 0.5) * sw);
+        const l = edge(i);
+        const r = edge(i + 1);
+        const a = at(l);
+        const b = at(r);
+        const m = at((l + r) / 2);
         return (
-          <div key={i} style={{ position: "absolute", left: i * sw, top: 0, width: sw + 1, height: h, overflow: "hidden", transform: `translateY(${m.dy.toFixed(2)}px)` }}>
-            <div style={{ position: "absolute", left: -i * sw, top: 0, width: w, height: h, backgroundImage: `url("${src}")`, backgroundSize: `${w}px ${h}px` }} />
+          <div key={i} style={{ position: "absolute", left: l, top: 0, width: r - l + 1, height: h, overflow: "hidden", transform: `translateY(${m.dy.toFixed(1)}px)` }}>
+            <div style={{ position: "absolute", left: -l, top: 0, width: Math.round(w), height: h, backgroundImage: `url("${src}")`, backgroundSize: `${Math.round(w)}px ${h}px` }} />
             <div style={{ position: "absolute", inset: 0, background: `linear-gradient(90deg, ${tint(a.shade)}, ${tint(b.shade)})` }} />
           </div>
         );
@@ -207,7 +215,10 @@ export const Flag: React.FC<FlagProps> = (p) => {
   const w = bw * k;
   const h = bh * k;
   const x = CX - w / 2;
-  const y = CY - h / 2;
+  // a wide flag is short: the whole column moves down so it sits a little above the middle
+  const block = h + SWATCH_GAP + LEGEND_GAP + 64;
+  const y = COLUMN.top + Math.max(0, (COLUMN.bottom - COLUMN.top - block) * 0.42);
+  const CY = y + h / 2;
 
   const hook = beatAt(tl, "start");
   const fieldB = beatAt(tl, "field");
@@ -329,7 +340,7 @@ export const Flag: React.FC<FlagProps> = (p) => {
       ) : null}
 
       {/* the colours, as the site names them, with their codes */}
-      <div style={{ position: "absolute", top: CY + MAX_H / 2 + 54, left: SIDE, right: SIDE, display: "flex", justifyContent: "center", gap: 46, direction: "rtl" }}>
+      <div style={{ position: "absolute", top: y + h + SWATCH_GAP, left: SIDE, right: SIDE, display: "flex", justifyContent: "center", gap: 46, direction: "rtl" }}>
         {f.colors.map((c, i) => {
           const at = colorsB.from + 10 + i * 9;
           const o = fade(frame, at, 8);
@@ -348,15 +359,16 @@ export const Flag: React.FC<FlagProps> = (p) => {
 
       {/* the emblem's line of the drawing's legend */}
       {frame >= emblemB.from ? (
-        <div style={{ position: "absolute", top: CY + MAX_H / 2 + 176, right: SIDE + 10, left: SIDE + 10, direction: "rtl", display: "flex", alignItems: "baseline", gap: 18, justifyContent: "center", opacity: Math.min(fade(frame, emblemB.from + 4, 10), leave(frame, sourceFrom, 10)), borderTop: `1.5px solid rgba(38,42,28,.3)`, paddingTop: 16 }}>
+        <div style={{ position: "absolute", top: y + h + SWATCH_GAP + LEGEND_GAP, right: SIDE + 10, left: SIDE + 10, direction: "rtl", display: "flex", alignItems: "baseline", gap: 18, justifyContent: "center", opacity: Math.min(fade(frame, emblemB.from + 4, 10), leave(frame, sourceFrom, 10)), borderTop: `1.5px solid rgba(38,42,28,.3)`, paddingTop: 16 }}>
           <span style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 28, color: SHEET.olive }}>نشان</span>
           <span style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: f.symbols.length > 30 ? 30 : 36, color: SHEET.ink, textWrap: "balance" } as React.CSSProperties}>{f.symbols}</span>
         </div>
       ) : null}
 
       {/* the stamp: on the drawing's lower corner */}
-      <div style={{ position: "absolute", left: Math.max(30, x - 44), top: y + h - 150 }}>
-        <Stamp text={stampText} color={stampColor} at={stampAt} size={f.approx ? 236 : 200} />
+      {/* the stamp: pressed on the drawing's lower corner, mostly on the paper */}
+      <div style={{ position: "absolute", left: Math.max(24, x - (f.approx ? 236 : 196) * 0.5), top: y + h - (f.approx ? 236 : 196) * 0.42 }}>
+        <Stamp text={stampText} color={stampColor} at={stampAt} size={f.approx ? 236 : 196} />
       </div>
 
       <Captions tl={tl} look={{ ink: SHEET.paper, now: "#e3ef9a", band: "rgba(38,42,28,.86)", border: "1.5px solid rgba(147,162,58,.5)" }} bottom={1440} />

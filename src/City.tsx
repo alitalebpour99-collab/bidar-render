@@ -128,7 +128,8 @@ export const City: React.FC<CityProps> = (p) => {
   const limbTurn = settle(0, 54, 64) + Math.max(0, frame - 54) * 0.03;
   const ringTurn = settle(4, 58, -82);
   const plateTurn = settle(8, 56, 40) - Math.max(0, frame - 64) * 0.02;
-  const ringO = fade(frame, 0, 8);
+  // the instrument is there from the first frame, already turning
+  const ringO = interpolate(frame, [0, 10], [0.88, 1], clamped);
 
   // the index on the limb: from period to period
   const now = held.findLastIndex((x) => frame >= beatAt(tl, x.id).from);
@@ -189,7 +190,9 @@ export const City: React.FC<CityProps> = (p) => {
           <div style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 30, color: BRASS.muted }}>
             {p.label}: {p.count}
           </div>
-          <div style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 80, lineHeight: 1.25, color: BRASS.ink }}>{p.city.note}</div>
+          <div style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: `${p.city.name}، ${p.city.note}`.length > 18 ? 64 : 76, lineHeight: 1.25, color: BRASS.ink }}>
+            {p.city.name}، {p.city.note}
+          </div>
           {p.city.outside ? <div style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 38, color: BRASS.gold, marginTop: 4 }}>{p.city.outside}</div> : null}
         </div>
       ) : null}
@@ -236,10 +239,11 @@ export const City: React.FC<CityProps> = (p) => {
               <g key={x.id}>
                 <path d={band(R.segIn, R.seg, a1, a0)} fill="url(#brassSeg)" stroke={BRASS.brassDeep} strokeWidth="1.6" />
                 {u > 0 ? <path d={band(R.segIn + 3, R.seg - 3, a0 - (a0 - a1) * u, a0)} fill={fill} opacity={0.95} /> : null}
+                {/* a capital: a small star engraved on the inner ring, beside its segment, clear of its name */}
                 {x.capital && u >= 1 ? (
-                  <g transform={`translate(${pt(R.seg - 18, mid(i))[0]} ${pt(R.seg - 18, mid(i))[1]})`}>
-                    <rect x={-7} y={-7} width={14} height={14} fill={BRASS.brassDeep} />
-                    <rect x={-7} y={-7} width={14} height={14} fill={BRASS.brassDeep} transform="rotate(45)" />
+                  <g transform={`translate(${pt((R.inner + R.plate) / 2, mid(i))[0]} ${pt((R.inner + R.plate) / 2, mid(i))[1]})`}>
+                    <rect x={-6} y={-6} width={12} height={12} fill={BRASS.gold} stroke={BRASS.brassDeep} strokeWidth="1.4" />
+                    <rect x={-6} y={-6} width={12} height={12} fill={BRASS.gold} stroke={BRASS.brassDeep} strokeWidth="1.4" transform="rotate(45)" />
                   </g>
                 ) : null}
               </g>
@@ -259,8 +263,9 @@ export const City: React.FC<CityProps> = (p) => {
         {/* the index riding the limb */}
         {indexO > 0 ? (
           <g opacity={indexO} transform={`rotate(${indexAngle + 90} ${CX} ${CY})`}>
-            <path d={`M${CX} ${CY - R.seg + 6}L${CX - 22} ${CY - R.out - 18}L${CX + 22} ${CY - R.out - 18}Z`} fill={BRASS.brass2} stroke={BRASS.brassDeep} strokeWidth="3" strokeLinejoin="round" />
-            <circle cx={CX} cy={CY - R.out - 8} r={7} fill={BRASS.brassDeep} />
+            {/* its tip on the segment's outer edge: the name under it stays readable */}
+            <path d={`M${CX} ${CY - R.seg - 1}L${CX - 20} ${CY - R.out - 22}L${CX + 20} ${CY - R.out - 22}Z`} fill={BRASS.brass2} stroke={BRASS.brassDeep} strokeWidth="3" strokeLinejoin="round" />
+            <circle cx={CX} cy={CY - R.out - 10} r={6} fill={BRASS.brassDeep} />
           </g>
         ) : null}
         {/* the whole rim glows once every period has been read */}
