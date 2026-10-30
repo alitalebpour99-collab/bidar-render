@@ -8,9 +8,10 @@
 // the props (lib/social/quiz.ts of the site builds them from its data).
 import React from "react";
 import { AbsoluteFill, Img, interpolate, useCurrentFrame } from "remotion";
-import { DESIGN_TOP, FPS, Mark, RAIL, SIDE, Sfx, SourceLine, VAZIR, W, clamped, ease, fade, faDigits, grow, leave, rise, slam } from "./kit";
+import { DESIGN_BOTTOM, DESIGN_TOP, FPS, Mark, RAIL, SIDE, Sfx, VAZIR, W, clamped, ease, fade, faDigits, grow, leave, rise, slam } from "./kit";
 import type { QuizProps } from "./props";
 import { Stage, beatAt } from "./Safe";
+import { SourceBlock } from "./cite";
 
 export const SHOW = {
   night: "#060a17",
@@ -62,11 +63,11 @@ export const Quiz: React.FC<QuizProps> = (p) => {
   const close = beatAt(tl, "end");
   const flag = p.flag && FLAG_URL.test(p.flag.svg) ? p.flag : null;
   // the layout: a flag question shows the drawing above a shorter question
-  const Q = flag ? { top: 226, flagH: 330, qTop: 584, qH: 150 } : { top: 236, flagH: 0, qTop: 236, qH: 330 };
-  const pillTop = flag ? 770 : 630;
-  const PILL = 118;
-  const GAP = 24;
-  const ringY = pillTop + 3 * (PILL + GAP) + 150;
+  const Q = flag ? { top: 226, flagH: 330, qTop: 584, qH: 150 } : { top: 240, flagH: 0, qTop: 240, qH: 360 };
+  const pillTop = flag ? 768 : 668;
+  const PILL = flag ? 118 : 130;
+  const GAP = flag ? 24 : 28;
+  const ringY = pillTop + 3 * (PILL + GAP) + (flag ? 150 : 168);
   // the countdown: seconds left, a pulse on each
   const secs = p.count || 5;
   const inCount = frame >= count.from && frame < answer.from;
@@ -205,7 +206,7 @@ export const Quiz: React.FC<QuizProps> = (p) => {
         </div>
       ) : null}
 
-      <SourceLine text={p.source} opacity={fade(frame, sourceFrom, 12)} color={SHOW.muted} strong={SHOW.ink} />
+      <SourceBlock text={p.source} font={VAZIR} color={SHOW.muted} strong={SHOW.ink} style={{ position: "absolute", top: DESIGN_BOTTOM - 126, left: SIDE, right: RAIL, opacity: fade(frame, sourceFrom, 12) }} />
     </Stage>
   );
 };

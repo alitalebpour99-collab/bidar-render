@@ -81,7 +81,7 @@ const FigureTile: React.FC<CoverProps> = ({ title, mark, kicker, series }) => {
   const size = n <= 4 ? 250 : n <= 7 ? 200 : n <= 11 ? 150 : n <= 15 ? 120 : 100;
   return (
     <AbsoluteFill style={{ background: SWISS.paper, direction: "rtl" }}>
-      <div style={{ position: "absolute", left: -90, top: TOP + 120, width: 560, height: 560, borderRadius: 280, background: accent }} />
+      <div style={{ position: "absolute", left: -110, top: TOP + 300, width: 540, height: 540, borderRadius: 270, background: accent }} />
       <div style={{ position: "absolute", top: TOP + 70, right: 90, left: 90, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontFamily: GULZAR, fontSize: 88, color: SWISS.ink, lineHeight: 1.2 }}>بیدار</span>
         <span style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 42, color: SWISS.ink }}>{kicker ?? series}</span>

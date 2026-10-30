@@ -9,9 +9,10 @@
 import React from "react";
 import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
 import { NASKH } from "./Book";
-import { DESIGN_BOTTOM, DESIGN_TOP, FPS, H, Mark, RAIL, SIDE, Sfx, SourceLine, VAZIR, W, clamped, ease, fade, faDigits, grow, leave, rise, slam } from "./kit";
+import { DESIGN_BOTTOM, DESIGN_TOP, FPS, H, Mark, RAIL, SIDE, Sfx, VAZIR, W, clamped, ease, fade, faDigits, grow, leave, rise, slam } from "./kit";
 import type { FigureProps } from "./props";
 import { Stage, beatAt } from "./Safe";
+import { SourceBlock } from "./cite";
 
 export const SWISS = { paper: "#ECE8DF", paper2: "#E2DDD2", ink: "#131313", ink2: "#3B3A37", grey: "#8B877E", faint: "rgba(19,19,19,.08)" };
 
@@ -78,16 +79,13 @@ const Ruler: React.FC<{ p: FigureProps; accent: string; at: number; lit: number 
   const open = grow(frame, lit + 10, 18);
   const zl = { a: xOf(p.span.from, z.from, z.to), b: xOf(p.span.to, z.from, z.to) };
   const ticks = [-3000, -2000, -1000, 0, 1000];
-  const lifeEras = p.eras.filter((e) => e.from <= p.span.to && p.span.from <= e.to);
   return (
     <svg width={W} height={H} style={{ position: "absolute", inset: 0, overflow: "visible" }}>
-      {/* the atlas's periods above the line, in two lanes where they overlap */}
+      {/* the atlas's periods above the line: one lane of grey segments, a hair apart, a later one over an earlier */}
       {p.eras.map((e, i) => {
         const a = xOf(Math.max(from, e.from), from, to);
         const b = xOf(Math.min(to, e.to), from, to);
-        const hit = lifeEras.includes(e);
-        const lane = i % 2;
-        return <rect key={e.id} x={b} y={RULER_Y - 30 - lane * 14} width={Math.max(2, a - b)} height={10} fill={hit ? accent : SWISS.ink} opacity={(hit ? 0.9 : 0.16 + 0.1 * lane) * fade(frame, at + 6 + i, 8)} />;
+        return <rect key={e.id} x={b + 1} y={RULER_Y - 24} width={Math.max(2, a - b - 2)} height={14} fill={SWISS.ink} opacity={(i % 2 ? 0.26 : 0.13) * fade(frame, at + 6 + i, 8)} />;
       })}
       <line x1={R} x2={R - WIDTH * line} y1={RULER_Y} y2={RULER_Y} stroke={SWISS.ink} strokeWidth={4} />
       {ticks.map((y) => {
@@ -95,7 +93,7 @@ const Ruler: React.FC<{ p: FigureProps; accent: string; at: number; lit: number 
         return (
           <g key={y} opacity={fade(frame, at + 10, 10)}>
             <line x1={x} x2={x} y1={RULER_Y - 8} y2={RULER_Y + 12} stroke={SWISS.ink} strokeWidth={2} />
-            <text x={x} y={RULER_Y + 46} textAnchor="middle" fontFamily={VAZIR} fontWeight={600} fontSize={22} fill={SWISS.grey} direction="rtl">{yearLabel(y)}</text>
+            <text x={x} y={RULER_Y + 46} textAnchor="middle" fontFamily={VAZIR} fontWeight={600} fontSize={22} fill={SWISS.grey}>{yearLabel(y)}</text>
           </g>
         );
       })}
@@ -120,12 +118,6 @@ const Ruler: React.FC<{ p: FigureProps; accent: string; at: number; lit: number 
         const g = grow(frame, lit + 16, 16);
         return <rect x={a - (a - b) * g} y={ZOOM_Y - 13} width={(a - b) * g} height={26} fill={accent} />;
       })()}
-      {/* the periods the life touches, named */}
-      {lifeEras.slice(0, 2).map((e, i) => (
-        <text key={e.id} x={Math.min(R - 90, Math.max(L + 90, lifeX + lifeW / 2))} y={RULER_Y - 58 - i * 30} textAnchor="middle" fontFamily={VAZIR} fontWeight={800} fontSize={24} fill={accent} opacity={fade(frame, lit + 8 + i * 4, 8)} direction="rtl">
-          {e.name}
-        </text>
-      ))}
     </svg>
   );
 };
@@ -201,7 +193,7 @@ export const Figure: React.FC<FigureProps> = (p) => {
 
       {/* the dictionary's line on them, read */}
       {frame < defEnd + 8 ? (
-        <div style={{ position: "absolute", left: L, right: RAIL, top: BODY.top, direction: "rtl", opacity: leave(frame, defEnd + 4, 10) }}>
+        <div style={{ position: "absolute", left: L, right: RAIL, top: BODY.top, direction: "rtl", opacity: Math.min(fade(frame, def.from - 8, 8), leave(frame, defEnd + 4, 10)) }}>
           <div style={{ height: 6, width: 120, background: accent, marginBottom: 26, opacity: fade(frame, def.from - 4, 6) }} />
           <Read from={def.from} to={def.to} style={{ fontFamily: VAZIR, fontWeight: 500, fontSize: p.def.length > 150 ? 42 : 46, lineHeight: 1.75, color: SWISS.ink }}>
             {p.def}
@@ -221,7 +213,7 @@ export const Figure: React.FC<FigureProps> = (p) => {
               </Read>
             </div>
             {/* how far through the cards */}
-            <div style={{ position: "absolute", left: 40, top: 40, display: "flex", gap: 8 }}>
+            <div style={{ position: "absolute", left: 40, bottom: 34, display: "flex", gap: 8 }}>
               {p.facts.map((_, k) => (
                 <span key={k} style={{ width: 18, height: 18, background: k <= i ? accent : "transparent", border: `2.5px solid ${k <= i ? accent : SWISS.grey}` }} />
               ))}
@@ -245,7 +237,7 @@ export const Figure: React.FC<FigureProps> = (p) => {
         </Card>
       ) : null}
 
-      <SourceLine text={p.source} opacity={fade(frame, sourceFrom, 12)} color={SWISS.ink2} strong={SWISS.ink} />
+      <SourceBlock text={p.source} font={VAZIR} color={SWISS.ink2} strong={SWISS.ink} style={{ position: "absolute", top: DESIGN_BOTTOM - 126, left: SIDE, right: RAIL, opacity: fade(frame, sourceFrom, 12) }} />
     </Stage>
   );
 };

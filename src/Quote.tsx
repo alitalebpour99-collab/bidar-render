@@ -10,9 +10,10 @@
 import React from "react";
 import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
 import { NASKH } from "./Book";
-import { DESIGN_BOTTOM, FPS, GULZAR, H, Mark, SIDE, RAIL, Sfx, VAZIR, W, clamped, ease, fade, grow, rise, slam } from "./kit";
+import { GULZAR, H, Mark, RAIL, Sfx, VAZIR, W, clamped, ease, fade, grow, rise, slam } from "./kit";
 import type { QuoteProps, Word } from "./props";
 import { Stage, beatAt } from "./Safe";
+import { SourceBlock } from "./cite";
 
 export const ILLUM = {
   lapis: "#0d1d4c",
@@ -28,9 +29,13 @@ export const ILLUM = {
 };
 
 /** The page's outer rule on the design frame; the inner rule sits INSET inside it. */
-const F = { x: 72, y: 246, w: 936, h: 1176 };
+const F = { x: 72, y: 246, w: 936, h: 1290 };
 const INSET = 30;
+/** The seal's size on the design frame. */
+const SEAL = 262;
 const CX = W / 2;
+/** The width the saying is set in, inside the inner rule. */
+const TEXT_W = F.w - 2 * (INSET + 46);
 
 /** A fixed scatter of flecks (pyrite in lapis), the same on every frame and every Reel. */
 const FLECKS = (() => {
@@ -181,7 +186,7 @@ const Seal: React.FC<{ name: string; life: string; at: number }> = ({ name, life
   const frame = useCurrentFrame();
   if (frame < at) return null;
   const s = slam(frame, at, 2.1);
-  const size = 250;
+  const size = SEAL;
   const nameSize = name.length > 12 ? 34 : name.length > 8 ? 42 : 52;
   // the ink left uneven by the stamp: fixed light specks over the red
   const specks = Array.from({ length: 26 }, (_, i) => ({ a: i * 2.39996, r: 18 + ((i * 37) % 96), sz: 1.5 + (i % 4) }));
@@ -250,18 +255,11 @@ function mixColor(a: string, b: string, t: number): string {
 function typeOf(p: QuoteProps) {
   if (p.verse) {
     const longest = Math.max(...p.lines.map((l) => l.length));
-    return { family: GULZAR, weight: 400, size: Math.max(52, Math.min(100, Math.floor(2280 / Math.max(10, longest)))), lineHeight: 2.15 };
+    return { family: GULZAR, weight: 400, size: Math.max(50, Math.min(100, Math.floor(TEXT_W / (Math.max(10, longest) * 0.35)))), lineHeight: 2.3 };
   }
   const n = p.lines.join(" ").length;
   return { family: NASKH, weight: 700, size: n <= 34 ? 86 : n <= 64 ? 74 : n <= 100 ? 64 : n <= 130 ? 57 : 52, lineHeight: 1.95 };
 }
-
-const SourceNaskh: React.FC<{ text: string; opacity: number }> = ({ text, opacity }) => (
-  <div style={{ position: "absolute", top: DESIGN_BOTTOM - 128, left: SIDE, right: RAIL, direction: "rtl", opacity, transform: `translateY(${(1 - opacity) * 12}px)` }}>
-    <div style={{ fontFamily: NASKH, fontSize: 28, lineHeight: 1.55, color: ILLUM.cream2 }}>منبع: {text.replace(/^\s*منبع\s*[:：]\s*/, "")}</div>
-    <div style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 33, color: ILLUM.gold, direction: "ltr", textAlign: "right", marginTop: 4 }}>bidar.ahura.cloud</div>
-  </div>
-);
 
 export const Quote: React.FC<QuoteProps> = (p) => {
   const frame = useCurrentFrame();
@@ -297,7 +295,7 @@ export const Quote: React.FC<QuoteProps> = (p) => {
           top: interpolate(up, [0, 1], [640, F.y + 74]),
           textAlign: "center",
           direction: "rtl",
-          transform: `scale(${interpolate(up, [0, 1], [1, 0.46])}) translateY(${rise(frame, 0, 14, 14)}px)`,
+          transform: `scale(${interpolate(up, [0, 1], [1, 0.56])}) translateY(${rise(frame, 0, 14, 14)}px)`,
           transformOrigin: "50% 0%",
         }}
       >
@@ -306,7 +304,7 @@ export const Quote: React.FC<QuoteProps> = (p) => {
       </div>
 
       {/* the saying, written as it is read */}
-      <div style={{ position: "absolute", left: F.x + INSET + 46, right: F.x + INSET + 46, top: 460, bottom: H - 1092, display: "flex", flexDirection: "column", justifyContent: "center", direction: "rtl", opacity: fade(frame, first.from - 14, 8) }}>
+      <div style={{ position: "absolute", left: F.x + INSET + 46, right: F.x + INSET + 46, top: 450, bottom: H - 1170, display: "flex", flexDirection: "column", justifyContent: "center", direction: "rtl", opacity: fade(frame, first.from - 14, 8) }}>
         {placed.map((ws, k) => (
           <div
             key={k}
@@ -318,7 +316,8 @@ export const Quote: React.FC<QuoteProps> = (p) => {
               color: ILLUM.cream,
               textAlign: stagger ? (k === 0 ? "right" : "left") : "center",
               textWrap: "balance",
-              marginTop: k && !p.verse ? 12 : 0,
+              marginTop: k ? (p.verse ? 22 : 12) : 0,
+              whiteSpace: p.verse ? "nowrap" : "normal",
               paddingInline: stagger ? 10 : 0,
             } as React.CSSProperties}
           >
@@ -340,11 +339,13 @@ export const Quote: React.FC<QuoteProps> = (p) => {
       </div>
 
       {/* the seal, at the foot of the page on the left, where a colophon is sealed */}
-      <div style={{ position: "absolute", left: F.x + INSET + 34, top: F.y + F.h - INSET - 34 - 250 }}>
+      <div style={{ position: "absolute", left: F.x + INSET + 34, top: F.y + F.h - INSET - 34 - SEAL }}>
         <Seal name={p.who.name} life={p.who.life} at={sealAt} />
       </div>
 
-      <SourceNaskh text={p.source} opacity={fade(frame, seal.from + 10, 14)} />
+      <div style={{ position: "absolute", left: F.x + INSET + 34 + SEAL + 34, right: RAIL + 10, top: F.y + F.h - INSET - 34 - SEAL, height: SEAL, display: "flex", flexDirection: "column", justifyContent: "center", opacity: fade(frame, seal.from + 10, 14), transform: `translateY(${(1 - fade(frame, seal.from + 10, 14)) * 12}px)` }}>
+        <SourceBlock text={p.source} font={NASKH} size={29} color={ILLUM.cream2} strong={ILLUM.gold} />
+      </div>
     </Stage>
   );
 };
