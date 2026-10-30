@@ -290,7 +290,7 @@ export const City: React.FC<CityProps> = (p) => {
       })}
 
       {/* the city in the middle */}
-      <div style={{ position: "absolute", left: CX - 230, top: CY - 150, width: 460, height: 300, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", direction: "rtl", textAlign: "center", opacity: fade(frame, 8, 12) }}>
+      <div style={{ position: "absolute", left: CX - 230, top: CY - 150, width: 460, height: 300, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", direction: "rtl", textAlign: "center", opacity: interpolate(frame, [0, 12], [0.85, 1], clamped) }}>
         {nameLines.map((l, i) => (
           <div key={i} style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: nameSize, lineHeight: 1.18, color: BRASS.ink, whiteSpace: "nowrap" }}>
             {l}

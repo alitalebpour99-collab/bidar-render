@@ -281,7 +281,7 @@ export const Treaty: React.FC<TreatyProps> = (p) => {
   const pinAt = (k: number) => body0 + 14 + (k * Math.max(8, today.from - body0 - 34)) / Math.max(1, n);
   const flipAt = (k: number) => today.from + 6 + k * 7;
   const sourceFrom = tl.total - Math.round(2.6 * FPS);
-  const nameSize = Math.min(96, Math.round(660 / Math.max(6, t.name.length * 0.48)));
+  const nameSize = Math.min(88, Math.round(640 / Math.max(6, t.name.length * 0.48)));
 
   return (
     <Stage ground={<Ground total={tl.total} />} tl={tl} music={p.music} offset={sh}>
@@ -329,8 +329,8 @@ export const Treaty: React.FC<TreatyProps> = (p) => {
                   ))}
                 </div>
                 <div style={{ width: 300, height: 2, background: "rgba(44,28,18,.4)", margin: "18px 0 22px", opacity: fade(frame, doc.from + 10, 10) }} />
-                <div style={{ fontFamily: VAZIR, fontWeight: 800, fontSize: 66, color: ARCH.ink2, opacity: fade(frame, doc.from + 14, 10) }}>{t.year}</div>
-                <div style={{ fontFamily: NASKH, fontWeight: 700, fontSize: 62, color: ARCH.ink, marginTop: 18, opacity: fade(frame, doc.from + 24, 10) }}>
+                <div style={{ fontFamily: VAZIR, fontWeight: 800, fontSize: 60, color: ARCH.ink2, opacity: fade(frame, doc.from + 14, 10) }}>{t.year}</div>
+                <div style={{ fontFamily: NASKH, fontWeight: 700, fontSize: 56, lineHeight: 1.5, color: ARCH.ink, marginTop: 10, opacity: fade(frame, doc.from + 24, 10) }}>
                   {t.sealed ? (
                     <>
                       <span style={{ color: ARCH.wax, fontFamily: VAZIR, fontWeight: 700, fontSize: 46 }}>{t.toLabel}: </span>
@@ -342,8 +342,8 @@ export const Treaty: React.FC<TreatyProps> = (p) => {
                 </div>
               </div>
               {t.sealed ? (
-                <div style={{ position: "absolute", left: PAPER.w / 2 - 95, top: 520, opacity: fade(frame, sealAt, 2), transform: `scale(${slam(frame, sealAt, 1.9)}) rotate(-6deg)` }}>
-                  {frame >= sealAt ? <Seal size={190} /> : null}
+                <div style={{ position: "absolute", left: PAPER.w / 2 - 88, top: 536, opacity: fade(frame, sealAt, 2), transform: `scale(${slam(frame, sealAt, 1.9)}) rotate(-6deg)` }}>
+                  {frame >= sealAt ? <Seal size={176} /> : null}
                 </div>
               ) : null}
             </div>
