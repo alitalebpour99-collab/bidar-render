@@ -57,7 +57,7 @@ export function timeline(beats: Beat[], voiceIn: VoiceIn[] | undefined): Timelin
   const all = lines.find((l) => l.cue === "all");
   const from: Record<string, number> = {};
   let words: Word[] = [];
-  const voice: { file: string; from: number }[] = [];
+  const voice: Timeline["voice"] = [];
   let end = 0;
 
   if (all) {
@@ -74,13 +74,35 @@ export function timeline(beats: Beat[], voiceIn: VoiceIn[] | undefined): Timelin
       starts.push(i);
       cursor = i + Math.max(1, b.say.length);
     }
+    // a hold: a silent beat with `min` between two said ones (a quiz's countdown, a quote's rest). The take is
+    // cut in the pause before the next said beat, and everything after the cut waits `min` seconds.
+    const holds: { k: number; cut: number; frames: number }[] = [];
     beats.forEach((b, k) => {
-      from[b.id] = k === 0 ? 0 : Math.max(VOICE_AT + Math.round((t.s[starts[k]] ?? 0) * FPS) - CUT_LEAD, 0);
+      if (k === 0 || b.say.trim() || !b.min || !beats.slice(k + 1).some((x) => x.say.trim())) return;
+      let a = starts[k] - 1;
+      while (a > 0 && /\s/.test(text[a] ?? "")) a -= 1;
+      let n = starts[k];
+      while (n < text.length - 1 && /\s/.test(text[n] ?? "")) n += 1;
+      const before = t.e[a] ?? 0;
+      const after = Math.max(before, t.s[n] ?? before);
+      holds.push({ k, cut: VOICE_AT + Math.round(((before + after) / 2) * FPS), frames: Math.round(b.min * FPS) });
+    });
+    /** A frame of the take on the film's clock: later by every hold whose cut it has passed. */
+    const onFilm = (f: number) => f + holds.reduce((s, h) => (f >= h.cut ? s + h.frames : s), 0);
+    beats.forEach((b, k) => {
+      const hold = holds.find((h) => h.k === k);
+      if (hold) from[b.id] = hold.cut + holds.filter((h) => h.cut < hold.cut).reduce((s, h) => s + h.frames, 0);
+      else from[b.id] = k === 0 ? 0 : Math.max(onFilm(VOICE_AT + Math.round((t.s[starts[k]] ?? 0) * FPS)) - CUT_LEAD, 0);
     });
     const beatOf = (c: number) => beats[Math.max(0, starts.findLastIndex((s) => s <= c))].id;
-    words = lineWords(text, seconds, all.alignment, VOICE_AT, beatOf);
-    voice.push({ file: all.file, from: VOICE_AT });
-    end = VOICE_AT + all.frames;
+    words = lineWords(text, seconds, all.alignment, VOICE_AT, beatOf).map((w) => ({ ...w, from: onFilm(w.from), to: onFilm(w.to) }));
+    // the take in pieces: each piece from one cut to the next, played that much later
+    const cuts = [VOICE_AT, ...holds.map((h) => h.cut)];
+    cuts.forEach((c, i) => {
+      const next = cuts[i + 1];
+      voice.push({ file: all.file, from: onFilm(c), trim: c - VOICE_AT, ...(next !== undefined ? { frames: next - c } : {}) });
+    });
+    end = onFilm(VOICE_AT + all.frames);
   } else if (lines.length) {
     // one line per beat: each beat lasts as long as its line
     let at = VOICE_AT;

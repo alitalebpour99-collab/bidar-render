@@ -1,5 +1,5 @@
 {
-  "characters": 1502,
+  "characters": 2169,
   "calls": [
     {
       "name": "borders-1",
@@ -21,6 +21,36 @@
       "at": "2026-10-28T17:51:29.224Z",
       "model": "eleven_v3",
       "voice": "rNb3hdSf0n4ROIbYC8Bl"
+    },
+    {
+      "name": "quote-1",
+      "characters": 162,
+      "at": "2026-10-30T00:08:05.671Z",
+      "model": "eleven_v3",
+      "voice": "rNb3hdSf0n4ROIbYC8Bl",
+      "round": "formats-a",
+      "format": "mp3_44100_64",
+      "settings": "site (lib/social/voice.ts)"
+    },
+    {
+      "name": "figure-1",
+      "characters": 308,
+      "at": "2026-10-30T00:08:15.781Z",
+      "model": "eleven_v3",
+      "voice": "rNb3hdSf0n4ROIbYC8Bl",
+      "round": "formats-a",
+      "format": "mp3_44100_64",
+      "settings": "site (lib/social/voice.ts)"
+    },
+    {
+      "name": "quiz-1",
+      "characters": 197,
+      "at": "2026-10-30T00:08:22.406Z",
+      "model": "eleven_v3",
+      "voice": "rNb3hdSf0n4ROIbYC8Bl",
+      "round": "formats-a",
+      "format": "mp3_44100_64",
+      "settings": "site (lib/social/voice.ts)"
     }
   ]
 }

@@ -157,9 +157,54 @@ function book(p: Site): BookProps {
   };
 }
 
+// ---------- «سخنِ ماندگار», «چهره‌ها», «حدس بزن»: drawn in the site's own shape ----------
+// The beats exactly as the site's lib/social/beats.ts makes them. A silent beat
+// with `min` between two said ones (the quote's rest, the figure's years, the
+// quiz's countdown) is a hold: src/timeline.ts cuts the narrator's take there.
+const whoLine = (p: Site) => end(`${String(p.who?.name ?? "")}، ${String(p.who?.epithet ?? "")}`);
+const sayingLines = (lines: unknown[] | undefined, prefix: string): Beat[] => (lines ?? []).map((l, i) => ({ id: `${prefix}${i + 1}`, say: String(l) }));
+
+export function quoteBeats(p: Site): Beat[] {
+  return [
+    { id: "start", say: whoLine(p) },
+    ...sayingLines(p.lines, "l"),
+    { id: "rest", say: "", min: 1.6 },
+    { id: "seal", say: end(`${String(p.who?.name ?? "")}، ${String(p.who?.life ?? "")}`) },
+    { id: "end", say: "", min: 3 },
+  ];
+}
+
+export function figureBeats(p: Site): Beat[] {
+  return [
+    { id: "start", say: whoLine(p) },
+    { id: "life", say: "", min: 2.6 },
+    { id: "def", say: end(String(p.def ?? "")) },
+    ...((p.facts ?? []) as Site[]).map((f, i) => ({ id: `f${i + 1}`, say: end(f.label ? `${f.label}: ${f.value}` : String(f.value)) })),
+    ...sayingLines(p.quote?.lines, "q"),
+    { id: "end", say: "", min: 3 },
+  ];
+}
+
+export function quizBeats(p: Site): Beat[] {
+  const options: string[] = (p.options ?? []).map(String);
+  return [
+    { id: "start", say: end(String(p.question ?? hookText(p, ""))) },
+    ...options.map((o, i) => ({ id: `o${i + 1}`, say: end(`${faDigits(i + 1)}: ${o}`) })),
+    { id: "count", say: "", min: Number(p.count) || 5 },
+    { id: "answer", say: end(`پاسخ: ${options[Number(p.answer)] ?? ""}`) },
+    { id: "why", say: end(String(p.reveal ?? "")) },
+    { id: "end", say: end(String(p.cta ?? "")), min: 2.4 },
+  ];
+}
+
+const site = <P,>(s: Site, made: Beat[]) => ({ ...s, beats: beatsOr(s, made), source: sourceText(s.source) }) as unknown as P;
+
 /** Props in either shape → the compositions' own. */
 export function adapt<P extends ReelProps>(p: P | Site): P {
   const s = p as Site;
+  if (s.format === "quote" && Array.isArray(s.lines)) return site<P>(s, quoteBeats(s));
+  if (s.format === "figure" && Array.isArray(s.facts)) return site<P>(s, figureBeats(s));
+  if (s.format === "quiz" && Array.isArray(s.options)) return site<P>(s, quizBeats(s));
   if (s.format === "book" && Array.isArray(s.words)) return { ...book(s), music: s.music, voiceIn: s.voiceIn } as unknown as P;
   if (Array.isArray(s.beats) && s.beats.length && (s.stops || s.evidence)) return { ...s, source: sourceText(s.source) } as P;
   if (s.format === "borders" && Array.isArray(s.frames)) return { ...borders(s), music: s.music, voiceIn: s.voiceIn } as unknown as P;
