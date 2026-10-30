@@ -283,6 +283,8 @@ export const Quote: React.FC<QuoteProps> = (p) => {
       <Sfx at={sealAt} name="stamp" volume={0.5} />
 
       <Mark color={ILLUM.gold} sub={p.series} subColor={ILLUM.cream2} />
+      {/* the whole page comes slowly closer, so the last seconds still move */}
+      <div style={{ position: "absolute", inset: 0, transform: `scale(${interpolate(frame, [0, tl.total], [0.985, 1.03])})`, transformOrigin: "50% 46%" }}>
       <Frame />
       <div style={{ position: "absolute", left: CX - 230, width: 460, top: F.y - 59, height: 118, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: GULZAR, fontSize: 52, lineHeight: 1, color: ILLUM.goldLight, direction: "rtl", opacity: fade(frame, 16, 12), paddingBottom: 12 }}>{p.kicker}</div>
 
@@ -345,6 +347,13 @@ export const Quote: React.FC<QuoteProps> = (p) => {
 
       <div style={{ position: "absolute", left: F.x + INSET + 34 + SEAL + 34, right: RAIL + 10, top: F.y + F.h - INSET - 34 - SEAL, height: SEAL, display: "flex", flexDirection: "column", justifyContent: "center", opacity: fade(frame, seal.from + 10, 14), transform: `translateY(${(1 - fade(frame, seal.from + 10, 14)) * 12}px)` }}>
         <SourceBlock text={p.source} font={NASKH} size={29} color={ILLUM.cream2} strong={ILLUM.gold} />
+      </div>
+
+      {/* light runs over the gold after the seal, and once more at the close */}
+      {[seal.from + 22, beatAt(tl, "end").from + 6].map((at, i) => {
+        const g = interpolate(frame, [at, at + 46], [-30, 130], clamped);
+        return frame >= at && frame <= at + 46 ? <div key={i} style={{ position: "absolute", left: F.x, top: F.y - 60, width: F.w, height: F.h + 60, background: `linear-gradient(115deg, transparent ${g - 12}%, rgba(243,217,143,.10) ${g}%, transparent ${g + 12}%)`, pointerEvents: "none" }} /> : null;
+      })}
       </div>
     </Stage>
   );
