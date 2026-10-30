@@ -1,5 +1,5 @@
 {
-  "characters": 2169,
+  "characters": 3227,
   "calls": [
     {
       "name": "borders-1",
@@ -51,6 +51,30 @@
       "round": "formats-a",
       "format": "mp3_44100_64",
       "settings": "site (lib/social/voice.ts)"
+    },
+    {
+      "name": "flag-3",
+      "characters": 273,
+      "at": "2026-10-30T00:06:25.874Z",
+      "model": "eleven_v3",
+      "voice": "rNb3hdSf0n4ROIbYC8Bl",
+      "by": "formats-b"
+    },
+    {
+      "name": "treaty-1",
+      "characters": 344,
+      "at": "2026-10-30T00:06:35.514Z",
+      "model": "eleven_v3",
+      "voice": "rNb3hdSf0n4ROIbYC8Bl",
+      "by": "formats-b"
+    },
+    {
+      "name": "city-1",
+      "characters": 441,
+      "at": "2026-10-30T00:06:46.959Z",
+      "model": "eleven_v3",
+      "voice": "rNb3hdSf0n4ROIbYC8Bl",
+      "by": "formats-b"
     }
   ]
 }

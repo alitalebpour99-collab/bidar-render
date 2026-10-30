@@ -8,15 +8,21 @@ import quoteSample from "../samples/quote-1.json";
 import figureSample from "../samples/figure-1.json";
 import quizSample from "../samples/quiz-1.json";
 import coverSample from "../samples/borders-1.cover.json";
+import flagSample from "../samples/flag-1.json";
+import treatySample from "../samples/treaty-1.json";
+import citySample from "../samples/city-1.json";
 import { Book } from "./Book";
 import { Borders } from "./Borders";
+import { City } from "./City";
 import { Cover } from "./Cover";
 import { Figure } from "./Figure";
+import { Flag } from "./Flag";
 import { Myth } from "./Myth";
 import { Quiz } from "./Quiz";
 import { Quote } from "./Quote";
+import { Treaty } from "./Treaty";
 import { Word } from "./Word";
-import type { Base, BookProps, BordersProps, CoverProps, FigureProps, MythProps, QuizProps, QuoteProps, ReelProps, WordProps } from "./props";
+import type { Base, BookProps, BordersProps, CityProps, CoverProps, FigureProps, FlagProps, MythProps, QuizProps, QuoteProps, ReelProps, TreatyProps, WordProps } from "./props";
 import { timeline } from "./timeline";
 import { adapt } from "./adapt";
 
@@ -44,6 +50,9 @@ export const Root: React.FC = () => (
     <Composition id="quote" component={Quote} {...frame} durationInFrames={600} defaultProps={as<QuoteProps>(quoteSample)} calculateMetadata={(x: { props: QuoteProps }) => timed(x)} />
     <Composition id="figure" component={Figure} {...frame} durationInFrames={1050} defaultProps={as<FigureProps>(figureSample)} calculateMetadata={(x: { props: FigureProps }) => timed(x)} />
     <Composition id="quiz" component={Quiz} {...frame} durationInFrames={690} defaultProps={as<QuizProps>(quizSample)} calculateMetadata={(x: { props: QuizProps }) => timed(x)} />
+    <Composition id="flag" component={Flag} {...frame} durationInFrames={1050} defaultProps={as<FlagProps>(flagSample)} calculateMetadata={(x: { props: FlagProps }) => timed(x)} />
+    <Composition id="treaty" component={Treaty} {...frame} durationInFrames={1050} defaultProps={as<TreatyProps>(treatySample)} calculateMetadata={(x: { props: TreatyProps }) => timed(x)} />
+    <Composition id="city" component={City} {...frame} durationInFrames={1050} defaultProps={as<CityProps>(citySample)} calculateMetadata={(x: { props: CityProps }) => timed(x)} />
     <Composition id="cover" component={Cover} {...frame} durationInFrames={1} defaultProps={as<CoverProps>(coverSample)} />
   </>
 );

@@ -72,7 +72,7 @@ can (Divan keeps the last `can` it saw).
 ```ts
 type RenderJob = {
   id: number;            // the post's row id
-  format: string;        // the composition: "borders" | "myth" | "word" | "book" | "quote" | "figure" | "quiz"
+  format: string;        // the composition: "borders" | "myth" | "word" | "book" | "quote" | "figure" | "quiz" | "flag" | "treaty" | "city"
   name: string;          // a file-safe name, e.g. "reel-7"
   props: object;         // the composition's props (below), built by the site from its own data
   cover: CoverProps;     // the still tile for the profile grid
@@ -281,16 +281,68 @@ type BookProps = {
   beats: Beat[];                    // start, read, end
 };
 
+// The three formats drawn from the site's pictures and atlas keep the site's own
+// shape (bidar lib/social/props.ts); every one carries the narrator's beats.
+type SiteBase = { series: string; hook: { text: string; figure: string | null }; source: string; foot: string; beats: Beat[] };
+
+// «پرچم‌های ایران»: built layer by layer from the site's own picture
+type FlagProps = SiteBase & {
+  format: "flag";
+  title: string;                    // «پرچم‌های ایران»
+  flag: {
+    id: string; name: string; years: string;
+    file: string;                   // «/flags/flag_04_safavid.svg»: its layers are in src/data/flags.json by its name
+    colors: { hex: string; label: string }[];
+    symbols: string;                // the emblem, in the site's words
+    meaning: string[];              // 1–3 sentences, none about today
+    tier: "FACT" | "CONTESTED" | "ALLEGATION"; tierLabel: string;
+    approx: { stamp: string; basisLabel: string; basis: string | null } | null; // «بازسازیِ تقریبی», «منبعِ تاریخی:»
+    tricolor: string | null;        // «سه‌رنگِ پیوند»
+  };
+  sheet: string;                    // «۴ از ۹»
+  // beats: start, field, colors, emblem, m1–m3, stamp, end (silent: the flag waves)
+};
+
+// «آنچه از دست رفت»: a treaty as a document, then its places on a light map
+type TreatyProps = SiteBase & {
+  format: "treaty";
+  title: string;                    // «آنچه از دست رفت»
+  treaty: { id: string; name: string; year: string; toLabel: string; to: string; sealed: boolean; body: string[]; tier: string; tierLabel: string; note: string[] | null };
+  places: { id: string; name: string; today: string; lat: number; lon: number }[];
+  todayLabel: string;               // «امروز»
+  reference: string;                // «مرزِ ایرانِ امروز»: the gold dashed line
+  // beats: start, doc, b1–b4, today, n1–n2 or verdict, end
+};
+
+// «شهرها در گذرِ دوره‌ها»: a city on a brass astrolabe
+type CityProps = SiteBase & {
+  format: "city";
+  city: { id: string; name: string; note: string; outside: string | null }; // «امروز بیرونِ مرزِ سیاسیِ ایران»
+  periods: { id: string; name: string; years: string; held: boolean; capital: boolean }[]; // the 14 before 1979
+  label: string;                    // «حاضر در دوره‌ها»
+  count: string;                    // «۸ از ۱۴ دوره»
+  capitalLabel: string;             // «پایتخت»
+  // beats: start, one per held period (its id), note, end
+};
+
 type CoverProps = { format: string; series: string; title: string; mark?: string; kicker?: string };
 ```
+
+The flags' pictures are the renderer's copy of the site's `public/flags/` (see
+below): a job whose `flag.file` is not in this bundle fails with that reason.
+The treaty's map is drawn from `src/data/countries-110m.json` alone (the
+countries of the region, projected once per Reel): the site sends no geometry
+for it.
 
 The confidence wording and colours of `MythProps.verdict` are Bidar's own
 (`CONFIDENCE_META` in `lib/knowledge/types.ts`): FACT «واقعیت مستند» #3FBF7F,
 CONTESTED «مورد مناقشه» #E8B54A, ALLEGATION «ادعای اثبات‌نشده» #E2685B.
 
 The map data are copies of the site's `public/data/iran-eras.json` and
-`public/data/countries-110m.json` (`src/data/`); after they change on the
-site, copy them again (`node sync-data.mjs <path to bidar>`).
+`public/data/countries-110m.json` (`src/data/`), and the flags of
+`public/flags/flag_*.svg` split into their layers (`src/data/flags.json`, no
+copy of today's flag); after they change on the site, copy them again
+(`node sync-data.mjs <path to bidar>`).
 
 ## What the site's side has to hold
 

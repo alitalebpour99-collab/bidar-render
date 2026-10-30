@@ -9,6 +9,9 @@ import { LAPIS } from "./Borders";
 import { SWISS, accentOf } from "./Figure";
 import { SHOW } from "./Quiz";
 import { ILLUM } from "./Quote";
+import { CityTile } from "./City";
+import { FlagTile } from "./Flag";
+import { TreatyTile } from "./Treaty";
 import { GULZAR, H, VAZIR, W } from "./kit";
 import { PARCH } from "./Myth";
 import type { CoverProps } from "./props";
@@ -124,6 +127,9 @@ export const Cover: React.FC<CoverProps> = (props) => {
   if (format === "quote") return <QuoteTile {...props} />;
   if (format === "figure") return <FigureTile {...props} />;
   if (format === "quiz") return <QuizTile {...props} />;
+  if (format === "flag") return <FlagTile {...props} />;
+  if (format === "treaty") return <TreatyTile {...props} />;
+  if (format === "city") return <CityTile {...props} />;
   const l = LOOK[format] ?? LOOK.borders;
   const size = title.length > 40 ? 84 : title.length > 26 ? 100 : 122;
   return (

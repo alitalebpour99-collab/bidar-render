@@ -84,7 +84,19 @@ export const Mark: React.FC<{ color: string; sub?: string; subColor?: string; si
 /** The source line and the address: on screen in the last seconds of every Reel. */
 export const SourceLine: React.FC<{ text: string; opacity: number; color: string; strong: string; y?: number }> = ({ text, opacity, color, strong, y = DESIGN_BOTTOM - 126 }) => (
   <div style={{ position: "absolute", top: y, left: SIDE, right: RAIL, direction: "rtl", opacity, transform: `translateY(${(1 - opacity) * 14}px)` }}>
-    <div style={{ fontFamily: VAZIR, fontSize: 28, lineHeight: 1.5, color }}>منبع: {text.replace(/^\s*منبع\s*[:：]\s*/, "")}</div>
+    {/* each part between «·» in its own direction: a Latin title («Wikipedia, "…"») keeps its quotes where they belong */}
+    <div style={{ fontFamily: VAZIR, fontSize: 28, lineHeight: 1.5, color }}>
+      منبع:{" "}
+      {text
+        .replace(/^\s*منبع\s*[:：]\s*/, "")
+        .split(/\s+·\s+/)
+        .map((part, i) => (
+          <React.Fragment key={i}>
+            {i ? " · " : null}
+            <bdi>{part}</bdi>
+          </React.Fragment>
+        ))}
+    </div>
     <div style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 33, color: strong, direction: "ltr", textAlign: "right", marginTop: 4 }}>bidar.ahura.cloud</div>
   </div>
 );

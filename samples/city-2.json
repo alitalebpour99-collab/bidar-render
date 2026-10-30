@@ -1,0 +1,159 @@
+{
+ "format": "city",
+ "series": "بیدار · حقیقت، با سند",
+ "lang": "fa",
+ "hook": {
+  "text": "مرو در کدام دوره‌های تاریخِ ایران حاضر بود؟",
+  "figure": "۶ از ۱۴ دوره"
+ },
+ "source": "منبع: اطلسِ تاریخیِ بیدار: دوره‌ها، پایتخت‌ها و شهرهای هر دوره",
+ "foot": "bidar.ahura.cloud",
+ "city": {
+  "id": "merv",
+  "name": "مرو",
+  "note": "ترکمنستانِ امروز",
+  "outside": "امروز بیرونِ مرزِ سیاسیِ ایران"
+ },
+ "periods": [
+  {
+   "id": "elam",
+   "name": "عیلام",
+   "years": "≈۳۲۰۰–۵۴۰ پ.م",
+   "held": false,
+   "capital": false
+  },
+  {
+   "id": "median",
+   "name": "ماد",
+   "years": "≈۶۷۸–۵۵۰ پ.م",
+   "held": false,
+   "capital": false
+  },
+  {
+   "id": "achaemenid",
+   "name": "هخامنشی",
+   "years": "۵۵۰–۳۳۰ پ.م",
+   "held": true,
+   "capital": false
+  },
+  {
+   "id": "seleucid",
+   "name": "سلوکی",
+   "years": "۳۳۰–≈۱۵۰ پ.م",
+   "held": true,
+   "capital": false
+  },
+  {
+   "id": "parthian",
+   "name": "اشکانی",
+   "years": "۲۴۷ پ.م – ۲۲۴ م",
+   "held": true,
+   "capital": false
+  },
+  {
+   "id": "sasanian",
+   "name": "ساسانی",
+   "years": "۲۲۴–۶۵۱ م",
+   "held": true,
+   "capital": false
+  },
+  {
+   "id": "caliphate",
+   "name": "فتحِ اسلامی و خلافت",
+   "years": "۶۵۱–≈۹۰۰ م",
+   "held": true,
+   "capital": false
+  },
+  {
+   "id": "intermezzo",
+   "name": "فترتِ ایرانی",
+   "years": "≈۸۲۰–۱۲۱۹ م",
+   "held": true,
+   "capital": false
+  },
+  {
+   "id": "ilkhanate",
+   "name": "ایلخانانِ مغول",
+   "years": "۱۲۵۶–۱۳۳۵ م",
+   "held": false,
+   "capital": false
+  },
+  {
+   "id": "timurid",
+   "name": "تیموریان",
+   "years": "۱۳۷۰–۱۵۰۷ م",
+   "held": false,
+   "capital": false
+  },
+  {
+   "id": "safavid",
+   "name": "صفویان",
+   "years": "۱۵۰۱–۱۷۳۶ م",
+   "held": false,
+   "capital": false
+  },
+  {
+   "id": "afsharid-zand",
+   "name": "افشاریان و زندیان",
+   "years": "۱۷۳۶–۱۷۹۶ م",
+   "held": false,
+   "capital": false
+  },
+  {
+   "id": "qajar",
+   "name": "قاجار",
+   "years": "۱۷۸۹–۱۹۲۵ م",
+   "held": false,
+   "capital": false
+  },
+  {
+   "id": "pahlavi",
+   "name": "پهلوی",
+   "years": "۱۹۲۵–۱۹۷۹ م",
+   "held": false,
+   "capital": false
+  }
+ ],
+ "label": "حاضر در دوره‌ها",
+ "count": "۶ از ۱۴ دوره",
+ "capitalLabel": "پایتخت",
+ "beats": [
+  {
+   "id": "start",
+   "say": "مرو در کدام دوره‌های تاریخِ ایران حاضر بود؟"
+  },
+  {
+   "id": "achaemenid",
+   "say": "هخامنشی، از ۵۵۰ پ.م."
+  },
+  {
+   "id": "seleucid",
+   "say": "سلوکی، از ۳۳۰ پ.م."
+  },
+  {
+   "id": "parthian",
+   "say": "اشکانی، از ۲۴۷ پ.م."
+  },
+  {
+   "id": "sasanian",
+   "say": "ساسانی، از ۲۲۴ م."
+  },
+  {
+   "id": "caliphate",
+   "say": "فتحِ اسلامی و خلافت، از ۶۵۱ م."
+  },
+  {
+   "id": "intermezzo",
+   "say": "فترتِ ایرانی، از ≈۸۲۰ م."
+  },
+  {
+   "id": "note",
+   "say": "مرو، ترکمنستانِ امروز. امروز بیرونِ مرزِ سیاسیِ ایران."
+  },
+  {
+   "id": "end",
+   "say": "",
+   "min": 3
+  }
+ ]
+}

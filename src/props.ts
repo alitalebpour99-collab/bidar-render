@@ -122,17 +122,18 @@ export type BookProps = Omit<Base, "close"> & {
 };
 
 /**
- * The formats of 2026-10-29 («سخنِ ماندگار», «چهره‌ها», «حدس بزن») are drawn in
- * the site's own shape (bidar lib/social/props.ts), with the beats the site sends
- * or src/adapt.ts derives the same way.
+ * The site's own shape, as the formats of 2026-10-29 (quote, figure, quiz;
+ * flag, treaty, city) send it (bidar lib/social/props.ts): the compositions read it as it comes,
+ * with the beats the site sends (or the ones adapt.ts makes the same way).
  */
 export type SiteBase = {
   series: string;
+  lang?: "fa";
   hook: { text: string; figure: string | null } | null;
-  beats: Beat[];
-  /** the source line, «منبع: » taken off by adapt */
+  /** the source line, «منبع: …» (adapt or SourceLine takes the word off) */
   source: string;
   foot?: string;
+  beats: Beat[];
   music?: string;
   voiceIn?: VoiceIn[];
   tl?: Timeline;
@@ -182,7 +183,49 @@ export type QuizProps = SiteBase & {
   cta: string;
 };
 
-export type ReelProps = BordersProps | MythProps | WordProps | BookProps | QuoteProps | FigureProps | QuizProps;
+
+/** «پرچم‌های ایران»: one flag of the site's /iran/flags, built layer by layer from the site's own picture (src/data/flags.json). */
+export type FlagProps = SiteBase & {
+  format: "flag";
+  title: string;
+  flag: {
+    id: string;
+    name: string;
+    years: string;
+    /** the site's file, «/flags/flag_04_safavid.svg»: its layers are in src/data/flags.json under its name */
+    file: string;
+    colors: { hex: string; label: string }[];
+    symbols: string;
+    meaning: string[];
+    tier: Confidence;
+    tierLabel: string;
+    approx: { stamp: string; basisLabel: string; basis: string | null } | null;
+    tricolor: string | null;
+  };
+  sheet: string;
+};
+
+/** «آنچه از دست رفت»: a treaty of the atlas as a document, then its places on a light regional map. */
+export type TreatyProps = SiteBase & {
+  format: "treaty";
+  title: string;
+  treaty: { id: string; name: string; year: string; toLabel: string; to: string; sealed: boolean; body: string[]; tier: Confidence; tierLabel: string; note: string[] | null };
+  places: { id: string; name: string; today: string; lat: number; lon: number }[];
+  todayLabel: string;
+  reference: string;
+};
+
+/** «شهرها در گذرِ دوره‌ها»: a city of the atlas on a brass astrolabe, the periods before 1979 on its rim. */
+export type CityProps = SiteBase & {
+  format: "city";
+  city: { id: string; name: string; note: string; outside: string | null };
+  periods: { id: string; name: string; years: string; held: boolean; capital: boolean }[];
+  label: string;
+  count: string;
+  capitalLabel: string;
+};
+
+export type ReelProps = BordersProps | MythProps | WordProps | BookProps | QuoteProps | FigureProps | QuizProps | FlagProps | TreatyProps | CityProps;
 
 /** the site sends `kicker` (the series' name) beside `series` («بیدار · حقیقت، با سند»); the tile shows the kicker when there is one */
 export type CoverProps = { format: string; series: string; title: string; mark?: string; kicker?: string };
