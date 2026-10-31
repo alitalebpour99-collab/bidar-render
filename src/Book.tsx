@@ -214,7 +214,7 @@ const TextPage: React.FC<{ p: BookProps; page: PageWords; timed: Word[]; first: 
       <Head p={p} heading={first} />
       <div style={{ position: "absolute", top, left: 84, right: 104, bottom: 150, display: "flex", flexDirection: "column", justifyContent: "center", direction: "rtl" }}>
         {paras.map((para, j) => (
-          <p key={para.at} style={{ margin: 0, textIndent: j === 0 && (first || !p.words[para.at]?.p) ? 0 : "1.6em", textAlign: "justify", fontFamily: NASKH, fontWeight: 400, fontSize: size, lineHeight: 1.95, color: LEAF.ink }}>
+          <p key={para.at} style={{ margin: 0, textIndent: j === 0 && (first || !p.words[para.at]?.p) ? 0 : "1.6em", textAlign: p.v2 ? "right" : "justify", fontFamily: NASKH, fontWeight: 400, fontSize: size, lineHeight: p.v2 ? 1.8 : 1.95, color: LEAF.ink }}>
             {para.list.map((w, k) => {
               const i = para.at + k;
               const t = timed[i];

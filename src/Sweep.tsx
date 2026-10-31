@@ -22,6 +22,9 @@ export type SweepProps = Omit<Base, "format" | "hook"> & {
   close: { q: string; a: string };
 };
 
+/** «≈۳۲۰۰ پ.م» as read on screen: «حدود ۳۲۰۰ پ.م» (a «≈» lands on the wrong side of a Persian figure) */
+const about = (tick: string) => tick.replace(/^≈\s*/, "حدود ");
+
 const INK = { deep: "#05070d", ink: "#f4f1ea", muted: "#a7adbb", line: "rgba(244,241,234,.16)" };
 /** the line's span: the first period's first year to the end of the last (1979) */
 const END = 1979;
@@ -163,7 +166,7 @@ export const Sweep: React.FC<SweepProps> = (p) => {
             {p.periods.map((per, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 14px 8px", borderRadius: 14, background: "rgba(244,241,234,.06)", borderRight: `8px solid ${per.color}`, opacity: fade(frame, close.from + 8 + i * 2, 6), transform: `translateY(${rise(frame, close.from + 8 + i * 2, 16, 10)}px)` }}>
                 <span style={{ flex: 1, textAlign: "right", fontFamily: VAZIR, fontWeight: 800, fontSize: 27, color: INK.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{per.name}</span>
-                <span style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 23, color: per.color, whiteSpace: "nowrap" }}>{per.tick}</span>
+                <span style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 23, color: per.color, whiteSpace: "nowrap" }}>{about(per.tick)}</span>
               </div>
             ))}
           </div>
@@ -186,7 +189,7 @@ export const Sweep: React.FC<SweepProps> = (p) => {
         <div style={{ position: "absolute", top: 18, left: xOf(filled) - 3, width: 6, height: 70, borderRadius: 3, background: INK.ink, boxShadow: "0 0 16px rgba(255,255,255,.8)" }} />
         {/* the ends and zero */}
         {[
-          [START, p.periods[0].tick],
+          [START, about(p.periods[0].tick)],
           [0, "۰"],
           [END, `${faDigits(END)} م`],
         ].map(([y, label], k) => (
