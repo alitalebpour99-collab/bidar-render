@@ -40,6 +40,16 @@ const MOODS = {
   treaty: { root: 36, bpm: 50, voice: "dark", sub: true },
   // E, a drone and a high fifth that swells and fades each bar, like a ring turning
   city: { root: 40, bpm: 52, voice: "orbit" },
+  // the round of 2026-10-31 (proposal): Divan's «data-steady» brief, made here
+  // (a muted eighth pulse, a clock tick, a soft pad, a sub on the downbeat; minor; no melody)
+  // «درست یا غلط؟»: G, 100 bpm, the tick a little brighter (a game against the clock)
+  truefalse: { root: 43, bpm: 100, voice: "steady", sub: true, tick: 0.05, level: 0.85 },
+  // «پنج‌تایی»: A, 92 bpm, a countdown that keeps walking
+  five: { root: 45, bpm: 92, voice: "steady", sub: true, tick: 0.035, level: 0.85 },
+  // «تاریخ ایران در یک دقیقه»: E, 108 bpm, the quickest, like a clock running through the centuries
+  sweep: { root: 40, bpm: 108, voice: "steady", sub: true, tick: 0.045, level: 0.9 },
+  // «از کتاب» v2: room tone only, far under the book's reading; it carries the title page and the last card
+  book2: { root: 38, bpm: 48, voice: "room", level: 0.55 },
 };
 
 // i  VI  III  VII
@@ -102,6 +112,38 @@ function bell(L, R, at, midi, gain, pan) {
     const s = (Math.sin(TAU * f * t) * Math.exp(-t / 1.4) + 0.35 * Math.sin(TAU * f * 2.01 * t) * Math.exp(-t / 0.7) + 0.12 * Math.sin(TAU * f * 3.98 * t) * Math.exp(-t / 0.35)) * Math.min(1, t * 300);
     L[start + n] += lg * s;
     R[start + n] += rg * s;
+  }
+}
+
+/** A muted note: a short, soft, low-passed tone (the «data-steady» pulse). */
+function mute(L, R, at, midi, gain, pan) {
+  const f = hz(midi);
+  const start = Math.round(at * RATE);
+  const length = Math.min(L.length - start, Math.round(0.32 * RATE));
+  if (length <= 0) return;
+  const lg = gain * Math.cos(((pan + 1) * Math.PI) / 4);
+  const rg = gain * Math.sin(((pan + 1) * Math.PI) / 4);
+  for (let n = 0; n < length; n += 1) {
+    const t = n / RATE;
+    const env = Math.min(1, t / 0.004) * Math.exp(-t / 0.085);
+    const v = env * (Math.sin(TAU * f * t) + 0.32 * Math.sin(TAU * 2 * f * t) * Math.exp(-t / 0.03));
+    L[start + n] += lg * v;
+    R[start + n] += rg * v;
+  }
+}
+
+/** A clock's tick: a few milliseconds of bright noise. */
+function tick(L, R, at, gain) {
+  const start = Math.round(at * RATE);
+  const length = Math.min(L.length - start, Math.round(0.012 * RATE));
+  let last = 0;
+  for (let n = 0; n < length; n += 1) {
+    const x = noise();
+    const hp = x - last;
+    last = x;
+    const v = gain * hp * Math.exp(-n / (0.0025 * RATE));
+    L[start + n] += v;
+    R[start + n] += v * 0.8;
   }
 }
 
@@ -189,6 +231,32 @@ export function score({ id, seconds, duck = [] }) {
       pad(L, R, from, to, root, 0.08);
       pad(L, R, from, to, root + 7, 0.032);
       pad(L, R, from, to, root + 15, 0.01, 1.6);
+    } else if (mood.voice === "steady") {
+      // the pad: the key note and its fifth, the chord very soft above (it moves every bar, never a tune)
+      pad(L, R, from, to, root, 0.045);
+      pad(L, R, from, to, root + 7, 0.02);
+      chord.forEach((o) => pad(L, R, from, to, root + 12 + o, 0.01, 1.2));
+      // the pulse: eight muted notes a bar on the key note an octave up, the fourth of each half on the fifth; the last bar only its first
+      for (let q = 0; q < 8; q += 1) {
+        if (b === bars - 1 && q > 0) break;
+        mute(L, R, from + q * (beat / 2), root + 12 + (q % 4 === 3 ? 7 : 0), q % 2 ? 0.05 : 0.085, q % 2 ? 0.28 : -0.28);
+      }
+      // the clock: a tick on every off-beat
+      if (b < bars - 1) for (let q = 1; q < 8; q += 2) tick(L, R, from + q * (beat / 2), mood.tick ?? 0.04);
+    } else if (mood.voice === "room") {
+      // a far low pad, and a breath of brown noise: the room the book is read in
+      pad(L, R, from, to, root, 0.03, 1.6);
+      pad(L, R, from, to, root + 7, 0.012, 1.6);
+      const a = Math.floor(from * RATE);
+      const z = Math.min(L.length, Math.ceil(to * RATE));
+      let bl = 0;
+      let br = 0;
+      for (let n = a; n < z; n += 1) {
+        bl = 0.995 * bl + 0.02 * noise();
+        br = 0.995 * br + 0.02 * noise();
+        L[n] += bl * 0.35;
+        R[n] += br * 0.35;
+      }
     } else if (mood.voice === "orbit") {
       pad(L, R, from, to, root, 0.062);
       pad(L, R, from, to, root + 7, 0.026);

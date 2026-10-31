@@ -301,8 +301,12 @@ export const Book: React.FC<BookProps> = (p) => {
   const bookOut = interpolate(frame, [shut + TURN + 2, shut + TURN + 12], [1, 0], clamped);
   const coverIn = fade(frame, shut + TURN + 4, 12);
   const sourceFrom = tl.total - Math.round(2.6 * FPS);
+  // v2: the last frames go back to the title page, so the Reel's end is its beginning
+  const loopFrom = tl.total - 14;
   return (
     <Stage ground={<Ground total={tl.total} />} tl={tl} music={p.music}>
+      {p.v2 ? <Sfx at={shut + TURN + 8} name="chime" volume={0.22} /> : null}
+      {p.v2 ? <Sfx at={loopFrom} name="paper" volume={0.22} /> : null}
       <Sfx at={0} name="paper" volume={0.18} />
       {turns.map((t, i) => (
         <Sfx key={i} at={t} name="paper" volume={0.24} />
@@ -337,7 +341,16 @@ export const Book: React.FC<BookProps> = (p) => {
         </div>
       ) : null}
 
-      <SourceLine text={p.source} opacity={fade(frame, sourceFrom, 12)} color="rgba(243,231,200,.72)" strong={LEAF.gold} />
+      <SourceLine text={p.source} opacity={p.v2 ? Math.min(fade(frame, sourceFrom - 20, 12), 1 - fade(frame, loopFrom, 8)) : fade(frame, sourceFrom, 12)} color="rgba(243,231,200,.72)" strong={LEAF.gold} />
+
+      {p.v2 && frame >= loopFrom ? (
+        <div style={{ position: "absolute", inset: 0, opacity: fade(frame, loopFrom, 12) }}>
+          <Block />
+          <Leaf turnAt={null} z={100}>
+            <TitlePage p={p} />
+          </Leaf>
+        </div>
+      ) : null}
     </Stage>
   );
 };

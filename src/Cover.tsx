@@ -21,6 +21,10 @@ const LOOK: Record<string, { ground: string; ink: string; accent: string; sub: s
   borders: { ground: `radial-gradient(1200px 1400px at 50% 45%, ${LAPIS.sea}, ${LAPIS.deep})`, ink: LAPIS.ink, accent: LAPIS.gold, sub: LAPIS.turq, frame: "rgba(232,197,106,.5)" },
   myth: { ground: `radial-gradient(1200px 1400px at 50% 45%, ${PARCH.paper}, ${PARCH.paper2})`, ink: PARCH.ink, accent: PARCH.red, sub: PARCH.ink2, frame: "rgba(43,30,18,.35)" },
   word: { ground: `radial-gradient(1200px 1400px at 50% 50%, ${NIGHT.sky}, ${NIGHT.deep})`, ink: NIGHT.ink, accent: NIGHT.mint, sub: NIGHT.muted, frame: "rgba(95,224,207,.45)" },
+  // the round of 2026-10-31 (proposal)
+  truefalse: { ground: "radial-gradient(1200px 1400px at 50% 40%, #12373d, #06171a)", ink: "#f4ecd9", accent: "#e2bd6b", sub: "#9fb8b5", frame: "rgba(244,236,217,.35)" },
+  five: { ground: "radial-gradient(1200px 1400px at 50% 40%, #11254d, #040917)", ink: "#f5efe0", accent: "#e8c56a", sub: "#9fb0d0", frame: "rgba(232,197,106,.5)" },
+  sweep: { ground: "radial-gradient(1200px 1400px at 50% 40%, #2a2410, #05070d)", ink: "#f4f1ea", accent: "#e8c56a", sub: "#a7adbb", frame: "rgba(232,197,106,.45)" },
 };
 
 const TOP = (H - W) / 2;

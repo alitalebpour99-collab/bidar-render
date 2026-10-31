@@ -135,11 +135,18 @@ function word(p: Site): WordProps {
  */
 function book(p: Site): BookProps {
   const words: BookWord[] = (p.words ?? []).map((w: Site) => ({ w: String(w.w), t: Number(w.t) || 0, ...(w.p ? { p: 1 as const } : {}) }));
-  const made: Beat[] = [
-    { id: "start", say: end(hookText(p, p.chapter?.title ?? "")), min: 3 },
-    { id: "read", say: words.map((w) => w.w).join(" ") },
-    { id: "end", say: "", min: 1.5 },
-  ];
+  // v2 (the round of 2026-10-31): the reading starts after 1.4 s instead of 3 (the title page is read with it), and the close is shorter
+  const made: Beat[] = p.v2
+    ? [
+        { id: "start", say: "", min: 1.4 },
+        { id: "read", say: words.map((w) => w.w).join(" ") },
+        { id: "end", say: "", min: 1.2 },
+      ]
+    : [
+        { id: "start", say: end(hookText(p, p.chapter?.title ?? "")), min: 3 },
+        { id: "read", say: words.map((w) => w.w).join(" ") },
+        { id: "end", say: "", min: 1.5 },
+      ];
   return {
     format: "book",
     series: String(p.series ?? ""),
@@ -157,6 +164,7 @@ function book(p: Site): BookProps {
     words,
     closeLine: String(p.close?.line ?? p.closeLine ?? "ادامه‌اش در کتاب"),
     closeUrl: String(p.close?.url ?? p.closeUrl ?? "bidar.ahura.cloud/book"),
+    ...(p.v2 ? { v2: true } : {}),
   };
 }
 

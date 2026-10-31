@@ -1,0 +1,30 @@
+{
+  "budget": 5000,
+  "characters": 1691,
+  "calls": [
+    {
+      "name": "truefalse-1",
+      "characters": 521,
+      "at": "2026-10-31T18:53:52.403Z",
+      "model": "eleven_v3",
+      "voice": "rNb3hdSf0n4ROIbYC8Bl",
+      "ok": true
+    },
+    {
+      "name": "five-1",
+      "characters": 475,
+      "at": "2026-10-31T18:54:08.550Z",
+      "model": "eleven_v3",
+      "voice": "rNb3hdSf0n4ROIbYC8Bl",
+      "ok": true
+    },
+    {
+      "name": "sweep-1",
+      "characters": 695,
+      "at": "2026-10-31T18:54:26.666Z",
+      "model": "eleven_v3",
+      "voice": "rNb3hdSf0n4ROIbYC8Bl",
+      "ok": true
+    }
+  ]
+}

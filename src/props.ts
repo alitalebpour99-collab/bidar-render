@@ -119,6 +119,8 @@ export type BookProps = Omit<Base, "close"> & {
   /** the close: «ادامه‌اش در کتاب» and the book's address */
   closeLine: string;
   closeUrl: string;
+  /** the round of 2026-10-31: reading from 1.4 s, room tone under it, a chime on the close, and the last frames back on the title page (a loop) */
+  v2?: boolean;
 };
 
 /**
