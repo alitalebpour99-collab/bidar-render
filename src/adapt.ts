@@ -153,7 +153,8 @@ function book(p: Site): BookProps {
     episode: 0,
     hook: hookText(p, String(p.chapter?.title ?? "")),
     hookFigure: String(p.hook?.figure ?? p.chapter?.name ?? ""),
-    beats: beatsOr(p, made),
+    // v2 sets its own opening and close, whatever beats the site sent
+    beats: p.v2 ? made : beatsOr(p, made),
     source: sourceText(p.source),
     foot: p.foot,
     book: String(p.book ?? "روایتِ ایران"),
