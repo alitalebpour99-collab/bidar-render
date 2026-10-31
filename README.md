@@ -47,7 +47,8 @@ Chrome drawing for minutes.
 ## Every Reel
 
 - 1080 × 1920, 30 fps, H.264 at a fixed 2.3 Mbit/s with AAC 160 kbit/s (a Reel
-  of 30–40 s is about 9–12 MB), levelled to −14 LUFS (`finish.mjs`).
+  of 30–40 s is about 9–12 MB), levelled to −14 LUFS (`finish.mjs`), and refused when its sound has a hole
+  (4 s or more of total silence inside the film; `node --test tests/`).
 - Persian and right to left; Vazirmatn for every text, Gulzar for «بیدار».
 - The hook is on screen from the first frame and the picture already moves.
 - One idea; a cut or a change of motion about every two seconds.

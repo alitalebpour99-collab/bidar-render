@@ -159,6 +159,25 @@ export function bookAlignment(words, seconds) {
 }
 
 /**
+ * Cuts `from`–`to` (seconds) of the recording `src` into `out`, with 30 ms in
+ * and 180 ms out so the cut does not click, and returns the cut's length.
+ *
+ * The cut is made inside the filter (atrim, then asetpts so the cut's clock
+ * starts at 0) and only then faded. With `-ss` after `-i` the fades would see
+ * the recording's own clock: the fade-out, meant for the cut's last 180 ms,
+ * fell at `seconds − 0.18` of the RECORDING, and everything after it was
+ * silent. A passage from 26.6 s (chapter 3) went mute after 9.4 s of its 36.
+ */
+export function cutPassage(src, out, from, to) {
+  const seconds = Math.round((to - from) * 1000) / 1000;
+  if (!(seconds > 5)) throw new Error("the book's cut is too short");
+  const fadeOut = Math.max(0, seconds - 0.18).toFixed(3);
+  const filter = `atrim=start=${from.toFixed(3)}:end=${to.toFixed(3)},asetpts=PTS-STARTPTS,afade=t=in:st=0:d=0.03,afade=t=out:st=${fadeOut}:d=0.18`;
+  execFileSync("ffmpeg", ["-v", "error", "-y", "-i", src, "-af", filter, "-c:a", "libmp3lame", "-b:a", "128k", "-ar", "44100", out]);
+  return seconds;
+}
+
+/**
  * Fetches the book's recording named in a book Reel's props, cuts the passage
  * into the public folder (as the Reel's voice file, so dropVoice takes it away)
  * and returns it as the composition takes its lines in.
@@ -200,10 +219,7 @@ export async function bookVoice(props, publicDir, name, { fps = 30 } = {}) {
     const from = Math.max(0, Number(props.from) || 0);
     // `to` may pass the end of the file (a passage that ends its section): the file's end is the cut
     const to = Math.min(Number(props.to) || 0, length || Number(props.to) || 0);
-    const seconds = Math.round((to - from) * 1000) / 1000;
-    if (!(seconds > 5)) throw new Error("the book's cut is too short");
-    const fadeOut = Math.max(0, seconds - 0.18).toFixed(3);
-    execFileSync("ffmpeg", ["-v", "error", "-y", "-i", src, "-ss", from.toFixed(3), "-t", seconds.toFixed(3), "-af", `afade=t=in:st=0:d=0.03,afade=t=out:st=${fadeOut}:d=0.18`, "-c:a", "libmp3lame", "-b:a", "128k", "-ar", "44100", out]);
+    const seconds = cutPassage(src, out, from, to);
     console.log(`book: ${url.pathname.split("/").pop()} cut ${from.toFixed(2)}–${to.toFixed(2)} s (${seconds.toFixed(1)} s of ${length.toFixed(1)} s), ${words.length} words`);
     const text = words.map((w) => String(w.w)).join(" ");
     return [{ file, cue: "read", frames: Math.ceil(seconds * fps), text, alignment: bookAlignment(words, seconds) }];

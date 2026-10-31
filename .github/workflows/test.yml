@@ -1,0 +1,29 @@
+name: Test
+
+# The checks that need no browser and no render: the book's cut and the check
+# for holes in a Reel's sound (tests/), on sound made with ffmpeg. Runs on every
+# pull request and on main; it installs no npm packages (the tests use Node and
+# ffmpeg only).
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: ffmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends ffmpeg
+      - run: node --test tests/*.test.mjs
