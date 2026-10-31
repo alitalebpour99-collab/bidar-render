@@ -118,12 +118,16 @@ async function render(job) {
     await call(`?id=${job.id}&done=1`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ seconds }) });
     state.rendered += 1;
     console.log(`Reel ${job.id} (${job.format}): ${seconds.toFixed(1)} s of video, ${(fs.statSync(video).size / 1e6).toFixed(1)} MB, rendered and handed back in ${Math.round((Date.now() - t0) / 1000)} s`);
+    return true;
   } catch (e) {
     state.failed += 1;
     // the message of a render error may quote the content: only its first line, cut short, goes to the site, and none of it to the log
     const reason = gaveUp ? "the machine ran short of memory; the render was given up and will be tried again" : String(e instanceof Error ? e.message : e).split("\n")[0].slice(0, 240);
-    console.log(`Reel ${job.id} (${job.format}): failed after ${Math.round((Date.now() - t0) / 1000)} s`);
-    await call(`?id=${job.id}&failed=1`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ error: reason }) }).catch(() => undefined);
+    // a check of the finished file (finish.mjs FinalCheck) would fail the same way again: it says so (docs/contract.md, `final`), and its reason holds no content
+    const final = !gaveUp && Boolean(e?.final);
+    console.log(`Reel ${job.id} (${job.format}): failed after ${Math.round((Date.now() - t0) / 1000)} s${final ? `, for good: ${reason}` : ""}`);
+    await call(`?id=${job.id}&failed=1`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ error: reason, ...(final ? { final: true } : {}) }) }).catch(() => undefined);
+    return false;
   } finally {
     clearInterval(watch);
     for (const file of [video, cover, ...(music ? [path.join(publicDir, music)] : [])]) fs.rmSync(file, { force: true });
@@ -146,8 +150,11 @@ async function pass() {
     }
     const { jobs } = await call(`?max=1&can=${encodeURIComponent(CAN)}`);
     if (!jobs?.length) return taken;
-    await render(jobs[0]);
+    const ok = await render(jobs[0]);
     taken += 1;
+    // a failure ends the pass: the site puts the Reel back in the queue (three tries in all), and making it again
+    // at once, in the same pass, would only fail again; the next look tries it, or the Reels behind it
+    if (!ok) return taken;
     // never more than a handful in one pass: something that fails for ever must not spin
     if (taken >= 6) return taken;
   }

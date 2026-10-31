@@ -195,6 +195,15 @@ Body: `{"error": "<first line of the error, at most 240 characters>"}`. The
 site counts the try; after three it marks the post `failed` and tells the owner.
 The renderer prints nothing of a Reel's content in its log.
 
+`"final": true` is added when the error would come back the same however often
+the Reel is made again: a check of the finished file failed (`finish.mjs`
+FinalCheck, for now a hole in the sound: a mute stretch of 4 s or more after the
+first 1.5 s that does not run to the end). Its `error` is then plain Persian for
+the owner, with no content in it («صدای ویدیو از ثانیهٔ ۱۳ تا ۴۰ قطع است، پس
+این ویدیو فرستاده نشد.»). A site that reads `final` marks the post `failed` at
+once and tells the owner; one that does not counts it as a try like any other.
+A failure ends the worker's pass, so a Reel is never made twice in one pass.
+
 ## `GET /api/social/busy` (public, no secret)
 
 `{"ok": true, "busy": false}`: whether a render was claimed in the last 90

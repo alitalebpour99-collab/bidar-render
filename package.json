@@ -8,7 +8,8 @@
     "render": "node render.mjs",
     "worker": "node worker.mjs --loop",
     "once": "node worker.mjs",
-    "sfx": "node sfx.mjs"
+    "sfx": "node sfx.mjs",
+    "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
     "@remotion/bundler": "4.0.531",
