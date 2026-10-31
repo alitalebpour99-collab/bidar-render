@@ -1,5 +1,5 @@
 // «از کتاب»: a passage of the narrated book «روایتِ ایران», played by the book's
-// own recording (voice.mjs bookVoice cuts it; no narrator, no music). Its look is
+// own recording (voice.mjs bookVoice cuts it; no narrator, no music: only the room tone of v2). Its look is
 // the site's reader (components/book of bidar): a parchment leaf with a double
 // gold jadval on a lapis night, the book's Naskh, the section's heading in
 // Gulzar, and the word being read lit as a gold pill (the reader's .bw-active).
@@ -46,9 +46,9 @@ const endsSentence = (w: string) => /[.؟!؛][»)"]?$/.test(w) && !/^(?:[؀-ۿ]|
 const endsClause = (w: string) => /[،:؛.؟!][»)"]?$/.test(w);
 
 /** The passage's words cut into pages: as few as hold PAGE_WORDS each, each cut on the sentence end nearest its share (else a clause's, else a word). */
-export function paginate(words: BookWord[]): PageWords[] {
+export function paginate(words: BookWord[], per = PAGE_WORDS): PageWords[] {
   const n = words.length;
-  const count = Math.max(1, Math.ceil(n / PAGE_WORDS));
+  const count = Math.max(1, Math.ceil(n / per));
   const cuts: number[] = [];
   for (let k = 1; k < count; k += 1) {
     const aim = Math.round((k * n) / count);
@@ -200,7 +200,8 @@ const TitlePage: React.FC<{ p: BookProps }> = ({ p }) => {
 const TextPage: React.FC<{ p: BookProps; page: PageWords; timed: Word[]; first: boolean }> = ({ p, page, timed, first }) => {
   const frame = useCurrentFrame();
   const words = p.words.slice(page.from, page.to);
-  const size = sizeFor(words.length);
+  // v2: shorter pages in larger type (a page turns every few seconds, and reads on a phone)
+  const size = p.v2 ? (words.length <= 20 ? 70 : words.length <= 26 ? 64 : 58) : sizeFor(words.length);
   // the page's paragraphs: a new one at each word marked `p`
   const paras: { at: number; list: BookWord[] }[] = [];
   words.forEach((w, k) => {
@@ -213,7 +214,7 @@ const TextPage: React.FC<{ p: BookProps; page: PageWords; timed: Word[]; first: 
       <Head p={p} heading={first} />
       <div style={{ position: "absolute", top, left: 84, right: 104, bottom: 150, display: "flex", flexDirection: "column", justifyContent: "center", direction: "rtl" }}>
         {paras.map((para, j) => (
-          <p key={para.at} style={{ margin: 0, textIndent: j === 0 && (first || !p.words[para.at]?.p) ? 0 : "1.6em", textAlign: "justify", fontFamily: NASKH, fontWeight: 400, fontSize: size, lineHeight: 1.95, color: LEAF.ink }}>
+          <p key={para.at} style={{ margin: 0, textIndent: j === 0 && (first || !p.words[para.at]?.p) ? 0 : "1.6em", textAlign: p.v2 ? "right" : "justify", fontFamily: NASKH, fontWeight: 400, fontSize: size, lineHeight: p.v2 ? 1.8 : 1.95, color: LEAF.ink }}>
             {para.list.map((w, k) => {
               const i = para.at + k;
               const t = timed[i];
@@ -289,7 +290,7 @@ export const Book: React.FC<BookProps> = (p) => {
   const read = beatAt(tl, "read");
   const close = beatAt(tl, "end");
   const timed = tl.words.filter((w) => w.beat === "read");
-  const pages = paginate(p.words);
+  const pages = paginate(p.words, p.v2 ? 24 : PAGE_WORDS);
   // the leaf turns: the title page just before the first word, each page just before the first word of the next, the last onto the cover
   const firstWord = (pg: PageWords) => timed[pg.from]?.from ?? read.from;
   const turns: number[] = [Math.max(6, read.from - 8), ...pages.slice(1).map((pg) => firstWord(pg) - 12), close.from - 4];
@@ -301,8 +302,12 @@ export const Book: React.FC<BookProps> = (p) => {
   const bookOut = interpolate(frame, [shut + TURN + 2, shut + TURN + 12], [1, 0], clamped);
   const coverIn = fade(frame, shut + TURN + 4, 12);
   const sourceFrom = tl.total - Math.round(2.6 * FPS);
+  // v2: the last frames go back to the title page, so the Reel's end is its beginning
+  const loopFrom = tl.total - 14;
   return (
     <Stage ground={<Ground total={tl.total} />} tl={tl} music={p.music}>
+      {p.v2 ? <Sfx at={shut + TURN + 8} name="chime" volume={0.22} /> : null}
+      {p.v2 ? <Sfx at={loopFrom} name="paper" volume={0.22} /> : null}
       <Sfx at={0} name="paper" volume={0.18} />
       {turns.map((t, i) => (
         <Sfx key={i} at={t} name="paper" volume={0.24} />
@@ -337,7 +342,16 @@ export const Book: React.FC<BookProps> = (p) => {
         </div>
       ) : null}
 
-      <SourceLine text={p.source} opacity={fade(frame, sourceFrom, 12)} color="rgba(243,231,200,.72)" strong={LEAF.gold} />
+      <SourceLine text={p.source} opacity={p.v2 ? Math.min(fade(frame, sourceFrom - 20, 12), 1 - fade(frame, loopFrom, 8)) : fade(frame, sourceFrom, 12)} color="rgba(243,231,200,.72)" strong={LEAF.gold} />
+
+      {p.v2 && frame >= loopFrom ? (
+        <div style={{ position: "absolute", inset: 0, opacity: fade(frame, loopFrom, 12) }}>
+          <Block />
+          <Leaf turnAt={null} z={100}>
+            <TitlePage p={p} />
+          </Leaf>
+        </div>
+      ) : null}
     </Stage>
   );
 };

@@ -11,6 +11,9 @@ import coverSample from "../samples/borders-1.cover.json";
 import flagSample from "../samples/flag-1.json";
 import treatySample from "../samples/treaty-1.json";
 import citySample from "../samples/city-1.json";
+import trueFalseSample from "../samples/truefalse-1.json";
+import fiveSample from "../samples/five-1.json";
+import sweepSample from "../samples/sweep-1.json";
 import { Book } from "./Book";
 import { Borders } from "./Borders";
 import { City } from "./City";
@@ -22,6 +25,9 @@ import { Quiz } from "./Quiz";
 import { Quote } from "./Quote";
 import { Treaty } from "./Treaty";
 import { Word } from "./Word";
+import { TrueFalse, type TrueFalseProps } from "./TrueFalse";
+import { Five, type FiveProps } from "./Five";
+import { Sweep, type SweepProps } from "./Sweep";
 import type { Base, BookProps, BordersProps, CityProps, CoverProps, FigureProps, FlagProps, MythProps, QuizProps, QuoteProps, ReelProps, TreatyProps, WordProps } from "./props";
 import { timeline } from "./timeline";
 import { adapt } from "./adapt";
@@ -53,6 +59,10 @@ export const Root: React.FC = () => (
     <Composition id="flag" component={Flag} {...frame} durationInFrames={1050} defaultProps={as<FlagProps>(flagSample)} calculateMetadata={(x: { props: FlagProps }) => timed(x)} />
     <Composition id="treaty" component={Treaty} {...frame} durationInFrames={1050} defaultProps={as<TreatyProps>(treatySample)} calculateMetadata={(x: { props: TreatyProps }) => timed(x)} />
     <Composition id="city" component={City} {...frame} durationInFrames={1050} defaultProps={as<CityProps>(citySample)} calculateMetadata={(x: { props: CityProps }) => timed(x)} />
+    {/* the round of 2026-10-31: «درست یا غلط؟», «پنج‌تایی», «تاریخِ ایران در یک دقیقه» (the book's v2 is the «book» above) */}
+    <Composition id="truefalse" component={TrueFalse} {...frame} durationInFrames={1500} defaultProps={as<TrueFalseProps>(trueFalseSample)} calculateMetadata={(x: { props: TrueFalseProps }) => timed(x)} />
+    <Composition id="five" component={Five} {...frame} durationInFrames={1350} defaultProps={as<FiveProps>(fiveSample)} calculateMetadata={(x: { props: FiveProps }) => timed(x)} />
+    <Composition id="sweep" component={Sweep} {...frame} durationInFrames={1800} defaultProps={as<SweepProps>(sweepSample)} calculateMetadata={(x: { props: SweepProps }) => timed(x)} />
     <Composition id="cover" component={Cover} {...frame} durationInFrames={1} defaultProps={as<CoverProps>(coverSample)} />
   </>
 );
