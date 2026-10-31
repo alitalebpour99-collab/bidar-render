@@ -72,7 +72,7 @@ can (Divan keeps the last `can` it saw).
 ```ts
 type RenderJob = {
   id: number;            // the post's row id
-  format: string;        // the composition: "borders" | "myth" | "word" | "book" | "quote" | "figure" | "quiz" | "flag" | "treaty" | "city"
+  format: string;        // the composition: "borders" | "myth" | "word" | "book" | "quote" | "figure" | "quiz" | "flag" | "treaty" | "city" | "truefalse" | "five" | "sweep"
   name: string;          // a file-safe name, e.g. "reel-7"
   props: object;         // the composition's props (below), built by the site from its own data
   cover: CoverProps;     // the still tile for the profile grid
@@ -142,10 +142,40 @@ serves publicly, and the renderer cuts it (the site's server has no ffmpeg).
   timing). `bookVoice` turns them into an alignment of ElevenLabs' shape
   (every letter of a word from its start to the next word's start), so
   `src/timeline.ts` times the karaoke as it times a narrator.
-- The beats are `start` (the hook, silent, at least 3 s), `read` (the
-  passage's words joined by spaces) and `end` (the close, silent).
-- No bed (`music.mjs` `hasBed`): the book is read with nothing under it; only
+- **v2 is the book's look** since the owner's yes of 2026-10-31 (the site
+  sends `v2: true`; only `v2: false` draws the old one): the beats are
+  `start` (silent, 1.4 s: the title page is read with the first words),
+  `read` (the passage's words joined by spaces) and `end` (the close, silent,
+  1.2 s), set by `src/adapt.ts` whatever the site sends; pages of about 24
+  words in larger type, set right; a chime on the last card; the last frames
+  go back to the title page, so the Reel loops.
+- Its bed is room tone only (`music.mjs` MOODS.book, «room»), far under the
+  reading: the title page and the last card are never dead silence. No music;
   a soft paper sound at each turn of the leaf.
+
+### «درست یا غلط؟», «پنج‌تایی», «تاریخِ ایران در یک دقیقه» (2026-10-31)
+
+Jobs of `format: "truefalse"`, `"five"` and `"sweep"` (bidar
+`lib/social/round.ts`, props in its `lib/social/props.ts`) are narrated in
+one take and drawn in the site's own shape (`src/TrueFalse.tsx`, `Five.tsx`,
+`Sweep.tsx`). Their hook is a line (a site's `{text, figure}` is read as its
+text). Every one has a bed of the «data-steady» voice (`music.mjs`), so its
+silent holds are never mute and the check for holes (`finish.mjs`) holds.
+
+- truefalse: `rounds[]` of `{n, text, verdict: "right" | "wrong" | "contested",
+  label, proof, tier, topic}` and `score {q, a, next}`. Beats: `start` (the
+  hook and `sub`), per sentence `s1` («جملهٔ یک: …»), `c1` (silent, 3 s: a hold
+  to guess), `v1` (the label, then the proof, a dash said as a comma), …,
+  `end` (the score's question). «contested» is stamped «بحث‌برانگیز» in amber.
+- five: `items[]` of `{n: "۵"…"۱", icon, name, line, figure, tier}`, `close {q,
+  a}`. `icon` is a drawing of the thing (yakhchal, squinch, road, windmill,
+  qanat) or `star`, the girih star for people (no face); an empty `tier` draws
+  no chip. Beats: `start`, `n5` … `n1` («پنج: <name>. <line>.», the last «و
+  یک: …»), `end`.
+- sweep: `periods[]` of `{id, name, years, start, tick, color, capitals}`,
+  `close {q, a}`, `until` (where the line of time ends: 1979, or 651 for the
+  periods before Islam). Beats: `start` («<hook>، <sub>.»), `p1` … («<name>،
+  از <tick>.»), `end`.
 
 ### «سخنِ ماندگار», «چهره‌ها», «حدس بزن»: the site's shape, and holds
 
@@ -334,7 +364,8 @@ type CityProps = SiteBase & {
   // beats: start, one per held period (its id), note, end
 };
 
-type CoverProps = { format: string; series: string; title: string; mark?: string; kicker?: string };
+// `episode` (2026-10-31): «قسمتِ ۳», the book's «قسمتِ ۳ از ۲۰», drawn centred above the middle square, inside the grid's 3:4
+type CoverProps = { format: string; series: string; title: string; mark?: string; kicker?: string; episode?: string };
 ```
 
 The flags' pictures are the renderer's copy of the site's `public/flags/` (see

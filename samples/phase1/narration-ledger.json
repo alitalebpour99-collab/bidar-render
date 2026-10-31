@@ -1,0 +1,57 @@
+{
+  "budget": 3000,
+  "characters": 1204,
+  "calls": [
+    {
+      "name": "truefalse-2",
+      "characters": 529,
+      "at": "2026-10-31T21:05:35.195Z",
+      "model": "eleven_v3",
+      "voice": "rNb3hdSf0n4ROIbYC8Bl",
+      "format": "mp3_44100_128",
+      "ok": true,
+      "check": {
+        "score": 1,
+        "missed": []
+      },
+      "kbps": 128
+    },
+    {
+      "name": "five-scientists",
+      "characters": 338,
+      "at": "2026-10-31T21:05:55.868Z",
+      "model": "eleven_v3",
+      "voice": "rNb3hdSf0n4ROIbYC8Bl",
+      "format": "mp3_44100_128",
+      "ok": true,
+      "check": {
+        "score": 0.976,
+        "missed": [
+          "اوستاد",
+          "علوم",
+          "کدامشان"
+        ]
+      },
+      "kbps": 128
+    },
+    {
+      "name": "sweep-before-islam",
+      "characters": 337,
+      "at": "2026-10-31T21:06:12.201Z",
+      "model": "eleven_v3",
+      "voice": "rNb3hdSf0n4ROIbYC8Bl",
+      "format": "mp3_44100_128",
+      "ok": true,
+      "check": {
+        "score": 1,
+        "missed": []
+      },
+      "kbps": 128
+    }
+  ],
+  "account": {
+    "before": 76161,
+    "after": 76394,
+    "spent": 233
+  }
+}

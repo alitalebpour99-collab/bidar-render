@@ -129,24 +129,36 @@ function word(p: Site): WordProps {
 
 /**
  * «از کتاب»: the passage as the site sends it (lib/social/props.ts BookProps).
- * Beats: the hook (silent), the passage's words joined by spaces (played by the
- * book's recording, voice.mjs bookVoice), the close (silent), exactly as the
- * site's lib/social/beats.ts makes them.
+ * Beats: the opening (silent), the passage's words joined by spaces (played by
+ * the book's recording, voice.mjs bookVoice), the close (silent), exactly as
+ * the site's lib/social/beats.ts makes them.
+ * v2 is the book's look since the owner's yes of 2026-10-31 (the site sends
+ * `v2: true`; only `v2: false` draws the old look): the reading starts after
+ * 1.4 s instead of 3, room tone under it (music.mjs MOODS.book), a chime on the
+ * close, shorter pages in larger type, and the last frames back on the title page.
  */
 function book(p: Site): BookProps {
   const words: BookWord[] = (p.words ?? []).map((w: Site) => ({ w: String(w.w), t: Number(w.t) || 0, ...(w.p ? { p: 1 as const } : {}) }));
-  const made: Beat[] = [
-    { id: "start", say: end(hookText(p, p.chapter?.title ?? "")), min: 3 },
-    { id: "read", say: words.map((w) => w.w).join(" ") },
-    { id: "end", say: "", min: 1.5 },
-  ];
+  const v2 = p.v2 !== false;
+  const made: Beat[] = v2
+    ? [
+        { id: "start", say: "", min: 1.4 },
+        { id: "read", say: words.map((w) => w.w).join(" ") },
+        { id: "end", say: "", min: 1.2 },
+      ]
+    : [
+        { id: "start", say: end(hookText(p, p.chapter?.title ?? "")), min: 3 },
+        { id: "read", say: words.map((w) => w.w).join(" ") },
+        { id: "end", say: "", min: 1.5 },
+      ];
   return {
     format: "book",
     series: String(p.series ?? ""),
     episode: 0,
     hook: hookText(p, String(p.chapter?.title ?? "")),
     hookFigure: String(p.hook?.figure ?? p.chapter?.name ?? ""),
-    beats: beatsOr(p, made),
+    // v2 sets its own opening and close, whatever beats the site sent
+    beats: v2 ? made : beatsOr(p, made),
     source: sourceText(p.source),
     foot: p.foot,
     book: String(p.book ?? "روایتِ ایران"),
@@ -157,6 +169,7 @@ function book(p: Site): BookProps {
     words,
     closeLine: String(p.close?.line ?? p.closeLine ?? "ادامه‌اش در کتاب"),
     closeUrl: String(p.close?.url ?? p.closeUrl ?? "bidar.ahura.cloud/book"),
+    ...(v2 ? { v2: true } : {}),
   };
 }
 
@@ -254,6 +267,53 @@ export function quizBeats(p: Site): Beat[] {
 
 const site = <P,>(s: Site, made: Beat[]) => ({ ...s, beats: beatsOr(s, made), source: sourceText(s.source) }) as unknown as P;
 
+// ---------- «درست یا غلط؟», «پنج‌تایی», «تاریخِ ایران در یک دقیقه» (the round of 2026-10-31) ----------
+// Drawn in the site's own shape (bidar lib/social/round.ts); the beats exactly as
+// the site's lib/social/beats.ts makes them. The hook may come as a line or as
+// the site's {text, figure}: these compositions draw a line.
+const ROUND_WORDS = ["یک", "دو", "سه", "چهار", "پنج"];
+const latinDigits = (s: string) => s.replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)));
+/** A said line without the dash the site writes between two clauses: «… ۳۳۰ پ.م به آتش کشید — نزدیک به …» → «…، نزدیک به …». */
+const unDash = (s: string) => s.replace(/\s+[—–]\s+/g, "، ");
+
+/** «درست یا غلط؟»: the opening, then per sentence: the sentence, three silent seconds, the verdict and its proof; the score. */
+export function trueFalseBeats(p: Site): Beat[] {
+  const rounds: Site[] = p.rounds ?? [];
+  return [
+    { id: "start", say: end(`${hookText(p, "")} ${String(p.sub ?? "")}`) },
+    ...rounds.flatMap((r, i) => [
+      { id: `s${i + 1}`, say: end(`جملهٔ ${ROUND_WORDS[i] ?? faDigits(i + 1)}: ${String(r.text ?? "")}`) },
+      { id: `c${i + 1}`, say: "", min: 3 },
+      { id: `v${i + 1}`, say: end(`${String(r.label ?? "")}. ${unDash(String(r.proof ?? ""))}`) },
+    ]),
+    { id: "end", say: end(`${String(p.score?.q ?? "")} ${String(p.score?.a ?? "")}`), min: 2.6 },
+  ];
+}
+
+/** «پنج‌تایی»: the title and the dare, then each item from five down to one («و یک: …»), the close. */
+export function fiveBeats(p: Site): Beat[] {
+  const items: Site[] = p.items ?? [];
+  return [
+    { id: "start", say: `${end(hookText(p, ""))} ${end(String(p.sub ?? ""))}` },
+    ...items.map((it, i) => {
+      const n = Number(latinDigits(String(it.n ?? "")));
+      return { id: `n${n}`, say: `${i === items.length - 1 && items.length > 1 ? "و " : ""}${ROUND_WORDS[n - 1] ?? String(it.n)}: ${end(String(it.name ?? ""))} ${end(String(it.line ?? ""))}` };
+    }),
+    { id: "end", say: end(`${String(p.close?.q ?? "")} ${String(p.close?.a ?? "")}`), min: 2.6 },
+  ];
+}
+
+/** «تاریخِ ایران در یک دقیقه»: the title, each period and the year it begins, the close. */
+export function sweepBeats(p: Site): Beat[] {
+  const periods: Site[] = p.periods ?? [];
+  return [
+    { id: "start", say: end(`${hookText(p, "")}، ${String(p.sub ?? "")}`) },
+    ...periods.map((x, i) => ({ id: `p${i + 1}`, say: end(`${String(x.name ?? "")}، از ${String(x.tick ?? "")}`) })),
+    { id: "end", say: end(`${String(p.close?.q ?? "")} ${String(p.close?.a ?? "")}`), min: 2.6 },
+  ];
+}
+const lineHook = (s: Site) => ({ ...s, hook: hookText(s, "") });
+
 /** Props in either shape → the compositions' own. */
 export function adapt<P extends ReelProps>(p: P | Site): P {
   const s = p as Site;
@@ -264,6 +324,9 @@ export function adapt<P extends ReelProps>(p: P | Site): P {
   if (s.format === "quote" && Array.isArray(s.lines)) return site<P>(s, quoteBeats(s));
   if (s.format === "figure" && Array.isArray(s.facts)) return site<P>(s, figureBeats(s));
   if (s.format === "quiz" && Array.isArray(s.options)) return site<P>(s, quizBeats(s));
+  if (s.format === "truefalse" && Array.isArray(s.rounds)) return site<P>(lineHook(s), trueFalseBeats(s));
+  if (s.format === "five" && Array.isArray(s.items)) return site<P>(lineHook(s), fiveBeats(s));
+  if (s.format === "sweep" && Array.isArray(s.periods)) return site<P>(lineHook(s), sweepBeats(s));
   if (s.format === "book" && Array.isArray(s.words)) return { ...book(s), music: s.music, voiceIn: s.voiceIn } as unknown as P;
   if (Array.isArray(s.beats) && s.beats.length && (s.stops || s.evidence)) return { ...s, source: sourceText(s.source) } as P;
   if (s.format === "borders" && Array.isArray(s.frames)) return { ...borders(s), music: s.music, voiceIn: s.voiceIn } as unknown as P;

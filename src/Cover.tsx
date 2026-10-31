@@ -1,7 +1,9 @@
 // The still picture a Reel shows on the profile grid. Instagram cuts the tall
 // frame to its middle (3:4, and 1:1 in places), so everything that must be
 // read sits in the middle square. Each series keeps its own look on the grid
-// too: lapis and gold, parchment, night teal.
+// too: lapis and gold, parchment, night teal. Since 2026-10-31 every tile of
+// a series also carries the episode's number («قسمتِ ۳», the book's «قسمتِ ۳
+// از ۲۰») in one fixed place: centred just above the square, inside the 3:4.
 import React from "react";
 import { AbsoluteFill } from "remotion";
 import { LEAF, NASKH } from "./Book";
@@ -21,9 +23,26 @@ const LOOK: Record<string, { ground: string; ink: string; accent: string; sub: s
   borders: { ground: `radial-gradient(1200px 1400px at 50% 45%, ${LAPIS.sea}, ${LAPIS.deep})`, ink: LAPIS.ink, accent: LAPIS.gold, sub: LAPIS.turq, frame: "rgba(232,197,106,.5)" },
   myth: { ground: `radial-gradient(1200px 1400px at 50% 45%, ${PARCH.paper}, ${PARCH.paper2})`, ink: PARCH.ink, accent: PARCH.red, sub: PARCH.ink2, frame: "rgba(43,30,18,.35)" },
   word: { ground: `radial-gradient(1200px 1400px at 50% 50%, ${NIGHT.sky}, ${NIGHT.deep})`, ink: NIGHT.ink, accent: NIGHT.mint, sub: NIGHT.muted, frame: "rgba(95,224,207,.45)" },
+  // the round of 2026-10-31
+  truefalse: { ground: "radial-gradient(1200px 1400px at 50% 40%, #12373d, #06171a)", ink: "#f4ecd9", accent: "#e2bd6b", sub: "#9fb8b5", frame: "rgba(244,236,217,.35)" },
+  five: { ground: "radial-gradient(1200px 1400px at 50% 40%, #11254d, #040917)", ink: "#f5efe0", accent: "#e8c56a", sub: "#9fb0d0", frame: "rgba(232,197,106,.5)" },
+  sweep: { ground: "radial-gradient(1200px 1400px at 50% 40%, #2a2410, #05070d)", ink: "#f4f1ea", accent: "#e8c56a", sub: "#a7adbb", frame: "rgba(232,197,106,.45)" },
 };
 
 const TOP = (H - W) / 2;
+
+/**
+ * The episode's number, in the same place on every tile: centred just above
+ * the middle square, inside the grid's 3:4 (1080 × 1440 from y 240), where no
+ * tile draws anything; a dark pill with light figures that reads on every
+ * series' ground.
+ */
+const EpisodeChip: React.FC<{ text?: string }> = ({ text }) =>
+  text ? (
+    <div style={{ position: "absolute", top: TOP - 118, left: 0, right: 0, display: "flex", justifyContent: "center" }}>
+      <div style={{ padding: "6px 30px 14px", borderRadius: 36, background: "rgba(5,7,13,.72)", border: "3px solid rgba(232,197,106,.8)", color: "#f4ecd9", fontFamily: VAZIR, fontWeight: 800, fontSize: 44, direction: "rtl", whiteSpace: "nowrap" }}>{text}</div>
+    </div>
+  ) : null;
 
 /**
  * The book's tile («از کتاب»): the book's lapis leather and gold tooling (the
@@ -122,7 +141,7 @@ const QuizTile: React.FC<CoverProps> = ({ title, mark, kicker, series }) => {
   );
 };
 
-export const Cover: React.FC<CoverProps> = (props) => {
+const Tile: React.FC<CoverProps> = (props) => {
   const { format, series, title, mark, kicker } = props;
   if (format === "book") return <BookTile {...props} />;
   if (format === "quote") return <QuoteTile {...props} />;
@@ -148,3 +167,11 @@ export const Cover: React.FC<CoverProps> = (props) => {
     </AbsoluteFill>
   );
 };
+
+/** The tile of a Reel: its series' own, and the episode's number on it. */
+export const Cover: React.FC<CoverProps> = (props) => (
+  <AbsoluteFill>
+    <Tile {...props} />
+    <EpisodeChip text={props.episode} />
+  </AbsoluteFill>
+);

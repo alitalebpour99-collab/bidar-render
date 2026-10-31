@@ -119,6 +119,8 @@ export type BookProps = Omit<Base, "close"> & {
   /** the close: «ادامه‌اش در کتاب» and the book's address */
   closeLine: string;
   closeUrl: string;
+  /** the round of 2026-10-31: reading from 1.4 s, room tone under it, a chime on the close, and the last frames back on the title page (a loop) */
+  v2?: boolean;
 };
 
 /**
@@ -228,4 +230,5 @@ export type CityProps = SiteBase & {
 export type ReelProps = BordersProps | MythProps | WordProps | BookProps | QuoteProps | FigureProps | QuizProps | FlagProps | TreatyProps | CityProps;
 
 /** the site sends `kicker` (the series' name) beside `series` («حقیقت، با سند»; «بیدار · حقیقت، با سند» before 2026-10-31); the tile shows the kicker when there is one */
-export type CoverProps = { format: string; series: string; title: string; mark?: string; kicker?: string };
+/** `episode`: «قسمتِ ۳» or «قسمتِ ۳ از ۲۰» (the round of 2026-10-31): every tile of a series carries its number in the same place */
+export type CoverProps = { format: string; series: string; title: string; mark?: string; kicker?: string; episode?: string };
