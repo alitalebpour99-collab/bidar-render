@@ -35,7 +35,7 @@ const t0 = Date.now();
 const voiceFile = flag("--voice");
 const lines = voiceFile ? [JSON.parse(fs.readFileSync(voiceFile, "utf8"))].flat() : [];
 // a book Reel plays the book's own recording, cut from the file its props name (voice.mjs bookVoice)
-const voiceIn = id === "book" || props.format === "book" ? await bookVoice(props, publicDir, name) : voiceFiles(lines, publicDir, name, { baseDir: voiceFile ? path.dirname(voiceFile) : ".", format: id });
+const voiceIn = id === "book" || id === "book2" ? await bookVoice(props, publicDir, name) : voiceFiles(lines, publicDir, name, { baseDir: voiceFile ? path.dirname(voiceFile) : ".", format: id });
 const first = await selectComposition({ serveUrl, id, inputProps: { ...props, voiceIn }, timeoutInMilliseconds });
 const seconds = first.durationInFrames / first.fps;
 const tl = first.props.tl;
