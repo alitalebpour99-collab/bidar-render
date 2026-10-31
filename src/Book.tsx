@@ -149,7 +149,7 @@ const Block: React.FC = () => (
 const Head: React.FC<{ p: BookProps; heading: boolean }> = ({ p, heading }) => (
   <div style={{ position: "absolute", top: 64, left: 80, right: 100, textAlign: "center", direction: "rtl" }}>
     <div style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 30, color: LEAF.goldDeep, marginBottom: 14 }}>
-      {p.book} · {p.chapter.name}
+      {p.book}، {p.chapter.name}
     </div>
     <Sarlowh width={420} />
     {heading && p.chapter.heading ? (
@@ -272,7 +272,10 @@ const Cover: React.FC<{ title: string; w: number; h: number; glint: number }> = 
         <Shamseh size={120} color={LEAF.gold} />
       </div>
       <div style={{ fontFamily: GULZAR, fontSize: 96, lineHeight: 1.5, color: LEAF.gold, textShadow: "0 2px 4px rgba(0,0,0,.75)" }}>{title}</div>
-      <div style={{ fontFamily: VAZIR, fontWeight: 500, fontSize: 24, letterSpacing: "0.34em", color: LEAF.gold2, direction: "ltr" }}>BIDAR · بیدار</div>
+      <div style={{ fontFamily: VAZIR, fontWeight: 500, fontSize: 24, letterSpacing: "0.34em", color: LEAF.gold2, direction: "ltr", display: "flex", gap: "1.2em" }}>
+        <span>BIDAR</span>
+        <span>بیدار</span>
+      </div>
     </div>
     {/* the foil catches the light */}
     <div style={{ position: "absolute", inset: 0, background: `linear-gradient(105deg, transparent ${glint - 10}%, rgba(255,240,190,.28) ${glint}%, transparent ${glint + 10}%)` }} />

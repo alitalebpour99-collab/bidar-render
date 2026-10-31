@@ -144,7 +144,7 @@ export const Myth: React.FC<MythProps> = (p) => {
 
       {/* the claim as a header while the evidence is read */}
       <div style={{ position: "absolute", top: DESIGN_TOP + 130, right: SIDE + 40, left: SIDE, direction: "rtl", opacity: Math.min(fade(frame, firstCard, 12), leave(frame, slamAt + 2, 6)) }}>
-        <div style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 36, color: PARCH.red }}>{p.subject} · ادعا</div>
+        <div style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 36, color: PARCH.red }}>{p.subject}، ادعا</div>
         <div style={{ fontFamily: VAZIR, fontWeight: 800, fontSize: 60, lineHeight: 1.35, color: PARCH.ink }}>«{p.claim}»</div>
       </div>
 

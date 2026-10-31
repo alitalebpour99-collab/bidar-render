@@ -227,5 +227,5 @@ export type CityProps = SiteBase & {
 
 export type ReelProps = BordersProps | MythProps | WordProps | BookProps | QuoteProps | FigureProps | QuizProps | FlagProps | TreatyProps | CityProps;
 
-/** the site sends `kicker` (the series' name) beside `series` («بیدار · حقیقت، با سند»); the tile shows the kicker when there is one */
+/** the site sends `kicker` (the series' name) beside `series` («حقیقت، با سند»; «بیدار · حقیقت، با سند» before 2026-10-31); the tile shows the kicker when there is one */
 export type CoverProps = { format: string; series: string; title: string; mark?: string; kicker?: string };

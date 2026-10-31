@@ -11,7 +11,7 @@
 import React, { useMemo } from "react";
 import { AbsoluteFill, Img, interpolate, useCurrentFrame } from "remotion";
 import flagsJson from "./data/flags.json";
-import { DESIGN_TOP, FPS, Mark, SIDE, Sfx, SourceLine, VAZIR, W, clamped, ease, fade, glide, grow, leave, rise, shake, slam } from "./kit";
+import { DESIGN_TOP, FPS, Mark, SIDE, Sfx, SourceLine, VAZIR, W, clamped, ease, fade, glide, grow, leave, noDot, rise, seriesLine, shake, slam } from "./kit";
 import type { FlagProps } from "./props";
 import { Captions, Stage, beatAt } from "./Safe";
 
@@ -302,11 +302,9 @@ export const Flag: React.FC<FlagProps> = (p) => {
       {/* the sheet's title: the series and its number, the flag's name and years */}
       {frame >= titleIn - 2 ? (
         <div style={{ position: "absolute", top: DESIGN_TOP + 122, right: SIDE, left: SIDE, direction: "rtl", opacity: fade(frame, titleIn, 10), transform: `translateY(${rise(frame, titleIn, 40, 16)}px)` }}>
-          {/* no «·» beside Persian figures: it reads as a zero («ایران ۰ ۱ از ۹») */}
-          <div style={{ display: "flex", alignItems: "center", gap: 16, fontFamily: VAZIR, fontWeight: 700, fontSize: 30, color: SHEET.olive }}>
-            <span>{p.title}</span>
-            <span style={{ width: 2.5, height: 26, background: SHEET.olive, opacity: 0.6 }} />
-            <span>{p.sheet}</span>
+          {/* no «·» beside Persian figures (it reads as a zero: «ایران ۰ ۱ از ۹»), and no rule either (it reads as «|»): a Persian comma */}
+          <div style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 30, color: SHEET.olive }}>
+            {noDot(p.title)}، {p.sheet}
           </div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 26, flexWrap: "wrap", marginTop: 4 }}>
             <span style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: f.name.length > 14 ? 74 : 90, lineHeight: 1.2, color: SHEET.ink }}>{f.name}</span>
@@ -391,7 +389,7 @@ export const FlagTile: React.FC<{ title: string; mark?: string; kicker?: string;
         <circle cx={540} cy={top + 540} r={150} fill="none" stroke={SHEET.olive} strokeWidth="2.4" strokeDasharray="6 7" />
       </svg>
       <div style={{ position: "absolute", top: top + 96, right: 116, left: 116, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 40, color: SHEET.olive }}>{kicker ?? series}</span>
+        <span style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 40, color: SHEET.olive }}>{kicker ?? seriesLine(series)}</span>
         <span style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 30, color: SHEET.ink2, direction: "ltr" }}>bidar.ahura.cloud</span>
       </div>
       <div style={{ position: "absolute", top: top + 360, height: 360, right: 190, left: 190, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: 20, textAlign: "center" }}>

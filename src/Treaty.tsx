@@ -16,7 +16,7 @@ import { feature } from "topojson-client";
 import topoJson from "./data/countries-110m.json";
 import { NASKH } from "./Book";
 import { CONFIDENCE } from "./Myth";
-import { DESIGN_TOP, FPS, Mark, SIDE, Sfx, SourceLine, VAZIR, W, clamped, ease, fade, glide, grow, leave, rise, shake, slam } from "./kit";
+import { DESIGN_TOP, FPS, Mark, SIDE, Sfx, SourceLine, VAZIR, W, clamped, ease, fade, glide, grow, leave, rise, seriesLine, shake, slam } from "./kit";
 import type { Confidence, TreatyProps } from "./props";
 import { Captions, Stage, beatAt } from "./Safe";
 
@@ -377,11 +377,9 @@ export const Treaty: React.FC<TreatyProps> = (p) => {
         <div style={{ position: "absolute", top: DESIGN_TOP + 112, right: SIDE, left: SIDE, direction: "rtl", display: "flex", alignItems: "center", gap: 26, opacity: fade(frame, body0 + 8, 10), transform: `translateY(${rise(frame, body0 + 8, 30, 14)}px)` }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontFamily: NASKH, fontWeight: 700, fontSize: Math.min(70, nameSize), lineHeight: 1.5, color: ARCH.cream }}>{t.name}</div>
-            {/* no «·» here: beside Persian figures it reads as a zero */}
-            <div style={{ display: "flex", alignItems: "center", gap: 16, fontFamily: VAZIR, fontWeight: 700, fontSize: 38, color: ARCH.paper2, marginTop: 2 }}>
-              <span>{t.year}</span>
-              <span style={{ width: 2.5, height: 30, background: ARCH.paper2, opacity: 0.55 }} />
-              <span>{t.sealed ? `${t.toLabel}: ${t.to}` : t.to}</span>
+            {/* no «·» here (beside Persian figures it reads as a zero), and no rule (it reads as «|»): a Persian comma */}
+            <div style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 38, color: ARCH.paper2, marginTop: 2 }}>
+              {t.year}، {t.sealed ? `${t.toLabel}: ${t.to}` : t.to}
             </div>
           </div>
           {t.sealed ? <Seal size={124} /> : null}
@@ -485,7 +483,7 @@ export const TreatyTile: React.FC<{ title: string; mark?: string; kicker?: strin
       <div style={{ position: "absolute", top: top + 60, left: 70, right: 70, height: 960, borderRadius: 10, background: ARCH.paper, boxShadow: "0 30px 60px rgba(0,0,0,.5)" }}>
         <div style={{ position: "absolute", inset: 24, border: "3px solid rgba(142,29,20,.55)", borderRadius: 4 }} />
         <div style={{ position: "absolute", top: 60, right: 70, left: 70, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 42, color: ARCH.wax }}>{kicker ?? series}</span>
+          <span style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 42, color: ARCH.wax }}>{kicker ?? seriesLine(series)}</span>
           <span style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 30, color: ARCH.ink2, direction: "ltr" }}>bidar.ahura.cloud</span>
         </div>
         <div style={{ position: "absolute", top: 210, right: 80, left: 80, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 18 }}>
