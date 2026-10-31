@@ -204,7 +204,7 @@ const Opening: React.FC<{ p: FiveProps; until: number; loop?: boolean }> = ({ p,
       <div style={{ position: "absolute", top: DESIGN_TOP + 720, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 22, direction: "rtl" }}>
         {p.items.map((it, i) => {
           const last = i === p.items.length - 1;
-          const at = loop ? -30 : 4 + i * 4;
+          const at = loop ? -30 : -6 + i * 3;
           return (
             <div key={i} style={{ width: 150, height: 190, borderRadius: 22, border: `4px solid ${last ? GALLERY.gold : "rgba(232,197,106,.45)"}`, background: last ? "rgba(232,197,106,.12)" : "rgba(4,9,23,.5)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: VAZIR, fontWeight: 900, fontSize: 110, color: last ? GALLERY.gold : GALLERY.muted, transform: `scale(${slam(frame, at, 1.4)})`, opacity: fade(frame, at, 3), boxShadow: last ? `0 0 ${30 + 20 * Math.sin(frame / 6)}px rgba(232,197,106,.45)` : "none" }}>
               {last ? "؟" : it.n}
@@ -267,23 +267,25 @@ export const Five: React.FC<FiveProps> = (p) => {
         if (frame < b.from - 8 || frame > next + 4) return null;
         const Icon = ICONS[it.icon];
         const out = leave(frame, next + 2, 8);
-        const nameSize = it.name.length > 18 ? 74 : it.name.length > 10 ? 88 : 104;
+        const nameSize = it.name.length > 18 ? 86 : it.name.length > 10 ? 98 : 120;
         return (
           <div key={i} style={{ position: "absolute", inset: 0, opacity: out }}>
             {/* the numeral, stamped in, with its outline spreading */}
-            <div style={{ position: "absolute", top: DESIGN_TOP + 250, right: SIDE - 10, width: 330, height: 420, display: "flex", alignItems: "center", justifyContent: "center", direction: "rtl" }}>
+            <div style={{ position: "absolute", top: DESIGN_TOP + 230, right: SIDE - 20, width: 300, height: 420, display: "flex", alignItems: "center", justifyContent: "center", direction: "rtl" }}>
               <div style={{ position: "absolute", fontFamily: VAZIR, fontWeight: 900, fontSize: 400, lineHeight: 1, color: "transparent", WebkitTextStroke: `3px ${GALLERY.gold}`, opacity: interpolate(frame, [b.from, b.from + 16], [0.8, 0], clamped), transform: `scale(${interpolate(frame, [b.from, b.from + 16], [1, 1.5], clamped)})` }}>{it.n}</div>
               <div style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 400, lineHeight: 1, color: GALLERY.gold, textShadow: "0 18px 50px rgba(0,0,0,.5)", transform: `scale(${slam(frame, b.from, 2.2)})` }}>{it.n}</div>
             </div>
             {/* the drawing */}
-            <div style={{ position: "absolute", top: DESIGN_TOP + 240, left: SIDE - 6, width: 440, height: 440, borderRadius: 40, background: "radial-gradient(circle at 50% 45%, rgba(232,197,106,.10), rgba(232,197,106,0) 70%)", display: "flex", alignItems: "center", justifyContent: "center", transform: `translateY(${rise(frame, b.from - 4, 30, 16)}px)` }}>
-              <Icon at={b.from + 4} />
+            <div style={{ position: "absolute", top: DESIGN_TOP + 200, left: SIDE - 30, width: 620, height: 620, borderRadius: 60, background: "radial-gradient(circle at 50% 45%, rgba(232,197,106,.10), rgba(232,197,106,0) 70%)", display: "flex", alignItems: "center", justifyContent: "center", transform: `translateY(${rise(frame, b.from - 4, 30, 16)}px)` }}>
+              <div style={{ transform: "scale(1.42)" }}>
+                <Icon at={b.from + 4} />
+              </div>
             </div>
             {/* the name, the site's line, the figure and its trust label */}
-            <div style={{ position: "absolute", top: DESIGN_TOP + 730, left: SIDE, right: RAIL - 40, direction: "rtl" }}>
+            <div style={{ position: "absolute", top: DESIGN_TOP + 860, left: SIDE, right: RAIL - 50, direction: "rtl" }}>
               <div style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: nameSize, lineHeight: 1.25, color: GALLERY.ink, opacity: fade(frame, b.from + 2, 6), transform: `translateY(${rise(frame, b.from + 2, 40, 14)}px)` }}>{it.name}</div>
               <div style={{ height: 6, width: `${42 * grow(frame, b.from + 6, 18)}%`, background: GALLERY.gold, borderRadius: 3, marginTop: 14 }} />
-              <div style={{ fontFamily: VAZIR, fontWeight: 600, fontSize: it.line.length > 70 ? 44 : 50, lineHeight: 1.6, color: GALLERY.ink, marginTop: 26, opacity: fade(frame, b.from + 14, 10), transform: `translateY(${rise(frame, b.from + 14, 24, 14)}px)` }}>{it.line}</div>
+              <div style={{ fontFamily: VAZIR, fontWeight: 600, fontSize: it.line.length > 70 ? 50 : 56, lineHeight: 1.55, color: GALLERY.ink, marginTop: 26, opacity: fade(frame, b.from + 14, 10), transform: `translateY(${rise(frame, b.from + 14, 24, 14)}px)` }}>{it.line}</div>
               <div style={{ display: "flex", gap: 18, alignItems: "center", marginTop: 34, flexWrap: "wrap", opacity: fade(frame, b.from + 26, 8), transform: `scale(${slam(frame, b.from + 26, 1.25)})`, transformOrigin: "100% 50%" }}>
                 <span style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 46, color: GALLERY.deep, background: GALLERY.gold, borderRadius: 18, padding: "8px 26px 14px" }}>{it.figure}</span>
                 <span style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 30, color: GALLERY.chipInk, background: GALLERY.chip, borderRadius: 30, padding: "6px 20px 10px" }}>{it.tier}</span>

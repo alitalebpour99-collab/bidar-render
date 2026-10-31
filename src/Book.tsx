@@ -46,9 +46,9 @@ const endsSentence = (w: string) => /[.؟!؛][»)"]?$/.test(w) && !/^(?:[؀-ۿ]|
 const endsClause = (w: string) => /[،:؛.؟!][»)"]?$/.test(w);
 
 /** The passage's words cut into pages: as few as hold PAGE_WORDS each, each cut on the sentence end nearest its share (else a clause's, else a word). */
-export function paginate(words: BookWord[]): PageWords[] {
+export function paginate(words: BookWord[], per = PAGE_WORDS): PageWords[] {
   const n = words.length;
-  const count = Math.max(1, Math.ceil(n / PAGE_WORDS));
+  const count = Math.max(1, Math.ceil(n / per));
   const cuts: number[] = [];
   for (let k = 1; k < count; k += 1) {
     const aim = Math.round((k * n) / count);
@@ -200,7 +200,8 @@ const TitlePage: React.FC<{ p: BookProps }> = ({ p }) => {
 const TextPage: React.FC<{ p: BookProps; page: PageWords; timed: Word[]; first: boolean }> = ({ p, page, timed, first }) => {
   const frame = useCurrentFrame();
   const words = p.words.slice(page.from, page.to);
-  const size = sizeFor(words.length);
+  // v2: shorter pages in larger type (a page turns every few seconds, and reads on a phone)
+  const size = p.v2 ? (words.length <= 20 ? 70 : words.length <= 26 ? 64 : 58) : sizeFor(words.length);
   // the page's paragraphs: a new one at each word marked `p`
   const paras: { at: number; list: BookWord[] }[] = [];
   words.forEach((w, k) => {
@@ -289,7 +290,7 @@ export const Book: React.FC<BookProps> = (p) => {
   const read = beatAt(tl, "read");
   const close = beatAt(tl, "end");
   const timed = tl.words.filter((w) => w.beat === "read");
-  const pages = paginate(p.words);
+  const pages = paginate(p.words, p.v2 ? 24 : PAGE_WORDS);
   // the leaf turns: the title page just before the first word, each page just before the first word of the next, the last onto the cover
   const firstWord = (pg: PageWords) => timed[pg.from]?.from ?? read.from;
   const turns: number[] = [Math.max(6, read.from - 8), ...pages.slice(1).map((pg) => firstWord(pg) - 12), close.from - 4];

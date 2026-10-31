@@ -109,8 +109,8 @@ const Opening: React.FC<{ p: TrueFalseProps; leaveAt: number; loop?: boolean }> 
       </div>
       <div style={{ position: "absolute", top: DESIGN_TOP + 430, left: 0, right: 0, textAlign: "center", direction: "rtl", fontFamily: VAZIR, fontWeight: 700, fontSize: 54, color: DESK.muted }}>{p.sub}</div>
       <div style={{ position: "absolute", top: DESIGN_TOP + 610, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 70, direction: "rtl" }}>
-        <Stamp word="درست" color={DESK.right} at={loop ? -20 : 0} size={0.9} tilt={-9} />
-        <Stamp word="غلط" color={DESK.wrong} at={loop ? -20 : 9} size={0.9} tilt={7} />
+        <Stamp word="درست" color={DESK.right} at={loop ? -20 : -5} size={0.9} tilt={-9} />
+        <Stamp word="غلط" color={DESK.wrong} at={loop ? -20 : 7} size={0.9} tilt={7} />
       </div>
       {/* three empty cards waiting on the desk */}
       <div style={{ position: "absolute", top: DESIGN_TOP + 1010, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 34, direction: "rtl" }}>
@@ -183,13 +183,13 @@ export const TrueFalse: React.FC<TrueFalseProps> = (p) => {
         const x = (1 - inP) * 900 - outP * 1100;
         const rot = (1 - inP) * 9 - 1.6 + outP * -8;
         const [sx, sy] = shake(frame, v.from, 9);
-        const size = r.text.length <= 34 ? 74 : r.text.length <= 56 ? 64 : 56;
+        const size = r.text.length <= 34 ? 96 : r.text.length <= 56 ? 84 : 72;
         const counting = frame >= c.from && frame < v.from;
         const left = counting ? Math.max(1, 3 - Math.floor((frame - c.from) / FPS)) : 3;
         const ringP = interpolate(frame, [c.from, c.from + 3 * FPS], [1, 0], clamped);
         return (
           <React.Fragment key={i}>
-            <div style={{ position: "absolute", top: DESIGN_TOP + 290, left: SIDE + 6, right: SIDE + 6, height: 640, transform: `translate(${x + sx}px, ${sy}px) rotate(${rot}deg)`, transformOrigin: "50% 60%" }}>
+            <div style={{ position: "absolute", top: DESIGN_TOP + 270, left: SIDE - 6, right: SIDE - 6, height: 700, transform: `translate(${x + sx}px, ${sy}px) rotate(${rot}deg)`, transformOrigin: "50% 60%" }}>
               {/* the index card */}
               <div style={{ position: "absolute", inset: 0, borderRadius: 26, background: `linear-gradient(180deg, ${DESK.card}, ${DESK.card2})`, boxShadow: "0 40px 80px rgba(0,0,0,.55), 0 2px 0 rgba(255,255,255,.6) inset", overflow: "hidden" }}>
                 <div style={{ position: "absolute", top: 118, left: 0, right: 0, height: 4, background: DESK.rule, opacity: 0.75 }} />
@@ -200,12 +200,12 @@ export const TrueFalse: React.FC<TrueFalseProps> = (p) => {
                   <span style={{ fontWeight: 900, fontSize: 42, color: DESK.rule }}>جملهٔ {r.n} از {faDigits(p.rounds.length)}</span>
                   <span style={{ fontWeight: 700, fontSize: 34, color: DESK.ink2 }}>{r.topic}</span>
                 </div>
-                <div style={{ position: "absolute", top: 150, right: 56, left: 56, bottom: 120, display: "flex", alignItems: "center", direction: "rtl" }}>
+                <div style={{ position: "absolute", top: 140, right: 56, left: 56, bottom: 200, display: "flex", alignItems: "center", direction: "rtl" }}>
                   <div style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: size, lineHeight: 1.42, color: DESK.ink, textWrap: "balance" } as React.CSSProperties}>{r.text}</div>
                 </div>
                 {/* three silent seconds: a ring in the card's corner */}
                 {frame >= c.from - 4 && frame < v.from + 4 ? (
-                  <div style={{ position: "absolute", bottom: 26, left: 34, width: 108, height: 108, opacity: Math.min(fade(frame, c.from - 4, 4), leave(frame, v.from + 4, 4)) }}>
+                  <div style={{ position: "absolute", bottom: 40, right: 44, width: 108, height: 108, opacity: Math.min(fade(frame, c.from - 4, 4), leave(frame, v.from + 4, 4)) }}>
                     <svg width={108} height={108} viewBox="0 0 108 108" style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}>
                       <circle cx={54} cy={54} r={44} fill="none" stroke="rgba(29,26,22,.12)" strokeWidth={10} />
                       <circle cx={54} cy={54} r={44} fill="none" stroke={DESK.rule} strokeWidth={10} strokeLinecap="round" pathLength={1} strokeDasharray={`${ringP} 1`} />
@@ -215,20 +215,20 @@ export const TrueFalse: React.FC<TrueFalseProps> = (p) => {
                 ) : null}
               </div>
               {/* the stamp, over the card's lower half */}
-              <div style={{ position: "absolute", bottom: 40, right: 60, direction: "rtl" }}>
+              <div style={{ position: "absolute", bottom: 30, left: 44, direction: "rtl" }}>
                 <Stamp word={r.label} color={COLOR[r.verdict]} at={v.from - 2} size={0.95} tilt={r.verdict === "right" ? -7 : 6} />
               </div>
             </div>
 
             {/* the site's proof, under the card */}
             {frame >= v.from + 6 ? (
-              <div style={{ position: "absolute", top: DESIGN_TOP + 975, left: SIDE + 6, right: RAIL - 30, direction: "rtl", opacity: Math.min(fade(frame, v.from + 6, 10), 1 - outP), transform: `translateY(${rise(frame, v.from + 6, 40, 16)}px) translateX(${-outP * 1100}px)` }}>
+              <div style={{ position: "absolute", top: DESIGN_TOP + 1010, left: SIDE - 6, right: RAIL - 40, direction: "rtl", opacity: Math.min(fade(frame, v.from + 6, 10), 1 - outP), transform: `translateY(${rise(frame, v.from + 6, 40, 16)}px) translateX(${-outP * 1100}px)` }}>
                 <div style={{ borderRadius: 26, background: "rgba(6,23,26,.82)", border: `2px solid ${COLOR[r.verdict]}`, padding: "26px 34px 30px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 18, marginBottom: 10 }}>
                     <span style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 40, color: DESK.gold }}>سند</span>
                     <span style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 28, color: DESK.deep, background: DESK.gold, borderRadius: 30, padding: "2px 18px 6px" }}>{r.tier}</span>
                   </div>
-                  <div style={{ fontFamily: VAZIR, fontWeight: 600, fontSize: r.proof.length > 90 ? 38 : 42, lineHeight: 1.6, color: DESK.cream }}>{r.proof}</div>
+                  <div style={{ fontFamily: VAZIR, fontWeight: 600, fontSize: r.proof.length > 90 ? 44 : 50, lineHeight: 1.55, color: DESK.cream }}>{r.proof}</div>
                 </div>
               </div>
             ) : null}

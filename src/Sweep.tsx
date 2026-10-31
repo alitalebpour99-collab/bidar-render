@@ -59,10 +59,10 @@ const Odometer: React.FC<{ value: number; h: number; color: string }> = ({ value
   const v = Math.abs(value);
   // each column's position: its digit, plus the fraction of the column below it as it rolls over (only near the turn)
   const cols = [1000, 100, 10, 1].map((place) => {
+    if (place === 1) return v % 10;
     const whole = Math.floor(v / place);
-    const below = (v % place) / place;
-    const carry = place === 1 ? below : Math.max(0, (below - 0.9) / 0.1);
-    return whole % 10 + carry;
+    const carry = Math.max(0, (v % place) - (place - 1));
+    return (whole % 10) + carry;
   });
   // no leading zeros: a column shows only once the value reaches it
   const from = v >= 1000 ? 0 : v >= 100 ? 1 : v >= 10 ? 2 : 3;
@@ -101,9 +101,9 @@ export const Sweep: React.FC<SweepProps> = (p) => {
   const L1 = W - SIDE - 10;
   const xOf = (y: number) => L1 - ((y - START) / (END - START)) * (L1 - L0);
   const filled = frame >= loopFrom ? interpolate(frame, [loopFrom, tl.total - 2], [END, START], clamped) : year;
-  const lineY = DESIGN_TOP + 1080;
+  const lineY = DESIGN_TOP + 1120;
   // the counter sits under the title in the opening, then rises to the top while the periods run, and comes back down for the loop
-  const counterY = frame >= loopFrom ? interpolate(frame, [loopFrom, loopFrom + 12], [200, 470], { ...clamped, easing: easeInOut }) : interpolate(frame, [beats[0].from - 4, beats[0].from + 10], [470, 200], { ...clamped, easing: easeInOut });
+  const counterY = frame >= loopFrom ? interpolate(frame, [loopFrom, loopFrom + 12], [200, 520], { ...clamped, easing: easeInOut }) : interpolate(frame, [beats[0].from - 4, beats[0].from + 10], [520, 200], { ...clamped, easing: easeInOut });
   const inClose = frame >= close.from - 2;
   return (
     <Stage ground={<Ground color={color} total={tl.total} />} tl={tl} music={p.music}>
@@ -122,7 +122,7 @@ export const Sweep: React.FC<SweepProps> = (p) => {
       {/* the opening's title, over the counter at its first year */}
       {frame < beats[0].from + 10 || frame >= loopFrom ? (
         <div style={{ position: "absolute", top: DESIGN_TOP + 170, left: SIDE, right: SIDE, textAlign: "center", direction: "rtl", opacity: frame >= loopFrom ? fade(frame, loopFrom, 12) : leave(frame, beats[0].from + 8, 10) }}>
-          <div style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 118, lineHeight: 1.25, color: INK.ink, transform: `scale(${frame >= loopFrom ? 1 : interpolate(frame, [0, 40], [1.06, 1], { ...clamped, easing: ease })})` }}>{p.hook}</div>
+          <div style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 92, lineHeight: 1.25, whiteSpace: "nowrap", color: INK.ink, transform: `scale(${frame >= loopFrom ? 1 : interpolate(frame, [0, 40], [1.06, 1], { ...clamped, easing: ease })})` }}>{p.hook}</div>
           <div style={{ fontFamily: VAZIR, fontWeight: 800, fontSize: 64, color: p.periods[0].color, marginTop: 6 }}>{p.sub}</div>
         </div>
       ) : null}
@@ -137,12 +137,12 @@ export const Sweep: React.FC<SweepProps> = (p) => {
       {now >= 0 && !inClose ? (
         <div key={now} style={{ position: "absolute", top: DESIGN_TOP + 470, left: SIDE, right: RAIL - 40, direction: "rtl", textAlign: "center" }}>
           <div style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: cur.name.length > 14 ? 104 : 136, lineHeight: 1.2, color, textShadow: "0 12px 40px rgba(0,0,0,.55)", transform: `scale(${slam(frame, beats[now].from + 8, 1.7)})`, opacity: fade(frame, beats[now].from + 8, 3) }}>{cur.name}</div>
-          <div style={{ fontFamily: VAZIR, fontWeight: 800, fontSize: 56, color: INK.ink, marginTop: 18, opacity: fade(frame, beats[now].from + 14, 6), transform: `translateY(${rise(frame, beats[now].from + 14, 20, 10)}px)` }}>{cur.years}</div>
+          <div style={{ fontFamily: VAZIR, fontWeight: 800, fontSize: 68, color: INK.ink, marginTop: 18, opacity: fade(frame, beats[now].from + 14, 6), transform: `translateY(${rise(frame, beats[now].from + 14, 20, 10)}px)` }}>{cur.years}</div>
           {cur.capitals.length ? (
             <div style={{ display: "flex", justifyContent: "center", gap: 14, marginTop: 26, flexWrap: "wrap", opacity: fade(frame, beats[now].from + 20, 6) }}>
-              <span style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 32, color: INK.muted, paddingTop: 8 }}>پایتخت:</span>
+              <span style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 40, color: INK.muted, paddingTop: 8 }}>پایتخت:</span>
               {cur.capitals.map((c, k) => (
-                <span key={k} style={{ fontFamily: VAZIR, fontWeight: 800, fontSize: 36, color: INK.deep, background: color, borderRadius: 30, padding: "4px 22px 10px", transform: `scale(${slam(frame, beats[now].from + 20 + k * 3, 1.3)})` }}>
+                <span key={k} style={{ fontFamily: VAZIR, fontWeight: 800, fontSize: 44, color: INK.deep, background: color, borderRadius: 30, padding: "4px 24px 12px", transform: `scale(${slam(frame, beats[now].from + 20 + k * 3, 1.3)})` }}>
                   {c}
                 </span>
               ))}
@@ -156,9 +156,17 @@ export const Sweep: React.FC<SweepProps> = (p) => {
 
       {/* the close: the question over the whole coloured line, every name under it */}
       {inClose && frame < loopFrom + 10 ? (
-        <div style={{ position: "absolute", top: DESIGN_TOP + 460, left: SIDE, right: SIDE, direction: "rtl", textAlign: "center", opacity: Math.min(fade(frame, close.from, 10), leave(frame, loopFrom + 8, 8)) }}>
-          <div style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 84, lineHeight: 1.3, color: INK.ink }}>{p.close.q}</div>
-          <div style={{ display: "inline-block", marginTop: 26, padding: "16px 40px 22px", borderRadius: 40, background: "#e8c56a", color: INK.deep, fontFamily: VAZIR, fontWeight: 900, fontSize: 46, transform: `scale(${slam(frame, close.from + 12, 1.3)})` }}>{p.close.a}</div>
+        <div style={{ position: "absolute", top: DESIGN_TOP + 430, left: SIDE - 10, right: SIDE - 10, direction: "rtl", textAlign: "center", opacity: Math.min(fade(frame, close.from, 10), leave(frame, loopFrom + 8, 8)) }}>
+          <div style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 68, lineHeight: 1.3, color: INK.ink, whiteSpace: "nowrap" }}>{p.close.q}</div>
+          <div style={{ display: "inline-block", marginTop: 18, padding: "12px 40px 18px", borderRadius: 40, background: "#e8c56a", color: INK.deep, fontFamily: VAZIR, fontWeight: 900, fontSize: 42, transform: `scale(${slam(frame, close.from + 12, 1.3)})` }}>{p.close.a}</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 14px", marginTop: 26, direction: "rtl" }}>
+            {p.periods.map((per, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 14px 8px", borderRadius: 14, background: "rgba(244,241,234,.06)", borderRight: `8px solid ${per.color}`, opacity: fade(frame, close.from + 8 + i * 2, 6), transform: `translateY(${rise(frame, close.from + 8 + i * 2, 16, 10)}px)` }}>
+                <span style={{ flex: 1, textAlign: "right", fontFamily: VAZIR, fontWeight: 800, fontSize: 27, color: INK.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{per.name}</span>
+                <span style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 23, color: per.color, whiteSpace: "nowrap" }}>{per.tick}</span>
+              </div>
+            ))}
+          </div>
         </div>
       ) : null}
 
@@ -186,20 +194,6 @@ export const Sweep: React.FC<SweepProps> = (p) => {
             {label}
           </div>
         ))}
-        {/* at the close, the names under the line, two rows */}
-        {inClose && frame < loopFrom + 10
-          ? p.periods.map((per, i) => {
-              const a = per.start;
-              const b = i + 1 < p.periods.length ? p.periods[i + 1].start : END;
-              const x = (xOf(a) + xOf(b)) / 2;
-              const row = i % 3;
-              return (
-                <div key={i} style={{ position: "absolute", top: 136 + row * 40, left: Math.min(W - SIDE - 150, Math.max(SIDE - 20, x - 75)), width: 150, textAlign: "center", fontFamily: VAZIR, fontWeight: 800, fontSize: 24, color: per.color, whiteSpace: "nowrap", opacity: Math.min(fade(frame, close.from + 6 + i * 2, 6), leave(frame, loopFrom + 8, 8)) }}>
-                  {per.name}
-                </div>
-              );
-            })
-          : null}
       </div>
 
       <SourceLine text={p.source} opacity={Math.min(fade(frame, close.from + 30, 12), leave(frame, loopFrom + 6, 8))} color="rgba(244,241,234,.7)" strong="#e8c56a" y={DESIGN_BOTTOM - 120} />
