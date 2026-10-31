@@ -328,7 +328,8 @@ export function adapt<P extends ReelProps>(p: P | Site): P {
   if (s.format === "five" && Array.isArray(s.items)) return site<P>(lineHook(s), fiveBeats(s));
   if (s.format === "sweep" && Array.isArray(s.periods)) return site<P>(lineHook(s), sweepBeats(s));
   if (s.format === "book" && Array.isArray(s.words)) return { ...book(s), music: s.music, voiceIn: s.voiceIn } as unknown as P;
-  if (Array.isArray(s.beats) && s.beats.length && (s.stops || s.evidence)) return { ...s, source: sourceText(s.source) } as P;
+  // a hook sent as {text, figure} is drawn as its text: React cannot draw the object (error #31)
+  if (Array.isArray(s.beats) && s.beats.length && (s.stops || s.evidence)) return { ...s, hook: hookText(s, String(s.title ?? "")), source: sourceText(s.source) } as P;
   if (s.format === "borders" && Array.isArray(s.frames)) return { ...borders(s), music: s.music, voiceIn: s.voiceIn } as unknown as P;
   if (s.format === "myth" && Array.isArray(s.reality)) return { ...myth(s), music: s.music, voiceIn: s.voiceIn } as unknown as P;
   if (s.format === "word" && Array.isArray(s.chain)) return { ...word(s), music: s.music, voiceIn: s.voiceIn } as unknown as P;
