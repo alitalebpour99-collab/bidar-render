@@ -6,7 +6,7 @@
 import React, { useMemo } from "react";
 import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
 import { BORDERS, GRATICULE, IRAN, LAND, draw, fit, mix, push, shapeOf, type View } from "./geo";
-import { DESIGN_BOTTOM, DESIGN_TOP, FPS, Mark, RAIL, SIDE, Sfx, SourceLine, VAZIR, W, clamped, during, ease, fade, glide, grow, leave, rise, shake, slam } from "./kit";
+import { DESIGN_BOTTOM, DESIGN_TOP, FPS, Mark, RAIL, SIDE, Sfx, SourceLine, VAZIR, W, clamped, during, ease, fade, glide, grow, leave, rise, seriesLine, shake, slam } from "./kit";
 import type { BordersProps, BordersStop } from "./props";
 import { Captions, Stage, beatAt, beatNow } from "./Safe";
 
@@ -240,7 +240,7 @@ export const Borders: React.FC<BordersProps> = (p) => {
       {/* the close: what the lines are, and what comes next */}
       {frame >= close.from ? (
         <div style={{ position: "absolute", top: DESIGN_TOP + 150, right: SIDE, left: SIDE, direction: "rtl", opacity: fade(frame, close.from, 10), transform: `translateY(${rise(frame, close.from, 50, 16)}px)` }}>
-          <div style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 44, color: LAPIS.turq }}>{p.series}</div>
+          <div style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 44, color: LAPIS.turq }}>{seriesLine(p.series)}</div>
           <div style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 84, lineHeight: 1.35, color: LAPIS.ink, marginTop: 6, textWrap: "balance" } as React.CSSProperties}>{p.close}</div>
         </div>
       ) : null}

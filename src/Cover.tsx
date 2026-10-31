@@ -12,7 +12,7 @@ import { ILLUM } from "./Quote";
 import { CityTile } from "./City";
 import { FlagTile } from "./Flag";
 import { TreatyTile } from "./Treaty";
-import { GULZAR, H, VAZIR, W } from "./kit";
+import { GULZAR, H, VAZIR, W, seriesLine } from "./kit";
 import { PARCH } from "./Myth";
 import type { CoverProps } from "./props";
 import { NIGHT } from "./Word";
@@ -38,7 +38,7 @@ const BookTile: React.FC<CoverProps> = ({ title, mark, kicker, series }) => {
       <div style={{ position: "absolute", top: TOP + 66, left: 66, right: 66, height: W - 132, borderRadius: 12, border: "2px solid rgba(201,162,77,.45)" }} />
       <div style={{ position: "absolute", top: TOP + 104, right: 116, left: 116, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontFamily: GULZAR, fontSize: 92, color: LEAF.gold, lineHeight: 1.2 }}>بیدار</span>
-        <span style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 34, color: LEAF.gold2 }}>{kicker ?? series}</span>
+        <span style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 34, color: LEAF.gold2 }}>{kicker ?? seriesLine(series)}</span>
       </div>
       <div style={{ position: "absolute", top: TOP + 280, bottom: H - TOP - W + 200, right: 120, left: 120, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: 30, textAlign: "center" }}>
         <div style={{ fontFamily: NASKH, fontWeight: 700, fontSize: size, lineHeight: 1.55, color: LEAF.cream, textWrap: "balance", textShadow: "0 2px 6px rgba(0,0,0,.5)" } as React.CSSProperties}>{title}</div>
@@ -59,7 +59,7 @@ const QuoteTile: React.FC<CoverProps> = ({ title, mark, kicker, series }) => {
       <div style={{ position: "absolute", top: TOP + 74, left: 74, right: 74, height: W - 148, border: `2px solid ${ILLUM.gold}`, opacity: 0.8 }} />
       <div style={{ position: "absolute", top: TOP + 110, right: 120, left: 120, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontFamily: GULZAR, fontSize: 88, color: ILLUM.gold, lineHeight: 1.2 }}>بیدار</span>
-        <span style={{ fontFamily: GULZAR, fontSize: 50, color: ILLUM.goldLight }}>{kicker ?? series}</span>
+        <span style={{ fontFamily: GULZAR, fontSize: 50, color: ILLUM.goldLight }}>{kicker ?? seriesLine(series)}</span>
       </div>
       <div style={{ position: "absolute", top: TOP + 270, bottom: H - TOP - W + 200, right: 130, left: 130, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: 34, textAlign: "center" }}>
         <div style={{ fontFamily: GULZAR, fontSize: size, lineHeight: 2, color: ILLUM.cream, textWrap: "balance", textShadow: "0 2px 8px rgba(0,0,0,.5)" } as React.CSSProperties}>{title}</div>
@@ -87,7 +87,7 @@ const FigureTile: React.FC<CoverProps> = ({ title, mark, kicker, series }) => {
       <div style={{ position: "absolute", left: -110, top: TOP + 300, width: 540, height: 540, borderRadius: 270, background: accent }} />
       <div style={{ position: "absolute", top: TOP + 70, right: 90, left: 90, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontFamily: GULZAR, fontSize: 88, color: SWISS.ink, lineHeight: 1.2 }}>بیدار</span>
-        <span style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 42, color: SWISS.ink }}>{kicker ?? series}</span>
+        <span style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 42, color: SWISS.ink }}>{kicker ?? seriesLine(series)}</span>
       </div>
       <div style={{ position: "absolute", top: TOP + 210, right: 90, left: 90, height: 10, background: SWISS.ink }} />
       <div style={{ position: "absolute", top: TOP + 260, right: 90, left: 90, fontFamily: VAZIR, fontWeight: 900, fontSize: size, lineHeight: 1.08, color: SWISS.ink, textAlign: "right", textWrap: "balance" } as React.CSSProperties}>{title}</div>
@@ -99,14 +99,15 @@ const FigureTile: React.FC<CoverProps> = ({ title, mark, kicker, series }) => {
 
 /** «حدس بزن»: the dark stage, the show's pill, the question, its three options (none marked). */
 const QuizTile: React.FC<CoverProps> = ({ title, mark, kicker, series }) => {
-  const options = (mark ?? "").split(" · ").filter(Boolean).slice(0, 3);
+  // the site joins them with a Persian comma (lib/social/quiz.ts QUIZ_MARK_JOIN; «·» before 2026-10-31)
+  const options = (mark ?? "").split(/\s*[·،]\s*|\n/).map((o) => o.trim()).filter(Boolean).slice(0, 3);
   const size = title.length <= 24 ? 92 : title.length <= 36 ? 80 : 68;
   return (
     <AbsoluteFill style={{ background: `linear-gradient(180deg, ${SHOW.night2}, ${SHOW.night})`, direction: "rtl" }}>
       <AbsoluteFill style={{ background: "radial-gradient(600px 700px at 30% 30%, rgba(23,212,164,.2), rgba(23,212,164,0) 70%), radial-gradient(640px 760px at 75% 40%, rgba(123,97,255,.2), rgba(123,97,255,0) 70%)" }} />
       <div style={{ position: "absolute", top: TOP + 80, right: 90, left: 90, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontFamily: GULZAR, fontSize: 84, color: SHOW.ink, lineHeight: 1.2 }}>بیدار</span>
-        <span style={{ padding: "6px 26px 12px", borderRadius: 40, background: SHOW.teal, color: SHOW.dark, fontFamily: VAZIR, fontWeight: 900, fontSize: 44 }}>{kicker ?? series} ؟</span>
+        <span style={{ padding: "6px 26px 12px", borderRadius: 40, background: SHOW.teal, color: SHOW.dark, fontFamily: VAZIR, fontWeight: 900, fontSize: 44 }}>{kicker ?? seriesLine(series)} ؟</span>
       </div>
       <div style={{ position: "absolute", top: TOP + 250, right: 100, left: 100, fontFamily: VAZIR, fontWeight: 900, fontSize: size, lineHeight: 1.4, color: SHOW.ink, textAlign: "center", textWrap: "balance" } as React.CSSProperties}>{title}</div>
       <div style={{ position: "absolute", top: TOP + 560, right: 130, left: 130, display: "flex", flexDirection: "column", gap: 22 }}>
@@ -137,7 +138,7 @@ export const Cover: React.FC<CoverProps> = (props) => {
       <div style={{ position: "absolute", top: TOP + 56, left: 56, right: 56, height: W - 112, borderRadius: 40, border: `3px solid ${l.frame}` }} />
       <div style={{ position: "absolute", top: TOP + 96, right: 116, left: 116, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontFamily: GULZAR, fontSize: 96, color: l.accent, lineHeight: 1.2 }}>بیدار</span>
-        <span style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 36, color: l.sub }}>{kicker ?? series}</span>
+        <span style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 36, color: l.sub }}>{kicker ?? seriesLine(series)}</span>
       </div>
       <div style={{ position: "absolute", top: TOP + 290, bottom: H - TOP - W + 190, right: 116, left: 116, display: "flex", flexDirection: "column", justifyContent: "center", gap: 26 }}>
         <div style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: size, lineHeight: 1.35, color: l.ink, textWrap: "balance" } as React.CSSProperties}>{title}</div>

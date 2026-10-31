@@ -8,7 +8,7 @@
 // rings and type only, light for GitHub's software GL (no blur, no filter).
 import React, { useMemo } from "react";
 import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
-import { DESIGN_TOP, FPS, Mark, SIDE, Sfx, SourceLine, VAZIR, W, clamped, ease, easeInOut, fade, glide, grow, leave, rise } from "./kit";
+import { DESIGN_TOP, FPS, Mark, SIDE, Sfx, SourceLine, VAZIR, W, clamped, ease, easeInOut, fade, glide, grow, leave, rise, seriesLine } from "./kit";
 import type { CityProps } from "./props";
 import { Captions, Stage, beatAt } from "./Safe";
 
@@ -329,7 +329,7 @@ export const CityTile: React.FC<{ title: string; mark?: string; kicker?: string;
         <circle cx={540} cy={cy} r={258} fill={BRASS.plate2} stroke={BRASS.brass} strokeWidth="4" />
       </svg>
       <div style={{ position: "absolute", top: top + 70, right: 116, left: 116, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 38, color: BRASS.brass2 }}>{kicker ?? series}</span>
+        <span style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 38, color: BRASS.brass2 }}>{kicker ?? seriesLine(series)}</span>
         <span style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 28, color: BRASS.muted, direction: "ltr" }}>bidar.ahura.cloud</span>
       </div>
       <div style={{ position: "absolute", top: cy - 200, left: 290, right: 290, height: 400, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, textAlign: "center" }}>

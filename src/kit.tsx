@@ -71,31 +71,52 @@ export const DIACRITICS = /[ً-ٰٟ]/g;
 export const plain = (s: string) => s.replace(DIACRITICS, "");
 
 // ---------- the mark ----------
-/** «بیدار» in Gulzar, as the site writes it, with the series' name under it. */
+/**
+ * A text with no «·» or «|» beside Persian (Ali, 2026-10-31): each «·» or «|»
+ * between two parts becomes a Persian comma. For texts a site of before that
+ * day may still send.
+ */
+export const noDot = (s: string) => s.replace(/\s*[·|]\s*/g, "، ").replace(/^،\s*|،\s*$/g, "").trim();
+
+/**
+ * The series' line beside the mark, never saying «بیدار» twice: the site sent
+ * «بیدار · حقیقت، با سند» until 2026-10-31 and sends «حقیقت، با سند» since.
+ */
+export const seriesLine = (sub: string) => noDot(sub.replace(/^\s*بیدار\s*[·|،:]\s*/, ""));
+
+/**
+ * «بیدار» in Gulzar, as the site writes it, with the series' line beside it.
+ * No rule between them (it read as «بیدار | …»): a wider gap, and the two
+ * scripts and weights keep them apart.
+ */
 export const Mark: React.FC<{ color: string; sub?: string; subColor?: string; size?: number; style?: React.CSSProperties }> = ({ color, sub, subColor, size = 84, style }) => (
-  <div style={{ position: "absolute", top: DESIGN_TOP + 4, right: SIDE, display: "flex", alignItems: "center", gap: 22, direction: "rtl", ...style }}>
+  <div style={{ position: "absolute", top: DESIGN_TOP + 4, right: SIDE, display: "flex", alignItems: "center", gap: 34, direction: "rtl", ...style }}>
     <span style={{ fontFamily: GULZAR, fontSize: size, lineHeight: 1.15, color, transform: "translateY(-6px)" }}>بیدار</span>
-    {sub ? (
-      <span style={{ fontFamily: VAZIR, fontWeight: 500, fontSize: 30, color: subColor ?? color, opacity: 0.85, paddingRight: 22, borderRight: `2px solid ${subColor ?? color}`, lineHeight: 1.4 }}>{sub}</span>
-    ) : null}
+    {sub && seriesLine(sub) ? <span style={{ fontFamily: VAZIR, fontWeight: 500, fontSize: 30, color: subColor ?? color, opacity: 0.85, lineHeight: 1.4 }}>{seriesLine(sub)}</span> : null}
   </div>
 );
+
+/** The sources of a source line («منبع: A، B» or an older «A · B»), each on its own. */
+export const sourceParts = (text: string) =>
+  text
+    .replace(/^\s*منبع\s*[:：]\s*/, "")
+    .split(/\s*[·|]\s*|،\s+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
 
 /** The source line and the address: on screen in the last seconds of every Reel. */
 export const SourceLine: React.FC<{ text: string; opacity: number; color: string; strong: string; y?: number }> = ({ text, opacity, color, strong, y = DESIGN_BOTTOM - 126 }) => (
   <div style={{ position: "absolute", top: y, left: SIDE, right: RAIL, direction: "rtl", opacity, transform: `translateY(${(1 - opacity) * 14}px)` }}>
-    {/* each part between «·» in its own direction: a Latin title («Wikipedia, "…"») keeps its quotes where they belong */}
+    {/* each source in its own direction: a Latin title («Wikipedia, "…"») keeps its quotes where they belong. The site joins
+        them with a Persian comma (a Latin title's own is «,»); a «·» of an older site is read as one, and drawn as one */}
     <div style={{ fontFamily: VAZIR, fontSize: 28, lineHeight: 1.5, color }}>
       منبع:{" "}
-      {text
-        .replace(/^\s*منبع\s*[:：]\s*/, "")
-        .split(/\s+·\s+/)
-        .map((part, i) => (
-          <React.Fragment key={i}>
-            {i ? " · " : null}
-            <bdi>{part}</bdi>
-          </React.Fragment>
-        ))}
+      {sourceParts(text).map((part, i) => (
+        <React.Fragment key={i}>
+          {i ? "، " : null}
+          <bdi>{part}</bdi>
+        </React.Fragment>
+      ))}
     </div>
     <div style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 33, color: strong, direction: "ltr", textAlign: "right", marginTop: 4 }}>bidar.ahura.cloud</div>
   </div>
