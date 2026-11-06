@@ -86,6 +86,4 @@ jobs:
 
       - if: steps.look.outputs.waiting != '0'
         name: Draw what waits, hand it back
-        env:
-          RENDER_GL: swangle
         run: node worker.mjs
