@@ -62,10 +62,16 @@ not take it; a claim older than 90 minutes is given out again.
 ### `can`
 
 The comma-separated list of the optional compositions this bundle holds,
-beyond the Reels: `story`, `cards`. **This renderer currently sends `can=`
-(empty)**: it draws Reels and their grid tile only. A site must never hand it
-a Story or a carousel, and should not plan any while no renderer has said it
-can (Divan keeps the last `can` it saw).
+beyond the Reels: `story`, `cards`. **This renderer sends `can=story,cards`**
+(since 6 November 2026; `RENDER_CAN` overrides it), and the workflow's cheap
+look asks the same: it draws the Story that follows a Reel (`src/Story.tsx`,
+1080 × 1920, 9.5 s, a video like a Reel with its bed and no narrator) and the
+carousel (`src/Cards.tsx`, one JPEG of 1080 × 1350 per card, handed back as
+`slide1` … `slideN`, the first card again as `cover`, then `done` with
+`{"pictures": N}`). Both are ported from Divan's renderer and wear the colours
+of the series named in `of` (`src/looks.ts`). A site must never hand a Story
+or a carousel to a renderer that has not said it can (it keeps the last `can`
+it saw).
 
 ### RenderJob
 

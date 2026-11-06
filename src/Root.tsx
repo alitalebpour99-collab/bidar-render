@@ -14,6 +14,8 @@ import citySample from "../samples/city-1.json";
 import trueFalseSample from "../samples/truefalse-1.json";
 import fiveSample from "../samples/five-1.json";
 import sweepSample from "../samples/sweep-1.json";
+import storySample from "../samples/story.json";
+import cardsSample from "../samples/cards.json";
 import { Book } from "./Book";
 import { Borders } from "./Borders";
 import { City } from "./City";
@@ -28,6 +30,8 @@ import { Word } from "./Word";
 import { TrueFalse, type TrueFalseProps } from "./TrueFalse";
 import { Five, type FiveProps } from "./Five";
 import { Sweep, type SweepProps } from "./Sweep";
+import { Story, storyDuration, type StoryProps } from "./Story";
+import { CARD_H, CARD_W, Cards, cardsLength, type CardsProps } from "./Cards";
 import type { Base, BookProps, BordersProps, CityProps, CoverProps, FigureProps, FlagProps, MythProps, QuizProps, QuoteProps, ReelProps, TreatyProps, WordProps } from "./props";
 import { timeline } from "./timeline";
 import { adapt } from "./adapt";
@@ -64,5 +68,8 @@ export const Root: React.FC = () => (
     <Composition id="five" component={Five} {...frame} durationInFrames={1350} defaultProps={as<FiveProps>(fiveSample)} calculateMetadata={(x: { props: FiveProps }) => timed(x)} />
     <Composition id="sweep" component={Sweep} {...frame} durationInFrames={1800} defaultProps={as<SweepProps>(sweepSample)} calculateMetadata={(x: { props: SweepProps }) => timed(x)} />
     <Composition id="cover" component={Cover} {...frame} durationInFrames={1} defaultProps={as<CoverProps>(coverSample)} />
+    {/* the Story that follows a Reel onto the page (ported from Divan's), and the carousel: one picture per frame, saved as stills (worker.mjs) */}
+    <Composition id="story" component={Story} {...frame} durationInFrames={storyDuration()} defaultProps={as<StoryProps>(storySample)} />
+    <Composition id="cards" component={Cards} width={CARD_W} height={CARD_H} fps={30} durationInFrames={4} defaultProps={as<CardsProps>(cardsSample)} calculateMetadata={({ props }: { props: CardsProps }) => ({ durationInFrames: cardsLength(props) })} />
   </>
 );

@@ -26,8 +26,8 @@ const LOOP = process.argv.includes("--loop");
 const POLL_MS = Math.max(30, Number(process.env.POLL_SECONDS) || 120) * 1000;
 const CONCURRENCY = Math.max(1, Math.min(4, Number(process.env.RENDER_CONCURRENCY) || Math.min(4, os.cpus().length)));
 const GL = process.env.RENDER_GL || undefined;
-// what this bundle can draw beyond the Reels (docs/contract.md, `can`): nothing yet
-const CAN = process.env.RENDER_CAN ?? "";
+// what this bundle can draw beyond the Reels (docs/contract.md, `can`): the Story (src/Story.tsx) and the carousel (src/Cards.tsx)
+const CAN = process.env.RENDER_CAN ?? "story,cards";
 // the machine must have this much memory free before a Reel is started, and this much while it renders (Linux only)
 const START_FREE_MB = Number(process.env.START_FREE_MB) || 2200;
 const ABORT_FREE_MB = Number(process.env.ABORT_FREE_MB) || 450;
@@ -82,9 +82,47 @@ async function site() {
   return serveUrl;
 }
 
+/** A carousel: every card a JPEG of 1080 by 1350, in order (ported from Divan's worker). Returns the files. */
+async function renderCards(job, serve, chromiumOptions, timeoutInMilliseconds, out) {
+  const composition = await selectComposition({ serveUrl: serve, id: "cards", inputProps: job.props, chromiumOptions, timeoutInMilliseconds });
+  for (let frame = 0; frame < composition.durationInFrames; frame += 1) {
+    const output = path.resolve("out", `${job.name}-${frame + 1}.jpg`);
+    out.push(output);
+    await renderStill({ composition, serveUrl: serve, output, frame, inputProps: job.props, imageFormat: "jpeg", jpegQuality: 92, chromiumOptions, timeoutInMilliseconds });
+  }
+  return out;
+}
+
+/** A carousel from claim to hand-back: the pictures (slide1, slide2, …), the first one again as the cover, then done. */
+async function renderPictures(job, serve, t0) {
+  const chromiumOptions = { gl: GL };
+  const timeoutInMilliseconds = 120_000;
+  const files = [];
+  try {
+    await renderCards(job, serve, chromiumOptions, timeoutInMilliseconds, files);
+    for (const [i, file] of files.entries()) await call(`?id=${job.id}&file=slide${i + 1}`, { method: "POST", headers: { "content-type": "image/jpeg" }, body: fs.readFileSync(file) });
+    await call(`?id=${job.id}&file=cover`, { method: "POST", headers: { "content-type": "image/jpeg" }, body: fs.readFileSync(files[0]) });
+    await call(`?id=${job.id}&done=1`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ pictures: files.length }) });
+    state.rendered += 1;
+    console.log(`post ${job.id} (cards): ${files.length} pictures, rendered and handed back in ${Math.round((Date.now() - t0) / 1000)} s`);
+    return true;
+  } catch (e) {
+    state.failed += 1;
+    // only the error's first line, cut short, goes to the site, and none of it to the log
+    const reason = String(e instanceof Error ? e.message : e).split("\n")[0].slice(0, 240);
+    console.log(`post ${job.id} (cards): failed after ${Math.round((Date.now() - t0) / 1000)} s`);
+    await call(`?id=${job.id}&failed=1`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ error: reason }) }).catch(() => undefined);
+    return false;
+  } finally {
+    for (const file of files) fs.rmSync(file, { force: true });
+  }
+}
+
 async function render(job) {
   const t0 = Date.now();
   const serve = await site();
+  // a carousel is pictures, not a video; a Story is a short video like a Reel (src/Story.tsx), with its bed and no narrator
+  if (job.format === "cards") return renderPictures(job, serve, t0);
   const publicDir = path.join(serve, "public");
   const video = path.resolve("out", `${job.name}.mp4`);
   const cover = path.resolve("out", `${job.name}.jpg`);
