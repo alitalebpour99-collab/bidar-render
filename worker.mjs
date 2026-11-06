@@ -35,6 +35,14 @@ const HOLD_UNTIL = Date.parse(process.env.HOLD_UNTIL ?? "") || 0;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const state = { rendered: 0, failed: 0 };
+/**
+ * A Reel that has not been drawn in this long is given up and tried again
+ * later, with what it had reached in the log (ported from Divan's worker): on
+ * 1 and 2 November the «مرزها» map Reel hung six runs of 90 minutes each, and
+ * nothing else of the day was drawn. A Reel of 30 to 40 seconds takes a few
+ * minutes.
+ */
+const RENDER_MAX_MS = Number(process.env.RENDER_MAX_MS) || 15 * 60_000;
 
 async function call(query, init = {}, tries = 3) {
   let last = "";
@@ -86,6 +94,18 @@ async function render(job) {
   const { cancelSignal, cancel } = makeCancelSignal();
   let tight = 0;
   let gaveUp = false;
+  let slow = false;
+  // where the render is, for the log: each stage, then every tenth of the frames with the time it took
+  let reached = "start";
+  const step = (what) => {
+    reached = what;
+    console.log(`Reel ${job.id} (${job.format}): ${what} after ${Math.round((Date.now() - t0) / 1000)} s`);
+  };
+  const tooLong = setTimeout(() => {
+    slow = true;
+    console.log(`Reel ${job.id}: still drawing after ${Math.round(RENDER_MAX_MS / 60_000)} min (${reached}); giving this render up`);
+    cancel();
+  }, RENDER_MAX_MS);
   const watch = setInterval(() => {
     const mb = freeMb();
     tight = mb !== null && mb < ABORT_FREE_MB ? tight + 1 : 0;
@@ -98,7 +118,8 @@ async function render(job) {
   try {
     // the tile for the profile grid
     const tile = await selectComposition({ serveUrl: serve, id: "cover", inputProps: job.cover, chromiumOptions, timeoutInMilliseconds });
-    await renderStill({ composition: tile, serveUrl: serve, output: cover, inputProps: job.cover, imageFormat: "jpeg", jpegQuality: 92, chromiumOptions, timeoutInMilliseconds });
+    await renderStill({ composition: tile, serveUrl: serve, output: cover, inputProps: job.cover, imageFormat: "jpeg", jpegQuality: 92, chromiumOptions, timeoutInMilliseconds, cancelSignal });
+    step("tile drawn");
     // the narrator first: its alignment sets every beat and the Reel's length (src/timeline.ts);
     // a book Reel has none: the book's own recording is cut instead (voice.mjs bookVoice)
     const voiceIn = job.format === "book" ? await bookVoice(job.props, publicDir, job.name) : voiceFiles(job.voice, publicDir, job.name, { format: job.format });
@@ -107,7 +128,16 @@ async function render(job) {
     if (music) fs.writeFileSync(path.join(publicDir, music), score({ id: job.format, seconds, duck: duckOf(first) }));
     const inputProps = { ...job.props, voiceIn, ...(music ? { music } : {}) };
     const composition = await selectComposition({ serveUrl: serve, id: job.format, inputProps, chromiumOptions, timeoutInMilliseconds });
-    await renderMedia({ composition, serveUrl: serve, codec: "h264", videoBitrate: process.env.RENDER_VBR ?? "2300k", pixelFormat: "yuv420p", audioCodec: "aac", audioBitrate: "160k", inputProps, outputLocation: video, concurrency: CONCURRENCY, chromiumOptions, cancelSignal, timeoutInMilliseconds });
+    step(`${composition.durationInFrames} frames`);
+    let tenth = 0;
+    const onProgress = ({ renderedFrames }) => {
+      const now = Math.floor((renderedFrames / composition.durationInFrames) * 10);
+      if (now > tenth) {
+        tenth = now;
+        step(`frame ${renderedFrames} of ${composition.durationInFrames}`);
+      }
+    };
+    await renderMedia({ composition, serveUrl: serve, codec: "h264", videoBitrate: process.env.RENDER_VBR ?? "2300k", pixelFormat: "yuv420p", audioCodec: "aac", audioBitrate: "160k", inputProps, outputLocation: video, concurrency: CONCURRENCY, chromiumOptions, cancelSignal, timeoutInMilliseconds, onProgress });
     console.log(`Reel ${job.id}: ${finish(video, seconds)}`);
     for (const [kind, file, type] of [
       ["video", video, "video/mp4"],
@@ -122,14 +152,15 @@ async function render(job) {
   } catch (e) {
     state.failed += 1;
     // the message of a render error may quote the content: only its first line, cut short, goes to the site, and none of it to the log
-    const reason = gaveUp ? "the machine ran short of memory; the render was given up and will be tried again" : String(e instanceof Error ? e.message : e).split("\n")[0].slice(0, 240);
+    const reason = gaveUp ? "the machine ran short of memory; the render was given up and will be tried again" : slow ? `drawing took longer than ${Math.round(RENDER_MAX_MS / 60_000)} minutes (${reached}); it will be tried again` : String(e instanceof Error ? e.message : e).split("\n")[0].slice(0, 240);
     // a check of the finished file (finish.mjs FinalCheck) would fail the same way again: it says so (docs/contract.md, `final`), and its reason holds no content
-    const final = !gaveUp && Boolean(e?.final);
+    const final = !gaveUp && !slow && Boolean(e?.final);
     console.log(`Reel ${job.id} (${job.format}): failed after ${Math.round((Date.now() - t0) / 1000)} s${final ? `, for good: ${reason}` : ""}`);
     await call(`?id=${job.id}&failed=1`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ error: reason, ...(final ? { final: true } : {}) }) }).catch(() => undefined);
     return false;
   } finally {
     clearInterval(watch);
+    clearTimeout(tooLong);
     for (const file of [video, cover, ...(music ? [path.join(publicDir, music)] : [])]) fs.rmSync(file, { force: true });
     dropVoice(publicDir, job.name);
   }
