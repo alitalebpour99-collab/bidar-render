@@ -54,7 +54,7 @@ jobs:
         id: look
         run: |
           if [ -z "$BIDAR_RENDER_SECRET" ]; then echo "no secret yet: nothing to ask"; echo "waiting=0" >> "$GITHUB_OUTPUT"; exit 0; fi
-          n=$(curl -fsS --retry 3 --retry-delay 5 -H "authorization: Bearer $BIDAR_RENDER_SECRET" "$BIDAR_URL/api/social/work?peek=1&can=" | jq -r '.waiting // 0') || n=0
+          n=$(curl -fsS --retry 3 --retry-delay 5 -H "authorization: Bearer $BIDAR_RENDER_SECRET" "$BIDAR_URL/api/social/work?peek=1&can=story,cards" | jq -r '.waiting // 0') || n=0
           echo "waiting: $n"
           echo "waiting=$n" >> "$GITHUB_OUTPUT"
 
