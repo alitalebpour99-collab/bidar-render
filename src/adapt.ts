@@ -328,10 +328,15 @@ export function adapt<P extends ReelProps>(p: P | Site): P {
   if (s.format === "five" && Array.isArray(s.items)) return site<P>(lineHook(s), fiveBeats(s));
   if (s.format === "sweep" && Array.isArray(s.periods)) return site<P>(lineHook(s), sweepBeats(s));
   if (s.format === "book" && Array.isArray(s.words)) return { ...book(s), music: s.music, voiceIn: s.voiceIn } as unknown as P;
-  // a hook sent as {text, figure} is drawn as its text: React cannot draw the object (error #31)
-  if (Array.isArray(s.beats) && s.beats.length && (s.stops || s.evidence)) return { ...s, hook: hookText(s, String(s.title ?? "")), source: sourceText(s.source) } as P;
+  // The site's own shape first. Remotion hands calculateMetadata the composition's sample (defaultProps)
+  // merged under the job's props, so a job of the site carries the sample's `stops` or `evidence` too:
+  // checked after them, the site's `frames`, `reality` and `chain` were never read, and from 1 November
+  // 2026 every narrated «مرزها» Reel drew the sample's three maps (هخامنشیان، اشکانیان، ساسانیان)
+  // under the site's own periods. Its beats still win (beatsOr).
   if (s.format === "borders" && Array.isArray(s.frames)) return { ...borders(s), music: s.music, voiceIn: s.voiceIn } as unknown as P;
   if (s.format === "myth" && Array.isArray(s.reality)) return { ...myth(s), music: s.music, voiceIn: s.voiceIn } as unknown as P;
   if (s.format === "word" && Array.isArray(s.chain)) return { ...word(s), music: s.music, voiceIn: s.voiceIn } as unknown as P;
+  // a sample (beats and stops, no site shape); a hook sent as {text, figure} is drawn as its text: React cannot draw the object (error #31)
+  if (Array.isArray(s.beats) && s.beats.length && (s.stops || s.evidence)) return { ...s, hook: hookText(s, String(s.title ?? "")), source: sourceText(s.source) } as P;
   return p as P;
 }
