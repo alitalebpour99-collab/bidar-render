@@ -19,7 +19,7 @@ function goodPlan() {
     style: "set",
     format: "quiz",
     total,
-    shots: [{ at: 0, pose: home, move: "cut", push: 40, sway: 0.5 }, ...Array.from({ length: 10 }, (_, i) => ({ at: 60 * (i + 1), pose: { ...home, yaw: i % 2 ? 3 : -3 }, move: "glide", push: 20 })), { at: total - 19, pose: home, move: "glide", push: 0, sway: 0 }],
+    shots: [{ at: 0, pose: home, move: "cut", push: 40, sway: 0.5 }, ...Array.from({ length: 11 }, (_, i) => ({ at: 60 * (i + 1), pose: { ...home, yaw: i % 2 ? 3 : -3 }, move: "glide", push: 20 })), { at: total - 19, pose: home, move: "glide", push: 0, sway: 0 }],
     punches: [{ at: 20, depth: 24 }],
     objects: [
       { id: "question", kind: "slab", from: 0, to: total, lines: [{ text: "سمرقند امروز در کدام کشور است؟", size: 76, weight: 900 }] },
@@ -110,7 +110,7 @@ test("the measured checks: a still picture fails, a moving one that loops passes
   assert.ok(ids(still).includes("still"));
   // a bar that runs right and comes back: it moves all the time and ends where it began
   const moving = path.join(dir, "moving.mp4");
-  ff("-f", "lavfi", "-i", "color=c=0x0a1433:s=270x480:d=6:r=30", "-f", "lavfi", "-i", "sine=frequency=220:duration=6", "-vf", "drawbox=x='100+90*sin(2*PI*t/6)':y=200:w=60:h=60:color=0x17d4a4:t=fill", "-shortest", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", moving);
+  ff("-f", "lavfi", "-i", "color=c=0x0a1433:s=270x480:d=6:r=30", "-f", "lavfi", "-i", "color=c=0x17d4a4:s=60x60:d=6:r=30", "-f", "lavfi", "-i", "sine=frequency=220:duration=6", "-filter_complex", "[0:v][1:v]overlay=x='100+90*sin(2*PI*t/6)':y=200[v]", "-map", "[v]", "-map", "2:a", "-shortest", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", moving);
   const m = fileChecks(moving);
   assert.equal(m.find((c) => c.id === "hook-motion").ok, true, m.find((c) => c.id === "hook-motion").detail);
   assert.equal(m.find((c) => c.id === "still").ok, true);
