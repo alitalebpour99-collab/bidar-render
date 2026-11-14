@@ -134,10 +134,11 @@ export function likeness(file, a, b) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "bidar-gate-"));
   const one = path.join(dir, "a.png");
   const two = path.join(dir, "b.png");
-  const grab = (t, out) => (t === "last" ? ff(["-sseof", "-0.2", "-i", file, "-vf", "scale=540:-2", "-update", "1", "-frames:v", "1", "-y", out]) : ff(["-ss", String(t), "-i", file, "-vf", "scale=540:-2", "-frames:v", "1", "-y", out]));
+  const grab = (t, out) => (t === "last" ? ff(["-sseof", "-0.3", "-i", file, "-vf", "scale=540:-2", "-update", "1", "-y", out]) : ff(["-ss", String(t), "-i", file, "-vf", "scale=540:-2", "-frames:v", "1", "-y", out]));
   grab(a, one);
   grab(b, two);
-  const log = ff(["-i", one, "-i", two, "-lavfi", "ssim", "-f", "null", "-"]);
+  // compared small and a little soft: the picture, not the encoder's grain in the dark gradients or a mote of dust
+  const log = ff(["-i", one, "-i", two, "-lavfi", "[0]scale=180:-2,gblur=sigma=1[a];[1]scale=180:-2,gblur=sigma=1[b];[a][b]ssim", "-f", "null", "-"]);
   fs.rmSync(dir, { recursive: true, force: true });
   return Number(/All:([\d.]+)/.exec(log)?.[1] ?? NaN);
 }

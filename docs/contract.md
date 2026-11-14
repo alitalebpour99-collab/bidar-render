@@ -240,6 +240,23 @@ the owner, with no content in it («صدای ویدیو از ثانیهٔ ۱۳ �
 once and tells the owner; one that does not counts it as a try like any other.
 A failure ends the worker's pass, so a Reel is never made twice in one pass.
 
+Since the set style (README «The set style»), a set Reel («حدس بزن»,
+«درست یا غلط؟», «پنج‌تایی») that fails the gate (`gate.mjs`) is also a final
+failure, its `error` the failed checks in plain Persian, with no content:
+«این ویدیو از بازبینیِ پیش از ارسال رد شد: جملهٔ قلابِ اول ۸ واژه است (حداکثر ۷)؛ …».
+
+### What the set style reads beyond the props above
+
+- `cover.big`: three or four big words for the tile (the gate's `cover`
+  check counts them; without `big` it counts `title`).
+- `rounds[].src` («درست یا غلط؟») and `items[].src` («پنج‌تایی»): each
+  claim's own source, drawn on its slab. Without them the close shows the whole
+  source line, which must fit two lines at 29 px or the gate's `source` and
+  `text-size` checks fail.
+- `count` (the quiz) and the silent holds are capped at 3 s (the quiz) and
+  2 s (a true-or-false pause); the site sends 3 and 2 since bidar's set-style PR.
+- Hooks (the quiz's `question`, the others' `hook`) of seven words or fewer.
+
 ## `GET /api/social/busy` (public, no secret)
 
 `{"ok": true, "busy": false}`: whether a render was claimed in the last 90
