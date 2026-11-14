@@ -200,7 +200,7 @@ export function planQuiz(p: QuizProps, tl: Timeline, opts: { badge: boolean }): 
   const optBottom = optTop + p.options.length * (optH + gap) - gap;
   // the hook's one object: a medallion with «؟» under the question; it steps back into the hall when the options come, and returns for the loop
   const medal = 330;
-  const medalY = Math.min(optTop + medal / 2 + 60, LOW - medal / 2 - 160);
+  const medalY = Math.min(optTop + medal / 2 + 60, LOW - medal / 2 - 100);
   objects.push({ id: "mark", kind: "medal", at: [SX, medalY, Z0 - 20], w: medal, h: medal, from: 0, to: T + 60, enter: "none", word: { text: "؟", size: 230, weight: 900 }, states: [{ at: -20, glow: 0.8 }, { at: Math.max(10, o[0].from - 8), dz: 1400, dy: -120, dim: 0.6, glow: 0 }, { at: end.from + 16, dz: 0, dy: 0, dim: 0, glow: 0.8 }] });
 
   // the countdown: a ring of light under the options
@@ -264,10 +264,13 @@ function opening(hook: string, sub: string, T: number, subTo: number, tokens: st
   const second = slab("sub", { top: bottomOf(title) + 36, z: Z0 - 20 }, 6, subTo, subLines, { enter: "rise" });
   const size = tokens.length > 3 ? 124 : 190;
   const step = size + 20;
-  const y = Math.max(bottomOf(second) + 60 + size / 2, LOW - 10 - size / 2);
+  const y = Math.max(bottomOf(second) + 60 + size / 2, LOW - 70 - size / 2);
   const row = tokens.map((t, i): Obj => ({ id: `token${i + 1}`, kind: "medal", at: [SX + (i - (tokens.length - 1) / 2) * step * -1, y, Z0 - 30], w: size, h: size, from: 0, to: T + 60, enter: "none", word: { text: t, size: Math.round(size * 0.62), weight: 900 }, states: [{ at: -20, glow: 0.7 }] }));
   return [title, second, ...row];
 }
+
+/** The opening's push: 30 units a second, but never more than 90 in all, so a long opening does not fly into its own title (the review, 6.4 s of «پنج‌تایی»). */
+const openPush = (frames: number) => Math.min(30, 90 / Math.max(1, frames / FPS));
 
 /** The close at the opening slab: the question to the viewer under the title. */
 function closing(q: string, a: string, endFrom: number, T: number, top: number): Obj {
@@ -285,7 +288,7 @@ export function planTrueFalse(p: TrueFalseProps & { rounds: (TrueFalseProps["rou
   const open = opening(p.hook, p.sub, T, beat(tl, "s1").from + 8, p.rounds.map((_, i) => faDigits(i + 1)));
   objects.push(...open);
   const sub = open[1];
-  const shots: Shot[] = [{ at: 0, pose: orbit(at(0), BASE + 40, -3, 0), move: "cut", push: 30, sway: 0.5, why: "the opening, pushing toward the slabs" }];
+  const shots: Shot[] = [{ at: 0, pose: orbit(at(0), BASE + 40, -3, 0), move: "cut", push: openPush(beat(tl, "s1").from), sway: 0.5, why: "the opening, pushing toward the slabs" }];
   const punches: Punch[] = [];
   const sfx: Sfx[] = [{ at: 2, name: "rise", volume: 0.18, why: "the hook" }];
   let sourced = true;
@@ -352,7 +355,7 @@ export function planFive(p: FiveProps & { items: (FiveProps["items"][number] & {
   const open = opening(p.hook, p.sub, T, first.from + 8, p.items.map((it) => faDigits(latin(String(it.n)))));
   objects.push(...open);
   const sub = open[1];
-  const shots: Shot[] = [{ at: 0, pose: orbit(at(0), BASE + 40, -3, 0), move: "cut", push: 30, sway: 0.5, why: "the opening, pushing toward the five" }];
+  const shots: Shot[] = [{ at: 0, pose: orbit(at(0), BASE + 40, -3, 0), move: "cut", push: openPush(first.from), sway: 0.5, why: "the opening, pushing toward the five" }];
   const punches: Punch[] = [];
   const sfx: Sfx[] = [{ at: 2, name: "rise", volume: 0.18, why: "the hook" }];
   let sourced = true;

@@ -157,7 +157,8 @@ const Slab: React.FC<{ o: Obj; frame: number; s: number; total: number }> = ({ o
   const st = stateAt(o, frame);
   const ta = textAlpha(s);
   const accent = ACCENT[st.accent];
-  const ghosts = 1 - ta;
+  // soft bars only for a slab far away; one the camera comes too near just fades (no empty glass)
+  const ghosts = s < 1 ? 1 - ta : 0;
   // a slight shine that runs across the glass every few seconds
   const shine = frame > total - 40 ? 0 : ((frame - o.from) % 150) / 150;
   // the right answer: the glass fills with its colour and its letters turn dark
