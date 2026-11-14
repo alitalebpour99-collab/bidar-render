@@ -189,7 +189,8 @@ export type Obj = {
   image?: { src: string; h: number };
   /** a medal or a stamp: its word or figure */
   word?: Line;
-  /** a ring: the seconds it counts, from `from` */
+  /** a ring: the seconds it counts, from `start` (before it, a full ring with «؟»: the viewer's turn to think), else from `from` */
+  start?: number;
   secs?: number;
   accent?: Accent;
   states?: State[];
@@ -290,7 +291,7 @@ export const READ_SCALE = 0.72;
 export const textAlpha = (s: number) => (s < READ_SCALE ? 0 : s < READ_SCALE + 0.03 ? (s - READ_SCALE) / 0.03 : s > 1.1 ? 0 : s > 1.06 ? (1.1 - s) / 0.04 : 1);
 
 /** Frames inside a whip (the camera flying from one slab to the next, blurred): no reading is asked of them. */
-export const inWhip = (shots: Shot[], f: number) => shots.some((s) => s.move === "whip" && f >= s.at && f < s.at + MOVE_FRAMES.whip + 2);
+export const inWhip = (shots: Shot[], f: number) => shots.some((s) => s.move === "whip" && f >= s.at && f < s.at + MOVE_FRAMES.whip + 4);
 
 /** What a viewer sees of an object at a frame: its box, how present it is (entrance, dimming, the camera flying through), its letters' light. */
 export function seen(o: Obj, pose: Pose, f: number) {
@@ -350,8 +351,9 @@ export function frameCover(objects: Obj[], hud: Hud[], shots: Shot[], punches: P
     for (const o of objects) {
       if (!textOf(o).length) continue;
       const v = seen(o, pose, f);
-      if (!v.b || v.t < 0.5 || v.a < 0.5) continue;
-      n += 1;
+      if (!v.b || v.t < 0.5 || v.a < 0.3) continue;
+      // a dimmed answer that stepped back still fills the frame; it is not counted as readable
+      if (v.a >= 0.5) n += 1;
       bottom = Math.max(bottom, v.b.box.y + v.b.box.h);
     }
     for (const h of hud) if (h.kind === "source" && f >= h.from + 8 && f < h.to) bottom = Math.max(bottom, h.box.y + h.box.h);

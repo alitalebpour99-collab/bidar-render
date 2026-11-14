@@ -204,11 +204,14 @@ const Slab: React.FC<{ o: Obj; frame: number; s: number; total: number }> = ({ o
 
 const Ring: React.FC<{ o: Obj; frame: number }> = ({ o, frame }) => {
   const secs = o.secs ?? 3;
-  const t = (frame - o.from) / 30;
+  const start = o.start ?? o.from;
+  // before its count: a full turquoise ring with «؟», breathing slowly
+  const waiting = frame < start;
+  const t = Math.max(0, frame - start) / 30;
   const left = Math.max(1, secs - Math.floor(t));
-  const p = clamp01(1 - t / secs);
-  const pulse = interpolate((frame - o.from) % 30, [0, 10], [1, 0], clamped);
-  const color = left >= 3 ? ACCENT.turq : left === 2 ? ACCENT.gold : "#ff4d8d";
+  const p = waiting ? 1 : clamp01(1 - t / secs);
+  const pulse = waiting ? 0.5 + 0.5 * Math.sin((frame - o.from) / 9) : interpolate((frame - start) % 30, [0, 10], [1, 0], clamped);
+  const color = waiting || left >= 3 ? ACCENT.turq : left === 2 ? ACCENT.gold : "#ff4d8d";
   const size = o.w;
   return (
     <div style={{ position: "relative", width: size, height: size, transform: `scale(${1 + 0.06 * pulse})` }}>
@@ -216,7 +219,7 @@ const Ring: React.FC<{ o: Obj; frame: number }> = ({ o, frame }) => {
         <circle cx={140} cy={140} r={116} fill="rgba(6,16,31,.85)" stroke="rgba(244,246,255,.12)" strokeWidth={20} />
         <circle cx={140} cy={140} r={116} fill="none" stroke={color} strokeWidth={20} strokeLinecap="round" pathLength={1} strokeDasharray={`${p} 1`} style={{ filter: `drop-shadow(0 0 ${10 + 14 * pulse}px ${color})` }} />
       </svg>
-      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: VAZIR, fontWeight: 900, fontSize: o.word?.size ?? 130, color, lineHeight: 1 }}>{"۰۱۲۳۴۵۶۷۸۹"[left]}</div>
+      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: VAZIR, fontWeight: 900, fontSize: o.word?.size ?? 130, color, lineHeight: 1 }}>{waiting ? "؟" : "۰۱۲۳۴۵۶۷۸۹"[left]}</div>
     </div>
   );
 };

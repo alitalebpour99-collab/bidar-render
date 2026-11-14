@@ -170,14 +170,15 @@ export function planQuiz(p: QuizProps, tl: Timeline, opts: { badge: boolean }): 
   const objects: Obj[] = [];
 
   // the question: on screen from the first frame to past the last (the loop's first picture)
-  const q = fit({ text: noDot(p.question), width: INNER, maxLines: 3, size: flag ? 80 : 104, min: 64, weight: 900, height: flag ? 230 : 420 }).lines;
+  const q = fit({ text: noDot(p.question), width: INNER, maxLines: 3, size: flag ? 80 : 96, min: 64, weight: 900, height: flag ? 230 : 400 }).lines;
   const Q = slab("question", { top: rowY(300), z: Z0 }, 0, T + 60, q, { tag: noDot(p.kicker || "حدس بزن"), enter: "none", ...(flag ? { image: { src: flag.svg, h: 200 } } : {}) });
   objects.push(Q);
   const qBottom = bottomOf(Q);
 
-  // the options, one slab each, popping in as they are read; the right one is lit green with a tick, the others step back
-  const optH = 146;
-  const gap = 20;
+  // the options, one slab each, all in at the first (the frame is full while they are read), each lit as it is read;
+  // the right one is lit green with a tick, the others step back
+  const optH = 136;
+  const gap = 16;
   const optTop = qBottom + 36;
   p.options.forEach((text, i) => {
     const line = fitOne(`${faDigits(i + 1)}. ${noDot(text)}`, INNER, 72, 800, ANSWER);
@@ -188,12 +189,12 @@ export function planQuiz(p: QuizProps, tl: Timeline, opts: { badge: boolean }): 
       at: [SX, optTop + i * (optH + gap) + optH / 2, Z0],
       w: SLAB_W,
       h: optH,
-      from: Math.max(1, o[i].from - 3),
+      from: Math.max(1, o[0].from - 3 + i * 5),
       to: why.from + 10,
       enter: "pop",
       lines: [{ ...line, weight: 800, role: "answer" }],
       ...(right ? { mark: "check" as const } : {}),
-      states: [right ? { at: answer.from - 2, glow: 1, accent: "right" as Accent, dz: -50, win: 1 } : { at: answer.from - 2, dim: 1, dy: 16, dz: 140 }, { at: why.from - 2, dy: 260, dz: 300 }],
+      states: [{ at: o[i].from - 2, glow: 0.6 }, { at: (o[i + 1]?.from ?? count.from) - 2, glow: 0 }, right ? { at: answer.from - 2, glow: 1, accent: "right" as Accent, dz: -50, win: 1 } : { at: answer.from - 2, dim: 1, dy: 16, dz: 140 }, { at: why.from - 2, dy: 260, dz: 300 }],
     });
   });
   const optBottom = optTop + p.options.length * (optH + gap) - gap;
@@ -204,8 +205,9 @@ export function planQuiz(p: QuizProps, tl: Timeline, opts: { badge: boolean }): 
 
   // the countdown: a ring of light under the options
   const secs = Math.max(1, Math.round((count.to - count.from) / FPS));
-  const ringW = 260;
-  objects.push({ id: "ring", kind: "ring", at: [SX, Math.min(optBottom + 30 + ringW / 2, LOW - ringW / 2), Z0], w: ringW, h: ringW, from: count.from - 4, to: answer.from + 6, enter: "pop", secs, word: { text: "۳", size: 150, weight: 900 } });
+  // (in from the last option with «؟», counting from the countdown; as big as the room under the options allows)
+  const ringW = Math.round(Math.max(170, Math.min(250, LOW + 30 - optBottom - 24)));
+  objects.push({ id: "ring", kind: "ring", at: [SX, optBottom + 24 + ringW / 2, Z0], w: ringW, h: ringW, from: Math.min(count.from - 4, o[o.length - 1].from + 6), start: count.from, to: answer.from + 6, enter: "pop", secs, word: { text: "۳", size: Math.round(ringW * 0.56), weight: 900 } });
 
   // the reveal: a burst behind the right one (the slabs stand in front of it); then the options sink and the answer rises in their place, with its source
   const rightY = optTop + p.answer * (optH + gap) + optH / 2;
@@ -258,10 +260,11 @@ function opening(hook: string, sub: string, T: number, subTo: number, tokens: st
   const big = one.overflow ? fit({ text: noDot(hook), width: INNER, maxLines: 2, size: 124, min: 84, weight: 900 }).lines : one.lines;
   const title = slab("title", { top: rowY(330), z: Z0 }, 0, T + 60, big, { enter: "none" });
   const subLines = fit({ text: noDot(sub), width: INNER, maxLines: 2, size: 60, min: TEXT + 2, weight: 700 }).lines.map((l) => ({ ...l, color: "#cdd6f4" }));
-  const second = slab("sub", { top: bottomOf(title) + 36, z: Z0 - 20 }, 46, subTo, subLines, { enter: "rise" });
+  // the second line comes at once (the hook alone is said, so the opening is short), the tokens stand low: the frame is full from the first picture
+  const second = slab("sub", { top: bottomOf(title) + 36, z: Z0 - 20 }, 6, subTo, subLines, { enter: "rise" });
   const size = tokens.length > 3 ? 124 : 190;
   const step = size + 20;
-  const y = Math.min(bottomOf(second) + 110 + size / 2, LOW - size / 2);
+  const y = Math.max(bottomOf(second) + 60 + size / 2, LOW - 10 - size / 2);
   const row = tokens.map((t, i): Obj => ({ id: `token${i + 1}`, kind: "medal", at: [SX + (i - (tokens.length - 1) / 2) * step * -1, y, Z0 - 30], w: size, h: size, from: 0, to: T + 60, enter: "none", word: { text: t, size: Math.round(size * 0.62), weight: 900 }, states: [{ at: -20, glow: 0.7 }] }));
   return [title, second, ...row];
 }
@@ -312,8 +315,9 @@ export function planTrueFalse(p: TrueFalseProps & { rounds: (TrueFalseProps["rou
       const yes = choice(`yes${k}`, "درست", SX + (half + 24) / 2, r.verdict === "right", "right", "check");
       const no = choice(`no${k}`, "غلط", SX - (half + 24) / 2, r.verdict === "wrong", "wrong", "cross");
       const rowBottom = rowAt + pick / 2;
-      const ringW = 280;
-      const ring: Obj = { id: `ring${k}`, kind: "ring", at: [SX, rowBottom + 40 + ringW / 2, stationZ(k)], w: ringW, h: ringW, from: c.from - 4, to: v.from + 4, enter: "pop", secs: Math.max(1, Math.round((c.to - c.from) / FPS)), word: { text: "۲", size: 150, weight: 900 } };
+      // the ring stands under the answers while the sentence is read («؟», the viewer's turn), counts the pause, and gives its place to the proof
+      const ringW = Math.round(Math.max(200, Math.min(320, LOW + 20 - rowBottom - 40)));
+      const ring: Obj = { id: `ring${k}`, kind: "ring", at: [SX, rowBottom + 40 + ringW / 2, stationZ(k)], w: ringW, h: ringW, from: Math.min(c.from - 4, s.from + 10), start: c.from, to: v.from + 4, enter: "pop", secs: Math.max(1, Math.round((c.to - c.from) / FPS)), word: { text: "۲", size: Math.round(ringW * 0.54), weight: 900 } };
       const proof = asAnswer(fit({ text: noDot(r.proof), width: INNER, maxLines: pl, size: ps, min: ANSWER, weight: 600 }).lines);
       const pr = slab(`proof${k}`, { top: rowBottom + 22, z: stationZ(k) - 20 }, v.from + 8, leave + 6, proof, { enter: "rise", chip, claim: true });
       made = [st, yes, no, ring, pr];
