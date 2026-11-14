@@ -261,16 +261,29 @@ export function planTrueFalse(p: TrueFalseProps & { rounds: (TrueFalseProps["rou
     const st = slab(`claim${k}`, { top: rowY(360), z: stationZ(k) }, 0, T + 60, lines, { tag: `جملهٔ ${faDigits(k)} از ${faDigits(p.rounds.length)}`, enter: "none", states: [{ at: v.from - 2, glow: 0.8, accent }, { at: leave + 20, glow: 0, accent: "turq" }] });
     objects.push(st);
     const bottom = st.at[1] + st.h / 2;
-    // the pause: a ring counts it under the slab
-    objects.push({ id: `ring${k}`, kind: "ring", at: [SX, bottom + 80 + 130, stationZ(k)], w: 260, h: 260, from: c.from - 4, to: v.from + 4, enter: "pop", secs: Math.max(1, Math.round((c.to - c.from) / FPS)), word: { text: "۲", size: 140, weight: 900 } });
-    // the verdict: a stamp just under the slab's edge (clear of its last line), then the proof with its source
-    const word = fitOne(noDot(r.label), 420, 84, 900);
-    const sw = Math.round(measure(word.text, word.size, 900) + 120);
-    objects.push({ id: `stamp${k}`, kind: "stamp", at: [SX - SLAB_W / 2 + sw / 2 + 24, bottom + 84, stationZ(k) - 30], w: sw, h: 134, from: v.from - 2, to: leave + 6, enter: "pop", tilt: -6, accent, word: { text: word.text, size: word.size, weight: 900 } });
+    // the two answers under the claim, as the quiz's options: the viewer picks while the ring counts;
+    // the verdict lights the right one and the other steps back (a contested record: both step back, a stamp says so)
+    const pick = 150;
+    const half = (SLAB_W - 24) / 2;
+    const rowAt = bottom + 40 + pick / 2;
+    const choice = (id: string, label: string, x: number, mine: boolean, color: Accent): Obj => {
+      const t = fitOne(label, half - 70, 74, 900);
+      return { id, kind: "slab", at: [x, rowAt, stationZ(k)], w: half, h: pick, from: Math.max(1, s.from + 6), to: leave + 6, enter: "pop", lines: [{ text: t.text, size: t.size, weight: 900 }], states: [mine ? { at: v.from - 2, glow: 1, accent: color, dz: -40 } : { at: v.from - 2, dim: 1, dy: 24, dz: 220 }] };
+    };
+    objects.push(choice(`yes${k}`, "درست", SX + (half + 24) / 2, r.verdict === "right", "right"), choice(`no${k}`, "غلط", SX - (half + 24) / 2, r.verdict === "wrong", "wrong"));
+    // the pause: a ring counts it under the two answers
+    const rowBottom = rowAt + pick / 2;
+    objects.push({ id: `ring${k}`, kind: "ring", at: [SX, rowBottom + 40 + 120, stationZ(k)], w: 240, h: 240, from: c.from - 4, to: v.from + 4, enter: "pop", secs: Math.max(1, Math.round((c.to - c.from) / FPS)), word: { text: "۲", size: 130, weight: 900 } });
+    if (r.verdict === "contested") {
+      const word = fitOne(noDot(r.label), 560, 84, 900);
+      const sw = Math.round(measure(word.text, word.size, 900) + 120);
+      objects.push({ id: `stamp${k}`, kind: "stamp", at: [SX, rowAt, stationZ(k) - 60], w: sw, h: 134, from: v.from - 2, to: leave + 6, enter: "pop", tilt: -5, accent, word: { text: word.text, size: word.size, weight: 900 } });
+    }
+    // then the proof with its source, where the ring was
     const proof = fit({ text: noDot(r.proof), width: INNER, maxLines: 4, size: 52, min: 38, weight: 600 }).lines;
     const chip = chipOf(r.src);
     if (!chip) sourced = false;
-    objects.push(slab(`proof${k}`, { top: bottom + 172, z: stationZ(k) - 20 }, v.from + 8, leave + 6, proof, { enter: "rise", chip, claim: true }));
+    objects.push(slab(`proof${k}`, { top: rowBottom + 34, z: stationZ(k) - 20 }, v.from + 8, leave + 6, proof, { enter: "rise", chip, claim: true }));
     shots.push({ at: s.from - 6, pose: orbit(at(k), BASE, k % 2 ? 3 : -3, 0), move: "whip", push: 20, sway: 0.5, why: `to sentence ${k}` });
     if (c.to > c.from) shots.push({ at: c.from, pose: orbit(at(k), BASE - 20, k % 2 ? -5 : 5, -20), move: "glide", push: 16, sway: 0.8, why: `the pause of sentence ${k}` });
     shots.push({ at: v.from + 10, pose: orbit(at(k), BASE + 20, 0, 30), move: "glide", push: 14, sway: 0.4, why: `the proof of sentence ${k}` });
