@@ -49,6 +49,10 @@ jobs:
     env:
       BIDAR_URL: https://bidar.ahura.cloud
       BIDAR_RENDER_SECRET: ${{ secrets.BIDAR_RENDER_SECRET }}
+      # the set style's switches, as repository variables (README «The set style»): unset = the set style, the badge, the gate on
+      BIDAR_STYLE: ${{ vars.BIDAR_STYLE }}
+      BIDAR_BADGE: ${{ vars.BIDAR_BADGE }}
+      BIDAR_GATE: ${{ vars.BIDAR_GATE }}
     steps:
       - name: Anything to draw?
         id: look

@@ -11,6 +11,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { renderMedia, renderStill, selectComposition } from "@remotion/renderer";
 import { finish } from "./finish.mjs";
+import { enforce } from "./gate.mjs";
 import { hasBed, score } from "./music.mjs";
 import { bookVoice, dropVoice, duckOf, voiceFiles } from "./voice.mjs";
 
@@ -25,7 +26,11 @@ const propsFile = flag("--props") ?? `samples/${id}.json`;
 const stillArg = flag("--still");
 const serveUrl = path.resolve(flag("--bundle") ?? "bundle");
 const name = flag("--out") ?? path.basename(propsFile).replace(/(\.cover)?\.json$/, (m, c) => (c ? "-tile" : ""));
-const props = JSON.parse(fs.readFileSync(propsFile, "utf8"));
+// the switches of the set style: BIDAR_STYLE=classic draws the old look, BIDAR_BADGE=off leaves the badge out
+const switches = { ...(process.env.BIDAR_STYLE ? { style: process.env.BIDAR_STYLE } : {}), ...(process.env.BIDAR_BADGE === "off" ? { badge: false } : {}) };
+const props = { ...JSON.parse(fs.readFileSync(propsFile, "utf8")), ...switches };
+const coverFile = propsFile.replace(/.json$/, ".cover.json");
+const coverProps = fs.existsSync(coverFile) ? JSON.parse(fs.readFileSync(coverFile, "utf8")) : null;
 fs.mkdirSync("out", { recursive: true });
 const publicDir = path.join(serveUrl, "public");
 fs.mkdirSync(publicDir, { recursive: true });
@@ -58,7 +63,7 @@ if (stillArg) {
   }
 } else {
   const music = hasBed(id) ? `music-${name}.wav` : null;
-  if (music) fs.writeFileSync(path.join(publicDir, music), score({ id, seconds, duck: duckOf(first) }));
+  if (music) fs.writeFileSync(path.join(publicDir, music), score({ id, seconds, duck: duckOf(first), deep: Boolean(first.props.plan) }));
   const inputProps = { ...props, voiceIn, ...(music ? { music } : {}) };
   const composition = await selectComposition({ serveUrl, id, inputProps, timeoutInMilliseconds });
   const outputLocation = `out/${name}.mp4`;
@@ -67,6 +72,18 @@ if (stillArg) {
   await renderMedia({ composition, serveUrl, codec: "h264", videoBitrate: process.env.RENDER_VBR ?? "2300k", pixelFormat: "yuv420p", audioCodec: "aac", audioBitrate: "160k", inputProps, outputLocation, concurrency: Number(process.env.RENDER_CONCURRENCY ?? 3), timeoutInMilliseconds, chromiumOptions: { gl: process.env.RENDER_GL || undefined }, onProgress: ({ renderedFrames, encodedFrames, stitchStage }) => { const step = Math.floor((10 * renderedFrames) / composition.durationInFrames); if (step !== lastStep) { lastStep = step; console.log(`  ${renderedFrames}/${composition.durationInFrames} frames drawn, ${encodedFrames} encoded, ${stitchStage}, ${Math.round((Date.now() - t0) / 1000)} s`); } } });
   if (music) fs.rmSync(path.join(publicDir, music), { force: true });
   console.log(finish(outputLocation, seconds));
+  // the gate of the set style: the plan the film was drawn from, the file, the tile's words
+  const plan = composition.props.plan;
+  if (plan) {
+    const cover = coverProps ? String(coverProps.big ?? coverProps.title ?? "") : undefined;
+    let result = null;
+    try {
+      result = enforce({ plan, file: outputLocation, cover });
+    } finally {
+      if (result) fs.writeFileSync(`out/${name}.gate.json`, JSON.stringify({ ok: result.ok, checks: result.checks, seconds, sfx: plan.sfx.length, shots: plan.shots.length }, null, 1));
+    }
+    console.log(result?.ok ? "gate: every check passed" : "gate: failed (see above)");
+  }
   console.log("wrote", outputLocation, composition.durationInFrames, "frames,", seconds.toFixed(1), "s,", (fs.statSync(outputLocation).size / 1e6).toFixed(1), "MB, in", Math.round((Date.now() - t0) / 1000), "s");
 }
 dropVoice(publicDir, name);

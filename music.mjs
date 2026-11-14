@@ -191,7 +191,14 @@ function room(channel, spread) {
  */
 export const hasBed = (id) => typeof id === "string" && id.length > 0;
 
-export function score({ id, seconds, duck = [] }) {
+/**
+ * How far the bed steps down under the narrator: to 28 % (about −11 dB) in the
+ * classic look; to 14 % (about −17 dB, as Pickwise's set style) in the set
+ * style, where the bed comes back up between phrases and carries the moves.
+ */
+export const DUCK = { classic: 0.72, deep: 0.86 };
+
+export function score({ id, seconds, duck = [], deep = false }) {
   const mood = MOODS[id] ?? MOODS.borders;
   const { root, bpm } = mood;
   seed = 11;
@@ -327,7 +334,9 @@ export function score({ id, seconds, duck = [] }) {
   for (let n = 0; n < total; n += 1) {
     const t = n / RATE;
     const under = duck.reduce((m, [a, b]) => Math.max(m, Math.min(smooth((t - a + 0.25) / 0.25), smooth((b + 0.35 - t) / 0.35))), 0);
-    const level = smooth(t / 0.4) * smooth((seconds - t) / 2.2) * (1 - 0.72 * under);
+    // the set style loops: its bed does not fade out at the end, it comes home on the last bar
+    const tail = smooth((seconds - t) / (deep ? 0.25 : 2.2));
+    const level = smooth(t / (deep ? 0.08 : 0.4)) * tail * (1 - (deep ? DUCK.deep : DUCK.classic) * under);
     L[n] = (L[n] + 0.3 * wetL[n]) * level;
     R[n] = (R[n] + 0.3 * wetR[n]) * level;
     peak = Math.max(peak, Math.abs(L[n]), Math.abs(R[n]));
