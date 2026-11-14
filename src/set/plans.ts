@@ -148,8 +148,8 @@ export function planQuiz(p: QuizProps, tl: Timeline, opts: { badge: boolean }): 
   const qBottom = Q.at[1] + Q.h / 2;
 
   // the options, one slab each, popping in as they are read; after the answer they make room for it
-  const optH = 140;
-  const gap = 22;
+  const optH = 128;
+  const gap = 18;
   const optTop = qBottom + 40;
   p.options.forEach((text, i) => {
     const line = fitOne(`${faDigits(i + 1)}. ${noDot(text)}`, INNER, 66, 800);
@@ -174,8 +174,8 @@ export function planQuiz(p: QuizProps, tl: Timeline, opts: { badge: boolean }): 
 
   // the countdown: a ring of light under the options
   const secs = Math.max(1, Math.round((count.to - count.from) / FPS));
-  const ringW = 260;
-  objects.push({ id: "ring", kind: "ring", at: [SX, optBottom + 40 + ringW / 2, Z0], w: ringW, h: ringW, from: count.from - 4, to: answer.from + 6, enter: "pop", secs, word: { text: "۳", size: 140, weight: 900 } });
+  const ringW = 220;
+  objects.push({ id: "ring", kind: "ring", at: [SX, optBottom + 24 + ringW / 2, Z0], w: ringW, h: ringW, from: count.from - 4, to: answer.from + 6, enter: "pop", secs, word: { text: "۳", size: 140, weight: 900 } });
 
   // the reveal: a burst from the right one; then the options sink and the answer rises in their place, with its source
   const rightY = optTop + p.answer * (optH + gap) + optH / 2;
@@ -258,14 +258,14 @@ export function planTrueFalse(p: TrueFalseProps & { rounds: (TrueFalseProps["rou
     const leave = has(tl, `s${k + 1}`) ? beat(tl, `s${k + 1}`).from : end.from;
     const accent = VERDICT[r.verdict] ?? "maybe";
     const lines = fit({ text: noDot(r.text), width: INNER, maxLines: 4, size: 82, min: 52, weight: 800 }).lines;
-    const st = slab(`claim${k}`, { top: rowY(360), z: stationZ(k) }, 0, T + 60, lines, { tag: `جملهٔ ${faDigits(k)} از ${faDigits(p.rounds.length)}`, enter: "none", states: [{ at: v.from - 2, glow: 0.8, accent }, { at: leave + 20, glow: 0, accent: "turq" }] });
+    const st = slab(`claim${k}`, { top: rowY(340), z: stationZ(k) }, 0, T + 60, lines, { tag: `جملهٔ ${faDigits(k)} از ${faDigits(p.rounds.length)}`, enter: "none", states: [{ at: v.from - 2, glow: 0.8, accent }, { at: leave + 20, glow: 0, accent: "turq" }] });
     objects.push(st);
     const bottom = st.at[1] + st.h / 2;
     // the two answers under the claim, as the quiz's options: the viewer picks while the ring counts;
     // the verdict lights the right one and the other steps back (a contested record: both step back, a stamp says so)
-    const pick = 150;
+    const pick = 136;
     const half = (SLAB_W - 24) / 2;
-    const rowAt = bottom + 40 + pick / 2;
+    const rowAt = bottom + 30 + pick / 2;
     const choice = (id: string, label: string, x: number, mine: boolean, color: Accent): Obj => {
       const t = fitOne(label, half - 70, 74, 900);
       return { id, kind: "slab", at: [x, rowAt, stationZ(k)], w: half, h: pick, from: Math.max(1, s.from + 6), to: leave + 6, enter: "pop", lines: [{ text: t.text, size: t.size, weight: 900 }], states: [mine ? { at: v.from - 2, glow: 1, accent: color, dz: -40 } : { at: v.from - 2, dim: 1, dy: 24, dz: 220 }] };
@@ -280,10 +280,10 @@ export function planTrueFalse(p: TrueFalseProps & { rounds: (TrueFalseProps["rou
       objects.push({ id: `stamp${k}`, kind: "stamp", at: [SX, rowAt, stationZ(k) - 60], w: sw, h: 134, from: v.from - 2, to: leave + 6, enter: "pop", tilt: -5, accent, word: { text: word.text, size: word.size, weight: 900 } });
     }
     // then the proof with its source, where the ring was
-    const proof = fit({ text: noDot(r.proof), width: INNER, maxLines: 4, size: 52, min: 38, weight: 600 }).lines;
+    const proof = fit({ text: noDot(r.proof), width: INNER, maxLines: 4, size: 48, min: 38, weight: 600 }).lines;
     const chip = chipOf(r.src);
     if (!chip) sourced = false;
-    objects.push(slab(`proof${k}`, { top: rowBottom + 34, z: stationZ(k) - 20 }, v.from + 8, leave + 6, proof, { enter: "rise", chip, claim: true }));
+    objects.push(slab(`proof${k}`, { top: rowBottom + 26, z: stationZ(k) - 20 }, v.from + 8, leave + 6, proof, { enter: "rise", chip, claim: true }));
     shots.push({ at: s.from - 6, pose: orbit(at(k), BASE, k % 2 ? 3 : -3, 0), move: "whip", push: 20, sway: 0.5, why: `to sentence ${k}` });
     if (c.to > c.from) shots.push({ at: c.from, pose: orbit(at(k), BASE - 20, k % 2 ? -5 : 5, -20), move: "glide", push: 16, sway: 0.8, why: `the pause of sentence ${k}` });
     shots.push({ at: v.from + 10, pose: orbit(at(k), BASE + 20, 0, 30), move: "glide", push: 14, sway: 0.4, why: `the proof of sentence ${k}` });
