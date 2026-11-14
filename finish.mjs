@@ -64,9 +64,7 @@ export function finish(file, seconds) {
     }
   };
   if (!has("ffmpeg") || !has("ffprobe")) return "not levelled (no ffmpeg)";
-  const tmp = file.replace(/\.mp4$/, ".level.mp4");
-  execFileSync("ffmpeg", ["-v", "error", "-y", "-i", file, "-c:v", "copy", "-af", "loudnorm=I=-14:TP=-1.5:LRA=11", "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-movflags", "+faststart", tmp], { stdio: "inherit" });
-  fs.renameSync(tmp, file);
+  level(file);
   const probe = JSON.parse(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration:stream=codec_type", "-of", "json", file]).toString());
   const length = Number(probe.format?.duration ?? 0);
   const audio = (probe.streams ?? []).some((s) => s.codec_type === "audio");
@@ -78,5 +76,42 @@ export function finish(file, seconds) {
     console.log(`check: the sound is mute ${holes.map(([a, b]) => `${a.toFixed(1)}–${b.toFixed(1)} s`).join(", ")}`);
     throw new FinalCheck(holeReason(holes[0]));
   }
-  return `levelled to −14 LUFS, ${length.toFixed(1)} s with sound, no hole in it`;
+  const loud = loudness(file);
+  return `levelled to ${loud.lufs.toFixed(1)} LUFS (true peak ${loud.tp.toFixed(1)} dBTP), ${length.toFixed(1)} s with sound, no hole in it`;
+}
+
+/** The loudness the Reels are made to: −14 LUFS integrated, the true peak at −1 dBTP or lower, measured on the encoded file. */
+export const TARGET = { lufs: -14, tolerance: 1, tp: -1 };
+
+/** Integrated loudness and true peak of a file's sound, as ffmpeg's ebur128 measures them. */
+export function loudness(file) {
+  const log = spawnSync("ffmpeg", ["-hide_banner", "-nostats", "-i", file, "-vn", "-af", "ebur128=peak=true", "-f", "null", "-"], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 }).stderr ?? "";
+  const summary = log.slice(log.lastIndexOf("Summary:"));
+  const lufs = Number(/I:\s+(-?[\d.]+|-inf)\s+LUFS/.exec(summary)?.[1] ?? NaN);
+  const tp = Number(/True peak:\s+Peak:\s+(-?[\d.]+|-inf)\s+dBFS/.exec(summary)?.[1] ?? NaN);
+  return { lufs, tp };
+}
+
+/**
+ * The sound levelled in two passes (a measured loudnorm, linear where it can
+ * be), then measured on the encoded AAC: when the encoder lifted the true peak
+ * over −1 dBTP, it is done once more a decibel lower.
+ */
+export function level(file) {
+  const tmp = file.replace(/\.mp4$/, ".level.mp4");
+  const pass = (tp) => {
+    const first = spawnSync("ffmpeg", ["-hide_banner", "-nostats", "-i", file, "-vn", "-af", `loudnorm=I=${TARGET.lufs}:TP=${tp}:LRA=11:print_format=json`, "-f", "null", "-"], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 }).stderr ?? "";
+    const json = first.slice(first.lastIndexOf("{"), first.lastIndexOf("}") + 1);
+    let m = null;
+    try {
+      m = JSON.parse(json);
+    } catch {
+      m = null;
+    }
+    const af = m && Number.isFinite(Number(m.input_i)) ? `loudnorm=I=${TARGET.lufs}:TP=${tp}:LRA=11:measured_I=${m.input_i}:measured_TP=${m.input_tp}:measured_LRA=${m.input_lra}:measured_thresh=${m.input_thresh}:offset=${m.target_offset}:linear=true` : `loudnorm=I=${TARGET.lufs}:TP=${tp}:LRA=11`;
+    execFileSync("ffmpeg", ["-v", "error", "-y", "-i", file, "-c:v", "copy", "-af", af, "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-movflags", "+faststart", tmp], { stdio: "inherit" });
+  };
+  pass(-1.5);
+  if (loudness(tmp).tp > TARGET.tp) pass(-2.6);
+  fs.renameSync(tmp, file);
 }

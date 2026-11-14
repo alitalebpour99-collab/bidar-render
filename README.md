@@ -62,6 +62,55 @@ Chrome drawing for minutes.
 - Designed on the full frame, drawn on the safe stage (`STAGE_K`): nothing to
   read outside y 290–1590 of the screen, nothing in the lower right rail.
 
+## The set style (the owner's approved style, 13 November 2026)
+
+«حدس بزن», «درست یا غلط؟» and «پنج‌تایی» are drawn in Bidar's own set: a dark
+navy hall of pointed arches lit in turquoise, violet and pink (the site's and
+the panel's gradient border), a glossy floor, and the episode's glass slabs
+standing in it (`src/set/`). Pickwise's set style (Pickwise-Media-OS #55) is
+the model for how it works, not for how it looks.
+
+- **The camera never stands still** (`space.ts`): it pushes in from the first
+  frame, orbits the slab it looks at, punches on a beat, whips from one slab to
+  the next (a whoosh and a little blur), and in the last 19 frames glides back
+  to the first frame's place, so the Reel loops. A stretch over 2.6 s without a
+  move gets a small punch.
+- **The frame is full**: the question or claim at the top, the options or the
+  proof and its source below it, the countdown ring under them, the floor's
+  light and the slabs' reflections to the bottom edge. Far slabs show soft bars,
+  not small letters.
+- **Text is measured** before it is drawn (`fit.ts`, the real font in the
+  browser): every line fits its slab, no letter is smaller than 1.5 % of the
+  frame (29 px), and every text stays inside the apps' safe zones, measured on
+  the owner's screenshots: not in the top 11 %, not in the right 14 %, not in
+  the caption rows (frame x 56–888, y 232–1583).
+- **Every claim carries its source** on its slab (the site's `src` per round
+  or item); the close shows the source line and the address.
+- **The channel badge**: «بیدار» in its Nastaliq with a tiny heart and a tiny
+  follow mark, a small glass pill in the bottom safe area, for 2.2 s at the
+  close, gone before the loop; one master file for every platform.
+- **Sound**: the series' bed (`music.mjs`, Bidar's code-made sound, the Bidar
+  shelf of Ahura Sound) ducked about 17 dB under the narrator and back up
+  between phrases; an effect for every move (whip: whoosh, glide: swish, a slab
+  in: pop or paper, verdict: stamp, answer: rise, chime and hit, countdown:
+  tick), at most two in any second; levelled in two passes to −14 LUFS with the
+  true peak at −1 dBTP or lower, measured on the encoded file (`finish.mjs`).
+- **The holds are short**: the quiz counts 3 s, a true-or-false pause is 2 s.
+- **The tile**: one glass medallion and three or four big words (`CoverSet.tsx`,
+  the site's `big`).
+
+**The gate** (`gate.mjs`): after the render, a set Reel is checked, and one
+that fails is not handed back; the site is told why in plain Persian, as a
+final failure. Checks: hook-words, hook-camera, hook-motion, length, moves,
+still, loop-plan, loop, safe, text-size, source, persian, badge, sound-effects,
+loudness, cover. A sample render writes the report to `out/<name>.gate.json`.
+
+**Switches** (repository variables of this repository, read by `render.yml`):
+`BIDAR_STYLE=classic` draws these three formats in their old look;
+`BIDAR_BADGE=off` leaves the badge out; `BIDAR_GATE=warn` reports and hands
+back anyway, `BIDAR_GATE=off` skips the gate. Unset: the set style, the badge
+and the gate are on.
+
 ## Look at a format
 
 ```bash

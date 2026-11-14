@@ -17,6 +17,7 @@ import path from "node:path";
 import { bundle } from "@remotion/bundler";
 import { makeCancelSignal, renderMedia, renderStill, selectComposition } from "@remotion/renderer";
 import { finish } from "./finish.mjs";
+import { enforce } from "./gate.mjs";
 import { bookVoice, dropVoice, duckOf, voiceFiles } from "./voice.mjs";
 import { hasBed, score } from "./music.mjs";
 
@@ -32,6 +33,8 @@ const CAN = process.env.RENDER_CAN ?? "story,cards";
 const START_FREE_MB = Number(process.env.START_FREE_MB) || 2200;
 const ABORT_FREE_MB = Number(process.env.ABORT_FREE_MB) || 450;
 const HOLD_UNTIL = Date.parse(process.env.HOLD_UNTIL ?? "") || 0;
+// the set style's switches (README «The set style»): the old look, the badge
+const SWITCHES = { ...(process.env.BIDAR_STYLE ? { style: process.env.BIDAR_STYLE } : {}), ...(process.env.BIDAR_BADGE === "off" ? { badge: false } : {}) };
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const state = { rendered: 0, failed: 0 };
@@ -155,16 +158,17 @@ async function render(job) {
   }, 20_000);
   try {
     // the tile for the profile grid
-    const tile = await selectComposition({ serveUrl: serve, id: "cover", inputProps: job.cover, chromiumOptions, timeoutInMilliseconds });
-    await renderStill({ composition: tile, serveUrl: serve, output: cover, inputProps: job.cover, imageFormat: "jpeg", jpegQuality: 92, chromiumOptions, timeoutInMilliseconds, cancelSignal });
+    const tileProps = { ...job.cover, ...SWITCHES };
+    const tile = await selectComposition({ serveUrl: serve, id: "cover", inputProps: tileProps, chromiumOptions, timeoutInMilliseconds });
+    await renderStill({ composition: tile, serveUrl: serve, output: cover, inputProps: tile.props, imageFormat: "jpeg", jpegQuality: 92, chromiumOptions, timeoutInMilliseconds, cancelSignal });
     step("tile drawn");
     // the narrator first: its alignment sets every beat and the Reel's length (src/timeline.ts);
     // a book Reel has none: the book's own recording is cut instead (voice.mjs bookVoice)
     const voiceIn = job.format === "book" ? await bookVoice(job.props, publicDir, job.name) : voiceFiles(job.voice, publicDir, job.name, { format: job.format });
-    const first = await selectComposition({ serveUrl: serve, id: job.format, inputProps: { ...job.props, voiceIn }, chromiumOptions, timeoutInMilliseconds });
+    const first = await selectComposition({ serveUrl: serve, id: job.format, inputProps: { ...job.props, ...SWITCHES, voiceIn }, chromiumOptions, timeoutInMilliseconds });
     const seconds = first.durationInFrames / first.fps;
-    if (music) fs.writeFileSync(path.join(publicDir, music), score({ id: job.format, seconds, duck: duckOf(first) }));
-    const inputProps = { ...job.props, voiceIn, ...(music ? { music } : {}) };
+    if (music) fs.writeFileSync(path.join(publicDir, music), score({ id: job.format, seconds, duck: duckOf(first), deep: Boolean(first.props.plan) }));
+    const inputProps = { ...job.props, ...SWITCHES, voiceIn, ...(music ? { music } : {}) };
     const composition = await selectComposition({ serveUrl: serve, id: job.format, inputProps, chromiumOptions, timeoutInMilliseconds });
     step(`${composition.durationInFrames} frames`);
     let tenth = 0;
@@ -177,6 +181,11 @@ async function render(job) {
     };
     await renderMedia({ composition, serveUrl: serve, codec: "h264", videoBitrate: process.env.RENDER_VBR ?? "2300k", pixelFormat: "yuv420p", audioCodec: "aac", audioBitrate: "160k", inputProps, outputLocation: video, concurrency: CONCURRENCY, chromiumOptions, cancelSignal, timeoutInMilliseconds, onProgress });
     console.log(`Reel ${job.id}: ${finish(video, seconds)}`);
+    // the set style's gate: a Reel that fails it is not handed back (a FinalCheck: it would fail the same way again)
+    if (composition.props.plan) {
+      const result = enforce({ plan: composition.props.plan, file: video, cover: String(job.cover?.big ?? job.cover?.title ?? "") });
+      step(result?.ok ? "gate passed" : "gate reported");
+    }
     for (const [kind, file, type] of [
       ["video", video, "video/mp4"],
       ["cover", cover, "image/jpeg"],

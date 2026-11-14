@@ -51,6 +51,8 @@ jobs:
           RENDER_GL: swangle
           LIST: ${{ inputs.list }}
           MODE: ${{ inputs.mode }}
+          # a sample is for looking: the gate reports (out/<name>.gate.json) and the run goes on
+          BIDAR_GATE: warn
         run: |
           set -e
           for pair in $LIST; do
@@ -62,10 +64,22 @@ jobs:
             else
               node render.mjs "$comp" --props "samples/$name.json" $voice --bundle bundle --out "$out"
               ffprobe -v error -show_entries format=duration,size,bit_rate -show_entries stream=codec_name,width,height -of compact "out/$out.mp4"
+              # for looking without downloading the master: a small copy, a sheet of two frames a second, the loudness
+              mkdir -p small
+              ffmpeg -v error -y -i "out/$out.mp4" -vf scale=360:-2 -c:v libx264 -crf 30 -preset veryfast -c:a aac -b:a 96k "small/$out-360.mp4"
+              ffmpeg -v error -y -i "out/$out.mp4" -vf "fps=2,scale=216:-2,tile=10x8:padding=4:color=0x000000" -frames:v 1 -q:v 4 "small/$out-sheet.jpg"
+              ffmpeg -hide_banner -nostats -i "out/$out.mp4" -vn -af ebur128=peak=true -f null - 2>&1 | sed -n '/Summary:/,$p' > "small/$out-loudness.txt"
+              if [ -f "out/$out.gate.json" ]; then cp "out/$out.gate.json" small/; fi
             fi
-            if [ -f "samples/$name.cover.json" ]; then node render.mjs cover --props "samples/$name.cover.json" --bundle bundle --still 0 --out "$out-tile"; fi
+            if [ -f "samples/$name.cover.json" ]; then node render.mjs cover --props "samples/$name.cover.json" --bundle bundle --still 0 --out "$out-tile"; mkdir -p small; ffmpeg -v error -y -i "out/$out-tile-0000.png" -vf scale=540:-2 -q:v 3 "small/$out-tile.jpg" || true; fi
           done
           ls -la out
+      - uses: actions/upload-artifact@v4
+        if: inputs.mode == 'video'
+        with:
+          name: small
+          path: small/
+          retention-days: 14
       - uses: actions/upload-artifact@v4
         with:
           name: samples-${{ inputs.mode }}

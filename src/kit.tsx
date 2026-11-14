@@ -7,9 +7,13 @@ import { Audio, Easing, Sequence, interpolate, staticFile } from "remotion";
 import { loadFont as loadVazir } from "@remotion/google-fonts/Vazirmatn";
 import { loadFont as loadGulzar } from "@remotion/google-fonts/Gulzar";
 
-export const { fontFamily: VAZIR } = loadVazir("normal", { weights: ["400", "500", "700", "800", "900"], subsets: ["arabic", "latin"] });
+const vazir = loadVazir("normal", { weights: ["400", "500", "700", "800", "900"], subsets: ["arabic", "latin"] });
+export const VAZIR = vazir.fontFamily;
 // Gulzar (Nastaliq) is only for the «بیدار» mark, as on the site
-export const { fontFamily: GULZAR } = loadGulzar("normal", { weights: ["400"], subsets: ["arabic"] });
+const gulzar = loadGulzar("normal", { weights: ["400"], subsets: ["arabic"] });
+export const GULZAR = gulzar.fontFamily;
+/** Both fonts loaded (the set style measures its lines before it draws them). */
+export const fontsReady = () => Promise.all([vazir.waitUntilDone(), gulzar.waitUntilDone()]);
 
 export const W = 1080;
 export const H = 1920;
