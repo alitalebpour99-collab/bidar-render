@@ -80,7 +80,7 @@ if (stillArg) {
     try {
       result = enforce({ plan, file: outputLocation, cover });
     } finally {
-      if (result) fs.writeFileSync(`out/${name}.gate.json`, JSON.stringify({ ok: result.ok, checks: result.checks, seconds, sfx: plan.sfx.length, shots: plan.shots.length }, null, 1));
+      if (result) fs.writeFileSync(`out/${name}.gate.json`, JSON.stringify({ ok: result.ok, checks: result.checks, seconds, sfx: plan.sfx.length, shots: plan.shots.length, boxes: plan.boxes, low: (plan.frames ?? []).filter((x) => !x.whip && x.bottom < 1250).map((x) => [x.f, x.bottom, x.n]) }, null, 1));
     }
     console.log(result?.ok ? "gate: every check passed" : "gate: failed (see above)");
   }
