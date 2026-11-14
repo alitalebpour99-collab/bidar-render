@@ -326,7 +326,17 @@ export function planFive(p: FiveProps & { items: (FiveProps["items"][number] & {
     const line = fit({ text: noDot(it.line), width: INNER, maxLines: 3, size: 58, min: 42, weight: 600 }).lines.map((l) => ({ ...l, color: "#d7def5" }));
     const chip = chipOf(it.src);
     if (!chip) sourced = false;
-    objects.push(slab(`line${k}`, { top: head.at[1] + head.h / 2 + 34, z: stationZ(k) - 20 }, Math.max(1, b.from + 10), leave + 6, line, { enter: "rise", chip, claim: true }));
+    const lineSlab = slab(`line${k}`, { top: head.at[1] + head.h / 2 + 34, z: stationZ(k) - 20 }, Math.max(1, b.from + 10), leave + 6, line, { enter: "rise", chip, claim: true });
+    objects.push(lineSlab);
+    // the countdown so far, under the slabs: the five numbers, this one in gold, those told in turquoise, those to come dim
+    const n = p.items.length;
+    const size = 104;
+    const step = 124;
+    const y = lineSlab.at[1] + lineSlab.h / 2 + 60 + size / 2;
+    p.items.forEach((other, j) => {
+      const state = j === i ? { glow: 1, accent: "gold" as Accent } : j < i ? { glow: 0.5 } : { dim: 0.7 };
+      objects.push({ id: `step${k}-${j + 1}`, kind: "medal", at: [SX - (j - (n - 1) / 2) * step, y, stationZ(k) - 20], w: size, h: size, from: Math.max(1, b.from + 14), to: leave + 6, enter: "pop", word: { text: faDigits(latin(String(other.n))), size: 62, weight: 900 }, states: [{ at: b.from + 14, ...state }] });
+    });
     shots.push({ at: b.from - 6, pose: orbit(at(k), BASE, k % 2 ? 3 : -3, 0), move: "whip", push: 18, sway: 0.5, why: `to number ${faDigits(num)}` });
     const mid = Math.round((b.from + leave) / 2);
     if (leave - b.from > 100) shots.push({ at: mid, pose: orbit(at(k), BASE - 20, k % 2 ? -4 : 4, -20), move: "glide", push: 14, sway: 0.6, why: `number ${faDigits(num)}, an orbit` });
