@@ -49,8 +49,12 @@ export const MIDDLE = { top: Math.round(H / 3), bottom: Math.round((2 * H) / 3) 
 export const COL = { left: ZONES.left + 26, right: ZONES.right - 22 };
 export const COL_W = COL.right - COL.left;
 export const COL_X = (COL.left + COL.right) / 2;
-/** the smallest letters any text may have on screen: 1.5 % of the frame's height (STYLE_GUIDE R5) */
-export const MIN_TEXT = Math.ceil(0.015 * H);
+/** the smallest letters any text may have on screen (the review of 2026-11-14: 40 px, no smaller) */
+export const MIN_TEXT = 40;
+/** the answer and its explanation (an option, a verdict, a proof, a line of the five): 44 px or more */
+export const ANSWER_TEXT = 44;
+/** the lowest row the readable text must reach on almost every frame (gate `fill-y`): no empty lower part */
+export const FILL_Y = 1250;
 
 export type Box = { x: number; y: number; w: number; h: number };
 export const boxInZones = (b: Box) => b.x >= ZONES.left && b.y >= ZONES.top && b.x + b.w <= ZONES.right && b.y + b.h <= ZONES.bottom;
@@ -158,10 +162,14 @@ export const ACCENT: Record<Accent, string> = {
 };
 export const NAVY = { deep: "#040816", night: "#071026", hall: "#0a1433", panel: "#0f1a3d", panel2: "#16224d", ink: "#f4f6ff", muted: "#a9b4d6", dark: "#06101f" };
 
-/** A line of text, already broken and sized (fit.ts). */
-export type Line = { text: string; size: number; weight: number; color?: string };
+/**
+ * A line of text, already broken and sized (fit.ts): `w` is its measured width
+ * and `max` the width it may take (gate `clip`); `role: "answer"` marks an
+ * answer or its explanation (gate `text-size`, 44 px).
+ */
+export type Line = { text: string; size: number; weight: number; color?: string; w?: number; max?: number; role?: "answer" };
 /** A change of an object at a frame, eased over 10 frames. */
-export type State = { at: number; glow?: number; dim?: number; dy?: number; dz?: number; accent?: Accent };
+export type State = { at: number; glow?: number; dim?: number; dy?: number; dz?: number; accent?: Accent; win?: number };
 export type Obj = {
   id: string;
   kind: "slab" | "ring" | "stamp" | "burst" | "medal";
@@ -172,10 +180,12 @@ export type Obj = {
   from: number;
   to: number;
   enter?: "pop" | "rise" | "fade" | "none";
-  /** a slab: its lines, its tag (top right), its source chip (bottom) and a picture */
+  /** a slab: its lines, its tag (top right), its source chip (bottom, one or two whole lines) and a picture */
   lines?: Line[];
   tag?: string;
-  chip?: Line;
+  chip?: Line[];
+  /** the right answer's mark, shown as its `win` state comes: a tick, or a cross on «غلط» */
+  mark?: "check" | "cross";
   image?: { src: string; h: number };
   /** a medal or a stamp: its word or figure */
   word?: Line;
@@ -207,7 +217,9 @@ export type Plan = {
   /** the words on screen in the first 1.5 s */
   hook: { text: string; from: number };
   /** the screen box each text object covers over its whole life (gate `safe`) */
-  boxes: { id: string; box: Box; minSize: number; from: number; to: number }[];
+  boxes: { id: string; box: Box; minSize: number; minAnswer?: number; from: number; to: number }[];
+  /** every third frame: how many texts can be read, the lowest row they reach, and whether the camera is in a whip (gates `empty`, `fill-y`) */
+  frames?: { f: number; n: number; bottom: number; whip: boolean }[];
   /** the length this format may run, in seconds (gate `length`) */
   length: [number, number];
   badge: boolean;
@@ -223,6 +235,7 @@ export function stateAt(o: Obj, f: number) {
   let dy = 0;
   let dz = 0;
   let accent = o.accent ?? "turq";
+  let win = 0;
   for (const s of o.states ?? []) {
     const u = smooth((f - s.at) / 10);
     if (u <= 0) continue;
@@ -230,9 +243,10 @@ export function stateAt(o: Obj, f: number) {
     if (s.dim !== undefined) dim += (s.dim - dim) * u;
     if (s.dy !== undefined) dy += (s.dy - dy) * u;
     if (s.dz !== undefined) dz += (s.dz - dz) * u;
+    if (s.win !== undefined) win += (s.win - win) * u;
     if (s.accent && u > 0.5) accent = s.accent;
   }
-  return { glow, dim, dy, dz, accent };
+  return { glow, dim, dy, dz, accent, win };
 }
 
 /** How present an object is (0–1) and its entrance scale and lift. */
@@ -265,11 +279,30 @@ export function boxAt(o: Obj, pose: Pose, f: number): { box: Box; s: number } | 
 }
 
 /** Text an object shows (for the counts and the checks). */
-export const textOf = (o: Obj) => [...(o.lines ?? []).map((l) => l.text), o.tag ?? "", o.chip?.text ?? "", o.word?.text ?? ""].filter(Boolean);
-/** Below this scale a slab's letters are not drawn (only soft bars): far away they could not be read. */
-export const READ_SCALE = 0.86;
+export const textOf = (o: Obj) => [...(o.lines ?? []).map((l) => l.text), o.tag ?? "", ...(o.chip ?? []).map((l) => l.text), o.word?.text ?? ""].filter(Boolean);
+/**
+ * Below this scale a slab's letters are not drawn (only soft bars): far away
+ * they could not be read. Low enough that a slab the camera is coming to shows
+ * its words, not an empty glass (the review of 2026-11-14: «درست یا غلط؟» at 3.5 s).
+ */
+export const READ_SCALE = 0.72;
 /** How much of a slab's letters show at a scale: none far away, and none when the camera flies through it (they would leave the zones). */
-export const textAlpha = (s: number) => (s < READ_SCALE ? 0 : s < READ_SCALE + 0.02 ? (s - READ_SCALE) / 0.02 : s > 1.1 ? 0 : s > 1.06 ? (1.1 - s) / 0.04 : 1);
+export const textAlpha = (s: number) => (s < READ_SCALE ? 0 : s < READ_SCALE + 0.03 ? (s - READ_SCALE) / 0.03 : s > 1.1 ? 0 : s > 1.06 ? (1.1 - s) / 0.04 : 1);
+
+/** Frames inside a whip (the camera flying from one slab to the next, blurred): no reading is asked of them. */
+export const inWhip = (shots: Shot[], f: number) => shots.some((s) => s.move === "whip" && f >= s.at && f < s.at + MOVE_FRAMES.whip + 2);
+
+/** What a viewer sees of an object at a frame: its box, how present it is (entrance, dimming, the camera flying through), its letters' light. */
+export function seen(o: Obj, pose: Pose, f: number) {
+  const b = boxAt(o, pose, f);
+  if (!b) return { b: null, a: 0, t: 0 };
+  const st = stateAt(o, f);
+  const p = project([o.at[0], o.at[1], o.at[2] + st.dz], pose);
+  const through = p ? Math.max(0, Math.min(1, (1.7 - p[2]) / 0.4)) : 0;
+  // read only from READ_SCALE (a far medal's figure is decoration, not text)
+  const t = textAlpha(b.s);
+  return { b, a: presence(o, f).a * (1 - 0.6 * st.dim) * through, t };
+}
 
 /**
  * The boxes the gate checks: for every object with text, the union of its
@@ -280,25 +313,60 @@ export function textBoxes(objects: Obj[], shots: Shot[], punches: Punch[]): Plan
   for (const o of objects) {
     const texts = textOf(o);
     if (!texts.length) continue;
-    const sizes = [...(o.lines ?? []), ...(o.chip ? [o.chip] : []), ...(o.word ? [o.word] : [])].map((l) => l.size);
+    const all = [...(o.lines ?? []), ...(o.chip ?? []), ...(o.word ? [o.word] : [])];
+    const sizes = all.map((l) => l.size);
     if (o.tag) sizes.push(TAG_SIZE);
     const smallest = Math.min(...sizes);
+    const answers = all.filter((l) => l.role === "answer").map((l) => l.size);
+    const smallestAnswer = answers.length ? Math.min(...answers) : Infinity;
     let box: Box | null = null;
     let minSize = Infinity;
+    let minAnswer = Infinity;
     let from = -1;
     let to = -1;
     for (let f = o.from; f <= o.to; f += 2) {
-      const pose = poseAt(shots, punches, f);
-      const b = boxAt(o, pose, f);
-      if (!b || textAlpha(b.s) < 0.5 || presence(o, f).a < 0.5) continue;
-      box = unite(box, b.box);
-      minSize = Math.min(minSize, smallest * b.s);
+      if (inWhip(shots, f)) continue;
+      const v = seen(o, poseAt(shots, punches, f), f);
+      // what a viewer reads: drawn, its letters lit, not faded out or stepped back into the dark
+      if (!v.b || v.t < 0.5 || v.a < 0.5) continue;
+      box = unite(box, v.b.box);
+      minSize = Math.min(minSize, smallest * v.b.s);
+      minAnswer = Math.min(minAnswer, smallestAnswer * v.b.s);
       if (from < 0) from = f;
       to = f;
     }
-    if (box) out.push({ id: o.id, box, minSize, from, to });
+    if (box) out.push({ id: o.id, box, minSize, ...(Number.isFinite(minAnswer) ? { minAnswer } : {}), from, to });
+  }
+  return out;
+}
+
+/** Every third frame: how many texts a viewer can read and the lowest row they reach (the source line counts at the close). */
+export function frameCover(objects: Obj[], hud: Hud[], shots: Shot[], punches: Punch[], total: number): NonNullable<Plan["frames"]> {
+  const out: NonNullable<Plan["frames"]> = [];
+  for (let f = 0; f < total; f += 3) {
+    const pose = poseAt(shots, punches, f);
+    let n = 0;
+    let bottom = 0;
+    for (const o of objects) {
+      if (!textOf(o).length) continue;
+      const v = seen(o, pose, f);
+      if (!v.b || v.t < 0.5 || v.a < 0.5) continue;
+      n += 1;
+      bottom = Math.max(bottom, v.b.box.y + v.b.box.h);
+    }
+    for (const h of hud) if (h.kind === "source" && f >= h.from + 8 && f < h.to) bottom = Math.max(bottom, h.box.y + h.box.h);
+    out.push({ f, n, bottom: Math.round(bottom), whip: inWhip(shots, f) });
   }
   return out;
 }
 /** the slab's tag (its kind, its number) */
-export const TAG_SIZE = 36;
+export const TAG_SIZE = 48;
+/** where a slab's lines begin under its tag, and under its top edge without one */
+export const TAG_ROOM = 118;
+export const TOP_ROOM = 26;
+/** a source chip: its letters, its line height, and the height of its box (one or two lines, padding and border) */
+export const CHIP_SIZE = 46;
+export const CHIP_LEAD = 1.3;
+export const chipBlock = (lines: Line[]) => Math.ceil(lines.reduce((h, l) => h + l.size * CHIP_LEAD, 0)) + 22;
+/** the room a slab keeps at its bottom: the chip, its margin and a gap above it; or a plain margin */
+export const chipRoom = (lines?: Line[]) => (lines?.length ? chipBlock(lines) + 22 + 16 : 26);

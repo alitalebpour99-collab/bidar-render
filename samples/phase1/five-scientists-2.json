@@ -1,0 +1,92 @@
+{
+ "format": "five",
+ "series": "حقیقت، با سند",
+ "lang": "fa",
+ "episode": 1,
+ "hook": "پنج دانشمندِ ایرانی که دنیا می‌شناسد",
+ "sub": "از تازه‌ترین تا کهن‌ترین؛ شمارهٔ یک پدرِ جبر است",
+ "items": [
+  {
+   "n": "۵",
+   "icon": "star",
+   "name": "خواجه نصیرالدین طوسی",
+   "line": "بنیان‌گذارِ رصدخانهٔ مراغه.",
+   "figure": "۱۲۰۱–۱۲۷۴ م",
+   "tier": "",
+   "src": "Encyclopaedia Iranica, \"Naṣīr-al-Dīn Ṭūsī\""
+  },
+  {
+   "n": "۴",
+   "icon": "star",
+   "name": "ابن سینا",
+   "line": "فیلسوف-پزشکِ «قانون»",
+   "figure": "ح. ۹۸۰–۱۰۳۷ م",
+   "tier": "",
+   "src": "Internet Encyclopedia of Philosophy, \"Avicenna (Ibn Sina)\""
+  },
+  {
+   "n": "۳",
+   "icon": "star",
+   "name": "ابوریحان بیرونی",
+   "line": "اوستادِ همه‌فنِ علوم.",
+   "figure": "ح. ۹۷۳–۱۰۴۸ م",
+   "tier": "",
+   "src": "Encyclopaedia Iranica, \"Bīrūnī, Abū Rayḥān\""
+  },
+  {
+   "n": "۲",
+   "icon": "star",
+   "name": "محمد زکریای رازی",
+   "line": "بزرگ‌ترین پزشکِ بالینیِ جهان اسلام.",
+   "figure": "ح. ۸۶۴–۹۲۵ م",
+   "tier": "",
+   "src": "Encyclopaedia Iranica, \"Rāzī, Abū Bakr Moḥammad b. Zakariyāʾ\""
+  },
+  {
+   "n": "۱",
+   "icon": "star",
+   "name": "محمد بن موسی خوارزمی",
+   "line": "پدرِ جبر.",
+   "figure": "ح. ۷۸۰–۸۵۰ م",
+   "tier": "",
+   "src": "Encyclopaedia Iranica, \"Ḵᵛārazmī, Abū Jaʿfar Moḥammad\""
+  }
+ ],
+ "close": {
+  "q": "کدامشان را نمی‌شناختی؟",
+  "a": "شماره‌اش را بنویس"
+ },
+ "source": "منبع: Encyclopaedia Iranica, \"Ḵᵛārazmī, Abū Jaʿfar Moḥammad\"، Encyclopaedia Iranica, \"Rāzī, Abū Bakr Moḥammad b. Zakariyāʾ\"، Encyclopaedia Iranica, \"Bīrūnī, Abū Rayḥān\"، Internet Encyclopedia of Philosophy, \"Avicenna (Ibn Sina)\"، Encyclopaedia Iranica, \"Naṣīr-al-Dīn Ṭūsī\"",
+ "foot": "bidar.ahura.cloud",
+ "beats": [
+  {
+   "id": "start",
+   "say": "پنج دانشمندِ ایرانی که دنیا می‌شناسد. از تازه‌ترین تا کهن‌ترین؛ شمارهٔ یک پدرِ جبر است."
+  },
+  {
+   "id": "n5",
+   "say": "پنج: خواجه نصیرالدین طوسی. بنیان‌گذارِ رصدخانهٔ مراغه."
+  },
+  {
+   "id": "n4",
+   "say": "چهار: ابن سینا. فیلسوف-پزشکِ «قانون»"
+  },
+  {
+   "id": "n3",
+   "say": "سه: ابوریحان بیرونی. اوستادِ همه‌فنِ علوم."
+  },
+  {
+   "id": "n2",
+   "say": "دو: محمد زکریای رازی. بزرگ‌ترین پزشکِ بالینیِ جهان اسلام."
+  },
+  {
+   "id": "n1",
+   "say": "و یک: محمد بن موسی خوارزمی. پدرِ جبر."
+  },
+  {
+   "id": "end",
+   "say": "کدامشان را نمی‌شناختی؟ شماره‌اش را بنویس.",
+   "min": 2.6
+  }
+ ]
+}
