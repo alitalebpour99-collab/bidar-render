@@ -80,7 +80,9 @@ export function project(p: V3, pose: Pose): [number, number, number] | null {
 /** A camera that looks at `target` from `dist` away, turned `angle` degrees round it, raised `lift`. */
 export const orbit = (target: V3, dist: number, angle = 0, lift = 0): Pose => {
   const a = (angle * Math.PI) / 180;
-  return { x: target[0] - dist * Math.sin(a), y: lift, z: target[2] - dist * Math.cos(a), yaw: angle };
+  // moved sideways along its own right, so the target is drawn at the safe column's middle
+  const r = ((CX - (ZONES.left + 26 + ZONES.right - 22) / 2) * dist) / F;
+  return { x: target[0] - dist * Math.sin(a) + r * Math.cos(a), y: lift, z: target[2] - dist * Math.cos(a) - r * Math.sin(a), yaw: angle };
 };
 
 /**
@@ -265,7 +267,7 @@ export function boxAt(o: Obj, pose: Pose, f: number): { box: Box; s: number } | 
 /** Text an object shows (for the counts and the checks). */
 export const textOf = (o: Obj) => [...(o.lines ?? []).map((l) => l.text), o.tag ?? "", o.chip?.text ?? "", o.word?.text ?? ""].filter(Boolean);
 /** Below this scale a slab's letters are not drawn (only soft bars): far away they could not be read. */
-export const READ_SCALE = 0.62;
+export const READ_SCALE = 0.86;
 /** How much of a slab's letters show at a scale: none far away, and none when the camera flies through it (they would leave the zones). */
 export const textAlpha = (s: number) => (s < READ_SCALE ? 0 : s < READ_SCALE + 0.08 ? (s - READ_SCALE) / 0.08 : s > 1.1 ? 0 : s > 1.06 ? (1.1 - s) / 0.04 : 1);
 
@@ -299,4 +301,4 @@ export function textBoxes(objects: Obj[], shots: Shot[], punches: Punch[]): Plan
   return out;
 }
 /** the slab's tag (its kind, its number) */
-export const TAG_SIZE = 34;
+export const TAG_SIZE = 36;

@@ -15,13 +15,13 @@ export type SetFormat = (typeof SET_FORMATS)[number];
 export const isSetFormat = (f: string): f is SetFormat => (SET_FORMATS as readonly string[]).includes(f);
 
 /** How long each may run, in seconds (gate `length`): one idea each, the quiz the shortest. */
-export const LENGTH: Record<SetFormat, [number, number]> = { quiz: [14, 30], truefalse: [24, 48], five: [22, 42] };
+export const LENGTH: Record<SetFormat, [number, number]> = { quiz: [14, 30], truefalse: [24, 52], five: [22, 42] };
 /** The silent holds, at most (the quiz's countdown, the true-or-false pause): the audit's «nothing waits». */
 export const HOLD_CAP: Record<SetFormat, number> = { quiz: 3, truefalse: 2, five: 2 };
 
 /** The slab column: centred in the safe column, a little narrower so a punch keeps it inside. */
 const SX = COL.left + COL_W / 2 - 540;
-const SLAB_W = Math.min(760, COL_W - 24);
+const SLAB_W = Math.min(720, COL_W - 64);
 const INNER = SLAB_W - 96;
 const Z0 = 1000;
 /** the world's y of a row of the screen, for a thing at the camera's own distance (scale 1) */
@@ -44,7 +44,7 @@ function slab(id: string, at: { x?: number; top: number; z: number }, from: numb
 function chipOf(text: string | undefined): Line | undefined {
   if (!text) return undefined;
   const t = noDot(/^\s*منبع/.test(text) ? text : `منبع: ${text}`);
-  const one = fitOne(t, INNER - 20, 30, 600);
+  const one = fitOne(t, INNER - 20, 34, 600, 34);
   return one.overflow ? { ...one, text: shorten(t, INNER - 20, one.size, 600) } : one;
 }
 /** A source too long for its chip keeps its first words and an ellipsis (the whole line is in the caption). */
@@ -170,7 +170,7 @@ export function planQuiz(p: QuizProps, tl: Timeline, opts: { badge: boolean }): 
   const optBottom = optTop + p.options.length * (optH + gap) - gap;
   // the hook's one object: a medallion with «؟» under the question; it steps back into the hall when the options come, and returns for the loop
   const medal = 330;
-  objects.push({ id: "mark", kind: "medal", at: [SX, Math.min(optTop + medal / 2 + 70, rowY(1330) - medal / 2), Z0 - 20], w: medal, h: medal, from: 0, to: T + 60, enter: "none", word: { text: "؟", size: 230, weight: 900 }, states: [{ at: 8, glow: 0.8 }, { at: Math.max(10, o[0].from - 8), dz: 1400, dy: -120, dim: 0.6, glow: 0 }, { at: end.from + 16, dz: 0, dy: 0, dim: 0, glow: 0.8 }] });
+  objects.push({ id: "mark", kind: "medal", at: [SX, Math.min(optTop + medal / 2 + 70, rowY(1330) - medal / 2), Z0 - 20], w: medal, h: medal, from: 0, to: T + 60, enter: "none", word: { text: "؟", size: 230, weight: 900 }, states: [{ at: -20, glow: 0.8 }, { at: Math.max(10, o[0].from - 8), dz: 1400, dy: -120, dim: 0.6, glow: 0 }, { at: end.from + 16, dz: 0, dy: 0, dim: 0, glow: 0.8 }] });
 
   // the countdown: a ring of light under the options
   const secs = Math.max(1, Math.round((count.to - count.from) / FPS));
@@ -181,7 +181,7 @@ export function planQuiz(p: QuizProps, tl: Timeline, opts: { badge: boolean }): 
   const rightY = optTop + p.answer * (optH + gap) + optH / 2;
   objects.push({ id: "burst", kind: "burst", at: [SX, rightY, Z0 - 40], w: 720, h: 380, from: answer.from - 2, to: answer.from + 30, enter: "none" });
   const head = fitOne(`پاسخ: ${noDot(p.options[p.answer])}`, INNER, 62, 900);
-  const body = fit({ text: noDot(p.reveal), width: INNER, maxLines: 3, size: 48, min: 34, weight: 600 }).lines;
+  const body = fit({ text: noDot(p.reveal), width: INNER, maxLines: 3, size: 48, min: 36, weight: 600 }).lines;
   objects.push(slab("answer", { top: optTop, z: Z0 - 10 }, why.from, end.from + 4, [{ text: head.text, size: head.size, weight: 900, color: "#22e39b" }, ...body], { enter: "rise", chip: chipOf(p.source), claim: true }));
   // the call to answer in the comments, under the question at the close
   const cta = fitOne(noDot(p.cta), INNER, 60, 900);
@@ -221,12 +221,12 @@ function opening(hook: string, sub: string, T: number, subTo: number, tokens: st
   const one = fit({ text: noDot(hook), width: INNER, maxLines: 1, size: 140, min: 96, weight: 900 });
   const big = one.overflow ? fit({ text: noDot(hook), width: INNER, maxLines: 2, size: 120, min: 72, weight: 900 }).lines : one.lines;
   const title = slab("title", { top: rowY(380), z: Z0 }, 0, T + 60, big, { enter: "none" });
-  const subLines = fit({ text: noDot(sub), width: INNER, maxLines: 2, size: 50, min: 38, weight: 700 }).lines.map((l) => ({ ...l, color: "#a9b4d6" }));
+  const subLines = fit({ text: noDot(sub), width: INNER, maxLines: 2, size: 50, min: 40, weight: 700 }).lines.map((l) => ({ ...l, color: "#a9b4d6" }));
   const second = slab("sub", { top: title.at[1] + title.h / 2 + 40, z: Z0 - 20 }, 46, subTo, subLines, { enter: "rise" });
-  const size = tokens.length > 3 ? 138 : 190;
-  const step = size + 26;
+  const size = tokens.length > 3 ? 118 : 170;
+  const step = size + 22;
   const y = second.at[1] + second.h / 2 + 130 + size / 2;
-  const row = tokens.map((t, i): Obj => ({ id: `token${i + 1}`, kind: "medal", at: [SX + (i - (tokens.length - 1) / 2) * step * -1, y, Z0 - 30], w: size, h: size, from: 0, to: T + 60, enter: "none", word: { text: t, size: Math.round(size * 0.62), weight: 900 }, states: [{ at: 20 + i * 6, glow: 0.7 }] }));
+  const row = tokens.map((t, i): Obj => ({ id: `token${i + 1}`, kind: "medal", at: [SX + (i - (tokens.length - 1) / 2) * step * -1, y, Z0 - 30], w: size, h: size, from: 0, to: T + 60, enter: "none", word: { text: t, size: Math.round(size * 0.62), weight: 900 }, states: [{ at: -20, glow: 0.7 }] }));
   return [title, second, ...row];
 }
 
@@ -267,7 +267,7 @@ export function planTrueFalse(p: TrueFalseProps & { rounds: (TrueFalseProps["rou
     const word = fitOne(noDot(r.label), 420, 84, 900);
     const sw = Math.round(measure(word.text, word.size, 900) + 120);
     objects.push({ id: `stamp${k}`, kind: "stamp", at: [SX - SLAB_W / 2 + sw / 2 + 24, bottom + 84, stationZ(k) - 30], w: sw, h: 134, from: v.from - 2, to: leave + 6, enter: "pop", tilt: -6, accent, word: { text: word.text, size: word.size, weight: 900 } });
-    const proof = fit({ text: noDot(r.proof), width: INNER, maxLines: 4, size: 52, min: 36, weight: 600 }).lines;
+    const proof = fit({ text: noDot(r.proof), width: INNER, maxLines: 4, size: 52, min: 38, weight: 600 }).lines;
     const chip = chipOf(r.src);
     if (!chip) sourced = false;
     objects.push(slab(`proof${k}`, { top: bottom + 172, z: stationZ(k) - 20 }, v.from + 8, leave + 6, proof, { enter: "rise", chip, claim: true }));
@@ -310,7 +310,7 @@ export function planFive(p: FiveProps & { items: (FiveProps["items"][number] & {
     const fig = it.figure ? [{ ...fitOne(noDot(it.figure), INNER, 54, 800), color: "#17d4a4" }] : [];
     const head = slab(`item${k}`, { top: rowY(470) + 140, z: stationZ(k) }, 0, T + 60, [...name, ...fig], { enter: "none", states: [{ at: b.from, glow: 0.7 }, { at: leave + 20, glow: 0 }] });
     objects.push(head);
-    const line = fit({ text: noDot(it.line), width: INNER, maxLines: 3, size: 58, min: 40, weight: 600 }).lines.map((l) => ({ ...l, color: "#d7def5" }));
+    const line = fit({ text: noDot(it.line), width: INNER, maxLines: 3, size: 58, min: 42, weight: 600 }).lines.map((l) => ({ ...l, color: "#d7def5" }));
     const chip = chipOf(it.src);
     if (!chip) sourced = false;
     objects.push(slab(`line${k}`, { top: head.at[1] + head.h / 2 + 34, z: stationZ(k) - 20 }, Math.max(1, b.from + 10), leave + 6, line, { enter: "rise", chip, claim: true }));

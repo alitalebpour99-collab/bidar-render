@@ -141,13 +141,13 @@ const TextLines: React.FC<{ lines: Line[]; color?: string; lead?: number }> = ({
   </>
 );
 
-const Slab: React.FC<{ o: Obj; frame: number; s: number }> = ({ o, frame, s }) => {
+const Slab: React.FC<{ o: Obj; frame: number; s: number; total: number }> = ({ o, frame, s, total }) => {
   const st = stateAt(o, frame);
   const ta = textAlpha(s);
   const accent = ACCENT[st.accent];
   const ghosts = 1 - ta;
   // a slight shine that runs across the glass every few seconds
-  const shine = ((frame - o.from) % 150) / 150;
+  const shine = frame > total - 40 ? 0 : ((frame - o.from) % 150) / 150;
   return (
     <div style={{ width: o.w, height: o.h, borderRadius: 40, padding: 4, background: st.glow > 0.05 ? `linear-gradient(120deg, ${accent}, ${accent} 40%, ${ACCENT.violet})` : EDGE, boxShadow: `0 0 ${30 + 70 * st.glow}px rgba(23,212,164,${0.18 + 0.4 * st.glow}), 0 40px 80px rgba(0,0,0,.5)` }}>
       <div style={{ position: "relative", width: "100%", height: "100%", borderRadius: 36, overflow: "hidden", background: `linear-gradient(165deg, ${NAVY.panel2} 0%, ${NAVY.panel} 45%, ${NAVY.night} 100%)` }}>
@@ -240,7 +240,7 @@ const Burst: React.FC<{ o: Obj; frame: number }> = ({ o, frame }) => {
 };
 
 /** One object where the camera sees it, with its light pool and its reflection on the floor. */
-const Thing: React.FC<{ o: Obj; pose: Pose; frame: number }> = ({ o, pose, frame }) => {
+const Thing: React.FC<{ o: Obj; pose: Pose; frame: number; total: number }> = ({ o, pose, frame, total }) => {
   const pr = presence(o, frame);
   if (pr.a <= 0) return null;
   const st = stateAt(o, frame);
@@ -264,7 +264,7 @@ const Thing: React.FC<{ o: Obj; pose: Pose; frame: number }> = ({ o, pose, frame
         <div style={{ position: "absolute", left: mirror[0] - (o.w * mirror[2]) / 2, top: mirror[1], width: o.w * mirror[2], height: o.h * mirror[2] * 0.5, borderRadius: 30 * mirror[2], background: `linear-gradient(180deg, ${accent}2a, rgba(123,97,255,.08) 40%, rgba(0,0,0,0))`, opacity: alpha * 0.9 }} />
       ) : null}
       <div style={{ position: "absolute", left: sx, top: sy, width: o.w, height: o.h, transform: `translate(-50%, -50%) scale(${s}) perspective(1600px) rotateY(${-pose.yaw * 0.5}deg)`, opacity: alpha }}>
-        {o.kind === "slab" ? <Slab o={o} frame={frame} s={s0} /> : o.kind === "ring" ? <Ring o={o} frame={frame} /> : o.kind === "stamp" ? <Stamp o={o} frame={frame} /> : o.kind === "medal" ? <Medal o={o} frame={frame} s={s0} /> : <Burst o={o} frame={frame} />}
+        {o.kind === "slab" ? <Slab o={o} frame={frame} s={s0} total={total} /> : o.kind === "ring" ? <Ring o={o} frame={frame} /> : o.kind === "stamp" ? <Stamp o={o} frame={frame} /> : o.kind === "medal" ? <Medal o={o} frame={frame} s={s0} /> : <Burst o={o} frame={frame} />}
       </div>
     </>
   );
@@ -317,7 +317,7 @@ export const Hall: React.FC<{ plan: Plan; tl: Timeline; music?: string }> = ({ p
   const speed = speedAt(plan.shots, plan.punches, frame);
   const blur = Math.min(9, Math.max(0, (speed - 30) / 22));
   const order = plan.objects
-    .map((o) => ({ o, d: project(o.at, pose)?.[2] ?? 0 }))
+    .map((o) => ({ o, d: project([o.at[0], o.at[1], o.at[2] + stateAt(o, frame).dz], pose)?.[2] ?? 0 }))
     .filter((x) => x.d > 0)
     .sort((a, b) => a.d - b.d);
   return (
@@ -332,7 +332,7 @@ export const Hall: React.FC<{ plan: Plan; tl: Timeline; music?: string }> = ({ p
         <Floor pose={pose} />
         <Dust pose={pose} frame={frame} />
         {order.map(({ o }) => (
-          <Thing key={o.id} o={o} pose={pose} frame={frame} />
+          <Thing key={o.id} o={o} pose={pose} frame={frame} total={plan.total} />
         ))}
       </AbsoluteFill>
       {/* the edges fall into shadow, so the light stays on the slab */}
