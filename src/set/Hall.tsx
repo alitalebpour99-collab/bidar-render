@@ -64,17 +64,33 @@ const Floor: React.FC<{ pose: Pose }> = ({ pose }) => {
   };
   for (let x = -3300; x <= 3300; x += 300) seg([x - 66, FLOOR, near], [x - 66, FLOOR, far]);
   for (let z = Math.ceil(near / 400) * 400; z < pose.z + 11000; z += 400) seg([-3600, FLOOR, z], [3600, FLOOR, z]);
+  const grid = segs.length;
+  for (const x of [-66 - 470, -66 + 470]) seg([x, FLOOR, near], [x, FLOOR, far]);
+  const aisle = segs.splice(grid);
   return (
     <svg width={W} height={H} style={{ position: "absolute", inset: 0 }}>
       <defs>
         <linearGradient id="floorline" gradientUnits="userSpaceOnUse" x1="0" y1={HZ} x2="0" y2={H}>
           <stop offset="0" stopColor="rgba(23,212,164,0)" />
           <stop offset="0.35" stopColor="rgba(23,212,164,.10)" />
-          <stop offset="1" stopColor="rgba(123,97,255,.26)" />
+          <stop offset="1" stopColor="rgba(123,97,255,.34)" />
+        </linearGradient>
+        <linearGradient id="aisle" gradientUnits="userSpaceOnUse" x1="0" y1={HZ} x2="0" y2={H}>
+          <stop offset="0" stopColor="rgba(23,212,164,0)" />
+          <stop offset="0.3" stopColor="rgba(23,212,164,.55)" />
+          <stop offset="0.7" stopColor="rgba(123,97,255,.6)" />
+          <stop offset="1" stopColor="rgba(255,77,141,.55)" />
         </linearGradient>
       </defs>
       {segs.map(([a, b, c, d], i) => (
         <line key={i} x1={a} y1={b} x2={c} y2={d} stroke="url(#floorline)" strokeWidth={2} />
+      ))}
+      {/* the lit aisle down the middle of the hall: two lines of light on the floor, and their glow */}
+      {aisle.map(([a, b, c, d], i) => (
+        <g key={`aisle${i}`}>
+          <line x1={a} y1={b} x2={c} y2={d} stroke="url(#aisle)" strokeWidth={46} opacity={0.18} strokeLinecap="round" />
+          <line x1={a} y1={b} x2={c} y2={d} stroke="url(#aisle)" strokeWidth={5} strokeLinecap="round" />
+        </g>
       ))}
     </svg>
   );

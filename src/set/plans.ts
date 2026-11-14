@@ -21,7 +21,7 @@ export const HOLD_CAP: Record<SetFormat, number> = { quiz: 3, truefalse: 2, five
 
 /** The slab column: centred in the safe column, a little narrower so a punch keeps it inside. */
 const SX = COL.left + COL_W / 2 - 540;
-const SLAB_W = Math.min(660, COL_W - 120);
+const SLAB_W = Math.min(760, COL_W - 24);
 const INNER = SLAB_W - 96;
 const Z0 = 1000;
 /** the world's y of a row of the screen, for a thing at the camera's own distance (scale 1) */
@@ -132,7 +132,6 @@ const FLAG_URL = /^https:\/\/bidar\.ahura\.cloud\/flags\/[a-z0-9_]+\.svg$/;
 
 export function planQuiz(p: QuizProps, tl: Timeline, opts: { badge: boolean }): Plan {
   const T = tl.total;
-  const n = p.options.length;
   const o = p.options.map((_, i) => beat(tl, `o${i + 1}`));
   const count = beat(tl, "count");
   const answer = beat(tl, "answer");
@@ -142,62 +141,58 @@ export function planQuiz(p: QuizProps, tl: Timeline, opts: { badge: boolean }): 
   const target: V3 = [SX, 0, Z0];
   const objects: Obj[] = [];
 
-  // the question: on screen from the first frame to the last (the loop's first picture)
-  const q = fit({ text: noDot(p.question), width: INNER, maxLines: 3, size: flag ? 62 : 76, min: 48, weight: 900, height: flag ? 190 : 320 }).lines;
-  const Q = slab("question", { top: rowY(292), z: Z0 }, 0, T, q, { tag: noDot(p.kicker || "حدس بزن"), enter: "none", ...(flag ? { image: { src: flag.svg, h: 190 } } : {}) });
+  // the question: on screen from the first frame to past the last (the loop's first picture)
+  const q = fit({ text: noDot(p.question), width: INNER, maxLines: 3, size: flag ? 70 : 96, min: 56, weight: 900, height: flag ? 210 : 360 }).lines;
+  const Q = slab("question", { top: rowY(300), z: Z0 }, 0, T + 60, q, { tag: noDot(p.kicker || "حدس بزن"), enter: "none", ...(flag ? { image: { src: flag.svg, h: 200 } } : {}) });
   objects.push(Q);
   const qBottom = Q.at[1] + Q.h / 2;
 
-  // the options, one slab each, popping in as they are read
-  const optH = 112;
-  const gap = 20;
-  const optTop = qBottom + 44;
+  // the options, one slab each, popping in as they are read; after the answer they make room for it
+  const optH = 140;
+  const gap = 22;
+  const optTop = qBottom + 40;
   p.options.forEach((text, i) => {
-    const line = fitOne(`${faDigits(i + 1)}. ${noDot(text)}`, INNER, 54, 800);
+    const line = fitOne(`${faDigits(i + 1)}. ${noDot(text)}`, INNER, 66, 800);
     const right = i === p.answer;
-    const ob: Obj = {
+    objects.push({
       id: `option${i + 1}`,
       kind: "slab",
       at: [SX, optTop + i * (optH + gap) + optH / 2, Z0],
       w: SLAB_W,
       h: optH,
       from: Math.max(1, o[i].from - 3),
-      to: T - 12,
+      to: why.from + 10,
       enter: "pop",
       lines: [{ text: line.text, size: line.size, weight: 800 }],
-      states: [right ? { at: answer.from - 2, glow: 1, accent: "right" as Accent, dz: -30 } : { at: answer.from - 2, dim: 1, dy: 16, dz: 140 }],
-      claim: right,
-    };
-    // a single-line slab: no tag and no chip, so its height is its own
-    objects.push(ob);
+      states: [right ? { at: answer.from - 2, glow: 1, accent: "right" as Accent, dz: -30 } : { at: answer.from - 2, dim: 1, dy: 16, dz: 140 }, { at: why.from - 2, dy: 260, dz: 300 }],
+    });
   });
-  const optBottom = optTop + n * (optH + gap) - gap;
+  const optBottom = optTop + p.options.length * (optH + gap) - gap;
 
   // the countdown: a ring of light under the options
   const secs = Math.max(1, Math.round((count.to - count.from) / FPS));
-  const ringW = 220;
-  objects.push({ id: "ring", kind: "ring", at: [SX, optBottom + 50 + ringW / 2, Z0], w: ringW, h: ringW, from: count.from - 4, to: answer.from + 6, enter: "pop", secs, word: { text: "۳", size: 120, weight: 900 } });
+  const ringW = 260;
+  objects.push({ id: "ring", kind: "ring", at: [SX, optBottom + 40 + ringW / 2, Z0], w: ringW, h: ringW, from: count.from - 4, to: answer.from + 6, enter: "pop", secs, word: { text: "۳", size: 140, weight: 900 } });
 
-  // the reveal: a burst from the right one, then the answer and its line of context with its source
+  // the reveal: a burst from the right one; then the options sink and the answer rises in their place, with its source
   const rightY = optTop + p.answer * (optH + gap) + optH / 2;
-  objects.push({ id: "burst", kind: "burst", at: [SX, rightY, Z0 - 40], w: 640, h: 340, from: answer.from - 2, to: answer.from + 30, enter: "none" });
-  const head = fitOne(`پاسخ: ${noDot(p.options[p.answer])}`, INNER, 52, 900);
-  const body = fit({ text: noDot(p.reveal), width: INNER, maxLines: 3, size: 38, min: 30, weight: 600 }).lines;
-  const whyTop = optBottom + 30;
-  objects.push(slab("answer", { top: whyTop, z: Z0 - 10 }, answer.from + 4, end.from + 4, [{ text: head.text, size: head.size, weight: 900, color: "#22e39b" }, ...body], { enter: "rise", chip: chipOf(p.source), claim: true }));
-  // the call to answer in the comments
-  const cta = fitOne(noDot(p.cta), INNER, 52, 900);
-  objects.push(slab("cta", { top: whyTop + 20, z: Z0 - 10 }, end.from, T - 12, [{ text: cta.text, size: cta.size, weight: 900, color: "#ffd23f" }], { enter: "pop" }));
+  objects.push({ id: "burst", kind: "burst", at: [SX, rightY, Z0 - 40], w: 720, h: 380, from: answer.from - 2, to: answer.from + 30, enter: "none" });
+  const head = fitOne(`پاسخ: ${noDot(p.options[p.answer])}`, INNER, 62, 900);
+  const body = fit({ text: noDot(p.reveal), width: INNER, maxLines: 3, size: 48, min: 34, weight: 600 }).lines;
+  objects.push(slab("answer", { top: optTop, z: Z0 - 10 }, why.from, end.from + 4, [{ text: head.text, size: head.size, weight: 900, color: "#22e39b" }, ...body], { enter: "rise", chip: chipOf(p.source), claim: true }));
+  // the call to answer in the comments, under the question at the close
+  const cta = fitOne(noDot(p.cta), INNER, 60, 900);
+  objects.push(slab("cta", { top: optTop + 60, z: Z0 - 10 }, end.from, T - 12, [{ text: cta.text, size: cta.size, weight: 900, color: "#ffd23f" }], { enter: "pop" }));
 
   const shots: Shot[] = [
-    { at: 0, pose: orbit(target, 1150, -4, 0), move: "cut", push: 50, sway: 0.5, why: "the question, the camera already pushing in" },
-    ...o.map((b, i) => ({ at: b.from - 2, pose: orbit(target, 1120 - i * 15, i % 2 ? -2 : 3, i % 2 ? 14 : -14), move: "glide" as const, push: 28, sway: 0.4, why: `option ${i + 1}` })),
-    { at: count.from, pose: orbit(target, 1170, 6, -36), move: "glide", push: 40, sway: 0.8, why: "the countdown: an orbit round the board" },
-    { at: answer.from - 3, pose: orbit(target, 1090, 0, 0), move: "whip", push: 20, why: "the answer" },
-    { at: why.from, pose: orbit(target, 1110, -3, -24), move: "glide", push: 26, sway: 0.5, why: "the context" },
-    { at: end.from, pose: orbit(target, 1110, 2, 0), move: "glide", push: 20, sway: 0.4, why: "the close" },
+    { at: 0, pose: orbit(target, 1110, -4, 0), move: "cut", push: 30, sway: 0.5, why: "the question, the camera already pushing in" },
+    ...o.map((b, i) => ({ at: b.from - 2, pose: orbit(target, 1080 - i * 10, i % 2 ? -2 : 3, i % 2 ? 14 : -14), move: "glide" as const, push: 18, sway: 0.4, why: `option ${i + 1}` })),
+    { at: count.from, pose: orbit(target, 1110, 6, -30), move: "glide", push: 22, sway: 0.8, why: "the countdown: an orbit round the board" },
+    { at: answer.from - 3, pose: orbit(target, 1070, 0, 0), move: "whip", push: 12, why: "the answer" },
+    { at: why.from, pose: orbit(target, 1080, -3, -20), move: "glide", push: 16, sway: 0.5, why: "the context" },
+    { at: end.from, pose: orbit(target, 1090, 2, 0), move: "glide", push: 12, sway: 0.4, why: "the close" },
   ];
-  const punches: Punch[] = [...o.map((b, i) => ({ at: b.from, depth: 24, why: `option ${i + 1}` })), { at: answer.from - 1, depth: 60, why: "the answer" }, { at: end.from + 2, depth: 18, why: "the close" }];
+  const punches: Punch[] = [...o.map((b, i) => ({ at: b.from, depth: 22, why: `option ${i + 1}` })), { at: answer.from - 1, depth: 45, why: "the answer" }, { at: end.from + 2, depth: 16, why: "the close" }];
   const sfx: Sfx[] = [
     { at: 2, name: "rise", volume: 0.18, why: "the hook" },
     ...Array.from({ length: secs }, (_, i) => ({ at: count.from + i * FPS, name: "tick" as const, volume: 0.22, why: "countdown" })),
@@ -209,24 +204,34 @@ export function planQuiz(p: QuizProps, tl: Timeline, opts: { badge: boolean }): 
 }
 
 // ---------- the corridor: «درست یا غلط؟» and «پنج‌تایی» ----------
-/** A station down the hall: its slabs stand at this depth; the camera stops 1080 in front of it. */
+/** A station down the hall: its slabs stand at this depth; the camera stops about 1060 in front of it. */
 const stationZ = (k: number) => Z0 + 2000 * k;
 const at = (k: number): V3 => [SX, 0, stationZ(k)];
+const BASE = 1080;
 
-/** The opening slab: the series' line in big letters (the hook), and its second line a moment later. */
-function opening(hook: string, sub: string, T: number, subTo: number): Obj[] {
-  const big = fit({ text: noDot(hook), width: INNER, maxLines: 2, size: 112, min: 64, weight: 900 }).lines;
-  const title = slab("title", { top: rowY(330), z: Z0 }, 0, T, big, { enter: "none" });
-  const subLines = fit({ text: noDot(sub), width: INNER, maxLines: 2, size: 46, min: 36, weight: 700 }).lines.map((l) => ({ ...l, color: "#a9b4d6" }));
+/**
+ * The opening: the series' line in big letters (the hook), its second line a
+ * moment later, and under them a row of glowing numbered tokens, one for each
+ * slab down the hall: the promise of what comes.
+ */
+function opening(hook: string, sub: string, T: number, subTo: number, tokens: string[]): Obj[] {
+  const one = fit({ text: noDot(hook), width: INNER, maxLines: 1, size: 140, min: 96, weight: 900 });
+  const big = one.overflow ? fit({ text: noDot(hook), width: INNER, maxLines: 2, size: 120, min: 72, weight: 900 }).lines : one.lines;
+  const title = slab("title", { top: rowY(330), z: Z0 }, 0, T + 60, big, { enter: "none" });
+  const subLines = fit({ text: noDot(sub), width: INNER, maxLines: 2, size: 50, min: 38, weight: 700 }).lines.map((l) => ({ ...l, color: "#a9b4d6" }));
   const second = slab("sub", { top: title.at[1] + title.h / 2 + 40, z: Z0 - 20 }, 46, subTo, subLines, { enter: "rise" });
-  return [title, second];
+  const size = tokens.length > 3 ? 132 : 170;
+  const step = size + 26;
+  const y = second.at[1] + second.h / 2 + 70 + size / 2;
+  const row = tokens.map((t, i): Obj => ({ id: `token${i + 1}`, kind: "medal", at: [SX + (i - (tokens.length - 1) / 2) * step * -1, y, Z0 - 30], w: size, h: size, from: 0, to: T + 60, enter: "none", word: { text: t, size: Math.round(size * 0.62), weight: 900 }, states: [{ at: 20 + i * 6, glow: 0.7 }] }));
+  return [title, second, ...row];
 }
 
 /** The close at the opening slab: the question to the viewer under the title. */
 function closing(q: string, a: string, endFrom: number, T: number, top: number): Obj {
-  const l1 = fitOne(noDot(q), INNER, 56, 900);
-  const l2 = fitOne(noDot(a), INNER, 46, 700);
-  return slab("close", { top, z: Z0 - 20 }, endFrom, T - 12, [{ text: l1.text, size: l1.size, weight: 900 }, { text: l2.text, size: l2.size, weight: 700, color: "#ffd23f" }], { enter: "pop" });
+  const l1 = fitOne(noDot(q), INNER, 64, 900);
+  const l2 = fitOne(noDot(a), INNER, 54, 700);
+  return slab("close", { top, z: Z0 - 40 }, endFrom, T - 12, [{ text: l1.text, size: l1.size, weight: 900 }, { text: l2.text, size: l2.size, weight: 700, color: "#ffd23f" }], { enter: "pop" });
 }
 
 const VERDICT: Record<string, Accent> = { right: "right", wrong: "wrong", contested: "maybe" };
@@ -235,9 +240,10 @@ export function planTrueFalse(p: TrueFalseProps & { rounds: (TrueFalseProps["rou
   const T = tl.total;
   const end = beat(tl, "end");
   const objects: Obj[] = [];
-  const [title, sub] = opening(p.hook, p.sub, T, beat(tl, "s1").from + 8);
-  objects.push(title, sub);
-  const shots: Shot[] = [{ at: 0, pose: orbit(at(0), 1120, -3, 0), move: "cut", push: 60, sway: 0.5, why: "the opening, pushing toward the three slabs" }];
+  const open = opening(p.hook, p.sub, T, beat(tl, "s1").from + 8, p.rounds.map((_, i) => faDigits(i + 1)));
+  objects.push(...open);
+  const sub = open[1];
+  const shots: Shot[] = [{ at: 0, pose: orbit(at(0), BASE + 40, -3, 0), move: "cut", push: 30, sway: 0.5, why: "the opening, pushing toward the slabs" }];
   const punches: Punch[] = [];
   const sfx: Sfx[] = [{ at: 2, name: "rise", volume: 0.18, why: "the hook" }];
   let sourced = true;
@@ -248,66 +254,71 @@ export function planTrueFalse(p: TrueFalseProps & { rounds: (TrueFalseProps["rou
     const v = beat(tl, `v${k}`);
     const leave = has(tl, `s${k + 1}`) ? beat(tl, `s${k + 1}`).from : end.from;
     const accent = VERDICT[r.verdict] ?? "maybe";
-    const lines = fit({ text: noDot(r.text), width: INNER, maxLines: 4, size: 66, min: 44, weight: 800 }).lines;
-    const st = slab(`claim${k}`, { top: rowY(300), z: stationZ(k) }, 0, T, lines, { tag: `جملهٔ ${faDigits(k)} از ${faDigits(p.rounds.length)}`, enter: "none", states: [{ at: v.from - 2, glow: 0.8, accent }, { at: leave + 20, glow: 0, accent: "turq" }] });
+    const lines = fit({ text: noDot(r.text), width: INNER, maxLines: 4, size: 74, min: 50, weight: 800 }).lines;
+    const st = slab(`claim${k}`, { top: rowY(300), z: stationZ(k) }, 0, T + 60, lines, { tag: `جملهٔ ${faDigits(k)} از ${faDigits(p.rounds.length)}`, enter: "none", states: [{ at: v.from - 2, glow: 0.8, accent }, { at: leave + 20, glow: 0, accent: "turq" }] });
     objects.push(st);
     const bottom = st.at[1] + st.h / 2;
     // the pause: a ring counts it under the slab
-    objects.push({ id: `ring${k}`, kind: "ring", at: [SX, bottom + 190, stationZ(k)], w: 200, h: 200, from: c.from - 4, to: v.from + 4, enter: "pop", secs: Math.max(1, Math.round((c.to - c.from) / FPS)), word: { text: "۲", size: 110, weight: 900 } });
-    // the verdict: a stamp on the slab's lower corner, then the proof with its source
-    const word = fitOne(noDot(r.label), 360, 74, 900);
-    const sw = Math.round(measure(word.text, word.size, 900) + 110);
-    objects.push({ id: `stamp${k}`, kind: "stamp", at: [SX - SLAB_W / 2 + sw / 2 + 30, bottom + 10, stationZ(k) - 30], w: sw, h: 116, from: v.from - 2, to: leave + 6, enter: "pop", tilt: -7, accent, word: { text: word.text, size: word.size, weight: 900 } });
-    const proof = fit({ text: noDot(r.proof), width: INNER, maxLines: 5, size: 44, min: 32, weight: 600 }).lines;
+    objects.push({ id: `ring${k}`, kind: "ring", at: [SX, bottom + 80 + 130, stationZ(k)], w: 260, h: 260, from: c.from - 4, to: v.from + 4, enter: "pop", secs: Math.max(1, Math.round((c.to - c.from) / FPS)), word: { text: "۲", size: 140, weight: 900 } });
+    // the verdict: a stamp just under the slab's edge (clear of its last line), then the proof with its source
+    const word = fitOne(noDot(r.label), 420, 84, 900);
+    const sw = Math.round(measure(word.text, word.size, 900) + 120);
+    objects.push({ id: `stamp${k}`, kind: "stamp", at: [SX - SLAB_W / 2 + sw / 2 + 24, bottom + 52, stationZ(k) - 30], w: sw, h: 134, from: v.from - 2, to: leave + 6, enter: "pop", tilt: -6, accent, word: { text: word.text, size: word.size, weight: 900 } });
+    const proof = fit({ text: noDot(r.proof), width: INNER, maxLines: 5, size: 50, min: 36, weight: 600 }).lines;
     const chip = chipOf(r.src);
     if (!chip) sourced = false;
-    objects.push(slab(`proof${k}`, { top: bottom + 96, z: stationZ(k) - 20 }, v.from + 8, leave + 6, proof, { enter: "rise", chip, claim: true }));
-    shots.push({ at: s.from - 6, pose: orbit(at(k), 1080, k % 2 ? 3 : -3, 0), move: "whip", push: 40, sway: 0.5, why: `to sentence ${k}` });
-    if (c.to > c.from) shots.push({ at: c.from, pose: orbit(at(k), 1050, k % 2 ? -5 : 5, -26), move: "glide", push: 30, sway: 0.8, why: `the pause of sentence ${k}` });
-    shots.push({ at: v.from + 10, pose: orbit(at(k), 1110, 0, 40), move: "glide", push: 24, sway: 0.4, why: `the proof of sentence ${k}` });
-    punches.push({ at: v.from - 1, depth: 55, why: `verdict ${k}` });
+    objects.push(slab(`proof${k}`, { top: bottom + 140, z: stationZ(k) - 20 }, v.from + 8, leave + 6, proof, { enter: "rise", chip, claim: true }));
+    shots.push({ at: s.from - 6, pose: orbit(at(k), BASE, k % 2 ? 3 : -3, 0), move: "whip", push: 20, sway: 0.5, why: `to sentence ${k}` });
+    if (c.to > c.from) shots.push({ at: c.from, pose: orbit(at(k), BASE - 20, k % 2 ? -5 : 5, -20), move: "glide", push: 16, sway: 0.8, why: `the pause of sentence ${k}` });
+    shots.push({ at: v.from + 10, pose: orbit(at(k), BASE + 20, 0, 30), move: "glide", push: 14, sway: 0.4, why: `the proof of sentence ${k}` });
+    punches.push({ at: v.from - 1, depth: 45, why: `verdict ${k}` });
     for (let t = 0; t < Math.round((c.to - c.from) / FPS); t += 1) sfx.push({ at: c.from + t * FPS, name: "tick", volume: 0.2, why: "pause" });
     sfx.push({ at: v.from - 2, name: "stamp", volume: 0.5, why: `verdict ${k}` });
     if (r.verdict === "right") sfx.push({ at: v.from + 2, name: "chime", volume: 0.24, why: "right" });
   });
   objects.push(closing(p.score.q, p.score.a, end.from, T, sub.at[1] - sub.h / 2));
-  shots.push({ at: end.from - 6, pose: orbit(at(0), 1090, 2, 0), move: "whip", push: 24, sway: 0.4, why: "back to the opening for the close" });
+  shots.push({ at: end.from - 6, pose: orbit(at(0), BASE + 20, 2, 0), move: "whip", push: 14, sway: 0.4, why: "back to the opening for the close" });
   return finish("truefalse", tl, { shots, punches, objects, sfx, hook: noDot(p.hook), closeAt: end.from, source: p.source, claimsSourced: sourced }, opts);
 }
+
+const latin = (s: string) => String(s).replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)));
 
 export function planFive(p: FiveProps & { items: (FiveProps["items"][number] & { src?: string })[] }, tl: Timeline, opts: { badge: boolean }): Plan {
   const T = tl.total;
   const end = beat(tl, "end");
   const objects: Obj[] = [];
-  const first = beat(tl, `n${String(p.items[0]?.n ?? "۵").replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)))}`);
-  const [title, sub] = opening(p.hook, p.sub, T, first.from + 8);
-  objects.push(title, sub);
-  const shots: Shot[] = [{ at: 0, pose: orbit(at(0), 1120, -3, 0), move: "cut", push: 60, sway: 0.5, why: "the opening, pushing toward the five" }];
+  const first = beat(tl, `n${latin(String(p.items[0]?.n ?? "۵"))}`);
+  const open = opening(p.hook, p.sub, T, first.from + 8, p.items.map((it) => faDigits(latin(String(it.n)))));
+  objects.push(...open);
+  const sub = open[1];
+  const shots: Shot[] = [{ at: 0, pose: orbit(at(0), BASE + 40, -3, 0), move: "cut", push: 30, sway: 0.5, why: "the opening, pushing toward the five" }];
   const punches: Punch[] = [];
   const sfx: Sfx[] = [{ at: 2, name: "rise", volume: 0.18, why: "the hook" }];
   let sourced = true;
   p.items.forEach((it, i) => {
     const k = i + 1;
-    const num = String(it.n).replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)));
+    const num = latin(String(it.n));
     const b = beat(tl, `n${num}`);
-    const leave = i + 1 < p.items.length ? beat(tl, `n${String(p.items[i + 1].n).replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)))}`).from : end.from;
-    const name = fit({ text: noDot(it.name), width: INNER, maxLines: 2, size: 76, min: 52, weight: 900 }).lines;
-    const line = fit({ text: noDot(it.line), width: INNER, maxLines: 3, size: 44, min: 34, weight: 600 }).lines.map((l) => ({ ...l, color: "#d7def5" }));
-    const fig = it.figure ? [{ ...fitOne(noDot(it.figure), INNER, 42, 800), color: "#17d4a4" }] : [];
+    const leave = i + 1 < p.items.length ? beat(tl, `n${latin(String(p.items[i + 1].n))}`).from : end.from;
+    // the number, a big medal; the name and the years on one slab; the line and its source on a second
+    const medal: Obj = { id: `medal${k}`, kind: "medal", at: [SX, rowY(410), stationZ(k) - 10], w: 210, h: 210, from: 0, to: T + 60, enter: "none", word: { text: faDigits(num), size: 140, weight: 900 }, states: [{ at: b.from, glow: 1, accent: "gold" }, { at: leave + 20, glow: 0, accent: "turq" }] };
+    objects.push(medal);
+    const name = fit({ text: noDot(it.name), width: INNER, maxLines: 2, size: 92, min: 60, weight: 900 }).lines;
+    const fig = it.figure ? [{ ...fitOne(noDot(it.figure), INNER, 54, 800), color: "#17d4a4" }] : [];
+    const head = slab(`item${k}`, { top: rowY(410) + 130, z: stationZ(k) }, 0, T + 60, [...name, ...fig], { enter: "none", states: [{ at: b.from, glow: 0.7 }, { at: leave + 20, glow: 0 }] });
+    objects.push(head);
+    const line = fit({ text: noDot(it.line), width: INNER, maxLines: 3, size: 52, min: 38, weight: 600 }).lines.map((l) => ({ ...l, color: "#d7def5" }));
     const chip = chipOf(it.src);
     if (!chip) sourced = false;
-    const st = slab(`item${k}`, { top: rowY(470), z: stationZ(k) }, 0, T, [...name, ...fig, ...line], { enter: "none", chip, claim: true, states: [{ at: b.from, glow: 0.7 }, { at: leave + 20, glow: 0 }] });
-    objects.push(st);
-    // the number above the slab, a medal that lights as the camera arrives
-    objects.push({ id: `medal${k}`, kind: "medal", at: [SX, st.at[1] - st.h / 2 - 70, stationZ(k) - 10], w: 160, h: 160, from: 0, to: T, enter: "none", word: { text: faDigits(num), size: 104, weight: 900 }, states: [{ at: b.from, glow: 1, accent: "gold" }, { at: leave + 20, glow: 0, accent: "turq" }] });
-    shots.push({ at: b.from - 6, pose: orbit(at(k), 1080, k % 2 ? 3 : -3, 0), move: "whip", push: 34, sway: 0.5, why: `to number ${faDigits(num)}` });
+    objects.push(slab(`line${k}`, { top: head.at[1] + head.h / 2 + 34, z: stationZ(k) - 20 }, Math.max(1, b.from + 10), leave + 6, line, { enter: "rise", chip, claim: true }));
+    shots.push({ at: b.from - 6, pose: orbit(at(k), BASE, k % 2 ? 3 : -3, 0), move: "whip", push: 18, sway: 0.5, why: `to number ${faDigits(num)}` });
     const mid = Math.round((b.from + leave) / 2);
-    if (leave - b.from > 100) shots.push({ at: mid, pose: orbit(at(k), 1040, k % 2 ? -4 : 4, -30), move: "glide", push: 26, sway: 0.6, why: `number ${faDigits(num)}, an orbit` });
-    punches.push({ at: b.from + 6, depth: 40, why: `number ${faDigits(num)}` });
+    if (leave - b.from > 100) shots.push({ at: mid, pose: orbit(at(k), BASE - 20, k % 2 ? -4 : 4, -20), move: "glide", push: 14, sway: 0.6, why: `number ${faDigits(num)}, an orbit` });
+    punches.push({ at: b.from + 6, depth: 36, why: `number ${faDigits(num)}` });
     sfx.push({ at: b.from + 4, name: k === p.items.length ? "chime" : "hit", volume: k === p.items.length ? 0.3 : 0.18, why: `number ${faDigits(num)}` });
   });
   objects.push(closing(p.close.q, p.close.a, end.from, T, sub.at[1] - sub.h / 2));
-  shots.push({ at: end.from - 6, pose: orbit(at(0), 1090, 2, 0), move: "whip", push: 24, sway: 0.4, why: "back to the opening for the close" });
+  shots.push({ at: end.from - 6, pose: orbit(at(0), BASE + 20, 2, 0), move: "whip", push: 14, sway: 0.4, why: "back to the opening for the close" });
   return finish("five", tl, { shots, punches, objects, sfx, hook: noDot(p.hook), closeAt: end.from, source: p.source, claimsSourced: sourced }, opts);
 }
 
