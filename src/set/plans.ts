@@ -142,8 +142,8 @@ export function planQuiz(p: QuizProps, tl: Timeline, opts: { badge: boolean }): 
   const objects: Obj[] = [];
 
   // the question: on screen from the first frame to past the last (the loop's first picture)
-  const q = fit({ text: noDot(p.question), width: INNER, maxLines: 3, size: flag ? 70 : 96, min: 56, weight: 900, height: flag ? 210 : 360 }).lines;
-  const Q = slab("question", { top: rowY(300), z: Z0 }, 0, T + 60, q, { tag: noDot(p.kicker || "حدس بزن"), enter: "none", ...(flag ? { image: { src: flag.svg, h: 200 } } : {}) });
+  const q = fit({ text: noDot(p.question), width: INNER, maxLines: 3, size: flag ? 74 : 104, min: 60, weight: 900, height: flag ? 220 : 400 }).lines;
+  const Q = slab("question", { top: rowY(340), z: Z0 }, 0, T + 60, q, { tag: noDot(p.kicker || "حدس بزن"), enter: "none", ...(flag ? { image: { src: flag.svg, h: 200 } } : {}) });
   objects.push(Q);
   const qBottom = Q.at[1] + Q.h / 2;
 
@@ -168,6 +168,9 @@ export function planQuiz(p: QuizProps, tl: Timeline, opts: { badge: boolean }): 
     });
   });
   const optBottom = optTop + p.options.length * (optH + gap) - gap;
+  // the hook's one object: a medallion with «؟» under the question; it steps back into the hall when the options come, and returns for the loop
+  const medal = 330;
+  objects.push({ id: "mark", kind: "medal", at: [SX, Math.min(optTop + medal / 2 + 70, rowY(1330) - medal / 2), Z0 - 20], w: medal, h: medal, from: 0, to: T + 60, enter: "none", word: { text: "؟", size: 230, weight: 900 }, states: [{ at: 8, glow: 0.8 }, { at: Math.max(10, o[0].from - 8), dz: 1400, dy: -120, dim: 0.6, glow: 0 }, { at: end.from + 16, dz: 0, dy: 0, dim: 0, glow: 0.8 }] });
 
   // the countdown: a ring of light under the options
   const secs = Math.max(1, Math.round((count.to - count.from) / FPS));
@@ -182,7 +185,7 @@ export function planQuiz(p: QuizProps, tl: Timeline, opts: { badge: boolean }): 
   objects.push(slab("answer", { top: optTop, z: Z0 - 10 }, why.from, end.from + 4, [{ text: head.text, size: head.size, weight: 900, color: "#22e39b" }, ...body], { enter: "rise", chip: chipOf(p.source), claim: true }));
   // the call to answer in the comments, under the question at the close
   const cta = fitOne(noDot(p.cta), INNER, 60, 900);
-  objects.push(slab("cta", { top: optTop + 60, z: Z0 - 10 }, end.from, T - 12, [{ text: cta.text, size: cta.size, weight: 900, color: "#ffd23f" }], { enter: "pop" }));
+  objects.push(slab("cta", { top: optTop + 420, z: Z0 - 10 }, end.from, T - 12, [{ text: cta.text, size: cta.size, weight: 900, color: "#ffd23f" }], { enter: "pop" }));
 
   const shots: Shot[] = [
     { at: 0, pose: orbit(target, 1110, -4, 0), move: "cut", push: 30, sway: 0.5, why: "the question, the camera already pushing in" },
@@ -217,12 +220,12 @@ const BASE = 1080;
 function opening(hook: string, sub: string, T: number, subTo: number, tokens: string[]): Obj[] {
   const one = fit({ text: noDot(hook), width: INNER, maxLines: 1, size: 140, min: 96, weight: 900 });
   const big = one.overflow ? fit({ text: noDot(hook), width: INNER, maxLines: 2, size: 120, min: 72, weight: 900 }).lines : one.lines;
-  const title = slab("title", { top: rowY(330), z: Z0 }, 0, T + 60, big, { enter: "none" });
+  const title = slab("title", { top: rowY(380), z: Z0 }, 0, T + 60, big, { enter: "none" });
   const subLines = fit({ text: noDot(sub), width: INNER, maxLines: 2, size: 50, min: 38, weight: 700 }).lines.map((l) => ({ ...l, color: "#a9b4d6" }));
   const second = slab("sub", { top: title.at[1] + title.h / 2 + 40, z: Z0 - 20 }, 46, subTo, subLines, { enter: "rise" });
-  const size = tokens.length > 3 ? 132 : 170;
+  const size = tokens.length > 3 ? 138 : 190;
   const step = size + 26;
-  const y = second.at[1] + second.h / 2 + 70 + size / 2;
+  const y = second.at[1] + second.h / 2 + 130 + size / 2;
   const row = tokens.map((t, i): Obj => ({ id: `token${i + 1}`, kind: "medal", at: [SX + (i - (tokens.length - 1) / 2) * step * -1, y, Z0 - 30], w: size, h: size, from: 0, to: T + 60, enter: "none", word: { text: t, size: Math.round(size * 0.62), weight: 900 }, states: [{ at: 20 + i * 6, glow: 0.7 }] }));
   return [title, second, ...row];
 }
@@ -254,8 +257,8 @@ export function planTrueFalse(p: TrueFalseProps & { rounds: (TrueFalseProps["rou
     const v = beat(tl, `v${k}`);
     const leave = has(tl, `s${k + 1}`) ? beat(tl, `s${k + 1}`).from : end.from;
     const accent = VERDICT[r.verdict] ?? "maybe";
-    const lines = fit({ text: noDot(r.text), width: INNER, maxLines: 4, size: 74, min: 50, weight: 800 }).lines;
-    const st = slab(`claim${k}`, { top: rowY(300), z: stationZ(k) }, 0, T + 60, lines, { tag: `جملهٔ ${faDigits(k)} از ${faDigits(p.rounds.length)}`, enter: "none", states: [{ at: v.from - 2, glow: 0.8, accent }, { at: leave + 20, glow: 0, accent: "turq" }] });
+    const lines = fit({ text: noDot(r.text), width: INNER, maxLines: 4, size: 82, min: 52, weight: 800 }).lines;
+    const st = slab(`claim${k}`, { top: rowY(360), z: stationZ(k) }, 0, T + 60, lines, { tag: `جملهٔ ${faDigits(k)} از ${faDigits(p.rounds.length)}`, enter: "none", states: [{ at: v.from - 2, glow: 0.8, accent }, { at: leave + 20, glow: 0, accent: "turq" }] });
     objects.push(st);
     const bottom = st.at[1] + st.h / 2;
     // the pause: a ring counts it under the slab
@@ -263,11 +266,11 @@ export function planTrueFalse(p: TrueFalseProps & { rounds: (TrueFalseProps["rou
     // the verdict: a stamp just under the slab's edge (clear of its last line), then the proof with its source
     const word = fitOne(noDot(r.label), 420, 84, 900);
     const sw = Math.round(measure(word.text, word.size, 900) + 120);
-    objects.push({ id: `stamp${k}`, kind: "stamp", at: [SX - SLAB_W / 2 + sw / 2 + 24, bottom + 52, stationZ(k) - 30], w: sw, h: 134, from: v.from - 2, to: leave + 6, enter: "pop", tilt: -6, accent, word: { text: word.text, size: word.size, weight: 900 } });
-    const proof = fit({ text: noDot(r.proof), width: INNER, maxLines: 5, size: 50, min: 36, weight: 600 }).lines;
+    objects.push({ id: `stamp${k}`, kind: "stamp", at: [SX - SLAB_W / 2 + sw / 2 + 24, bottom + 84, stationZ(k) - 30], w: sw, h: 134, from: v.from - 2, to: leave + 6, enter: "pop", tilt: -6, accent, word: { text: word.text, size: word.size, weight: 900 } });
+    const proof = fit({ text: noDot(r.proof), width: INNER, maxLines: 4, size: 52, min: 36, weight: 600 }).lines;
     const chip = chipOf(r.src);
     if (!chip) sourced = false;
-    objects.push(slab(`proof${k}`, { top: bottom + 140, z: stationZ(k) - 20 }, v.from + 8, leave + 6, proof, { enter: "rise", chip, claim: true }));
+    objects.push(slab(`proof${k}`, { top: bottom + 172, z: stationZ(k) - 20 }, v.from + 8, leave + 6, proof, { enter: "rise", chip, claim: true }));
     shots.push({ at: s.from - 6, pose: orbit(at(k), BASE, k % 2 ? 3 : -3, 0), move: "whip", push: 20, sway: 0.5, why: `to sentence ${k}` });
     if (c.to > c.from) shots.push({ at: c.from, pose: orbit(at(k), BASE - 20, k % 2 ? -5 : 5, -20), move: "glide", push: 16, sway: 0.8, why: `the pause of sentence ${k}` });
     shots.push({ at: v.from + 10, pose: orbit(at(k), BASE + 20, 0, 30), move: "glide", push: 14, sway: 0.4, why: `the proof of sentence ${k}` });
@@ -301,13 +304,13 @@ export function planFive(p: FiveProps & { items: (FiveProps["items"][number] & {
     const b = beat(tl, `n${num}`);
     const leave = i + 1 < p.items.length ? beat(tl, `n${latin(String(p.items[i + 1].n))}`).from : end.from;
     // the number, a big medal; the name and the years on one slab; the line and its source on a second
-    const medal: Obj = { id: `medal${k}`, kind: "medal", at: [SX, rowY(410), stationZ(k) - 10], w: 210, h: 210, from: 0, to: T + 60, enter: "none", word: { text: faDigits(num), size: 140, weight: 900 }, states: [{ at: b.from, glow: 1, accent: "gold" }, { at: leave + 20, glow: 0, accent: "turq" }] };
+    const medal: Obj = { id: `medal${k}`, kind: "medal", at: [SX, rowY(470), stationZ(k) - 10], w: 230, h: 230, from: 0, to: T + 60, enter: "none", word: { text: faDigits(num), size: 156, weight: 900 }, states: [{ at: b.from, glow: 1, accent: "gold" }, { at: leave + 20, glow: 0, accent: "turq" }] };
     objects.push(medal);
-    const name = fit({ text: noDot(it.name), width: INNER, maxLines: 2, size: 92, min: 60, weight: 900 }).lines;
+    const name = fit({ text: noDot(it.name), width: INNER, maxLines: 2, size: 100, min: 64, weight: 900 }).lines;
     const fig = it.figure ? [{ ...fitOne(noDot(it.figure), INNER, 54, 800), color: "#17d4a4" }] : [];
-    const head = slab(`item${k}`, { top: rowY(410) + 130, z: stationZ(k) }, 0, T + 60, [...name, ...fig], { enter: "none", states: [{ at: b.from, glow: 0.7 }, { at: leave + 20, glow: 0 }] });
+    const head = slab(`item${k}`, { top: rowY(470) + 140, z: stationZ(k) }, 0, T + 60, [...name, ...fig], { enter: "none", states: [{ at: b.from, glow: 0.7 }, { at: leave + 20, glow: 0 }] });
     objects.push(head);
-    const line = fit({ text: noDot(it.line), width: INNER, maxLines: 3, size: 52, min: 38, weight: 600 }).lines.map((l) => ({ ...l, color: "#d7def5" }));
+    const line = fit({ text: noDot(it.line), width: INNER, maxLines: 3, size: 58, min: 40, weight: 600 }).lines.map((l) => ({ ...l, color: "#d7def5" }));
     const chip = chipOf(it.src);
     if (!chip) sourced = false;
     objects.push(slab(`line${k}`, { top: head.at[1] + head.h / 2 + 34, z: stationZ(k) - 20 }, Math.max(1, b.from + 10), leave + 6, line, { enter: "rise", chip, claim: true }));
