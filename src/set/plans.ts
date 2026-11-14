@@ -194,12 +194,12 @@ export function planQuiz(p: QuizProps, tl: Timeline, opts: { badge: boolean }): 
       enter: "pop",
       lines: [{ ...line, weight: 800, role: "answer" }],
       ...(right ? { mark: "check" as const } : {}),
-      states: [{ at: o[i].from - 2, glow: 0.6 }, { at: (o[i + 1]?.from ?? count.from) - 2, glow: 0 }, right ? { at: answer.from - 2, glow: 1, accent: "right" as Accent, dz: -50, win: 1 } : { at: answer.from - 2, dim: 1, dy: 16, dz: 140 }, { at: why.from - 2, dy: 260, dz: 300 }],
+      states: [{ at: o[i].from - 2, glow: 0.6 }, { at: (o[i + 1]?.from ?? count.from) - 2, glow: 0 }, right ? { at: answer.from - 2, glow: 1, accent: "right" as Accent, dz: -50, win: 1 } : { at: answer.from - 2, dim: 1, dy: 60, dz: 140 }, { at: why.from - 2, dy: 260, dz: 300 }],
     });
   });
   const optBottom = optTop + p.options.length * (optH + gap) - gap;
   // the hook's one object: a medallion with «؟» under the question; it steps back into the hall when the options come, and returns for the loop
-  const medal = 330;
+  const medal = 370;
   const medalY = Math.min(optTop + medal / 2 + 60, LOW - medal / 2 - 100);
   objects.push({ id: "mark", kind: "medal", at: [SX, medalY, Z0 - 20], w: medal, h: medal, from: 0, to: T + 60, enter: "none", word: { text: "؟", size: 230, weight: 900 }, states: [{ at: -20, glow: 0.8 }, { at: Math.max(10, o[0].from - 8), dz: 1400, dy: -120, dim: 0.6, glow: 0 }, { at: end.from + 16, dz: 0, dy: 0, dim: 0, glow: 0.8 }] });
 
@@ -255,7 +255,7 @@ const BASE = 1080;
  * moment later, and under them a row of glowing numbered tokens, one for each
  * slab down the hall: the promise of what comes.
  */
-function opening(hook: string, sub: string, T: number, subTo: number, tokens: string[]): Obj[] {
+function opening(hook: string, sub: string, T: number, subTo: number, tokens: string[], closeAt: number): Obj[] {
   const one = fit({ text: noDot(hook), width: INNER, maxLines: 1, size: 140, min: 104, weight: 900 });
   const big = one.overflow ? fit({ text: noDot(hook), width: INNER, maxLines: 2, size: 124, min: 84, weight: 900 }).lines : one.lines;
   const title = slab("title", { top: rowY(330), z: Z0 }, 0, T + 60, big, { enter: "none" });
@@ -265,7 +265,8 @@ function opening(hook: string, sub: string, T: number, subTo: number, tokens: st
   const size = tokens.length > 3 ? 124 : 190;
   const step = size + 20;
   const y = Math.max(bottomOf(second) + 60 + size / 2, LOW - 70 - size / 2);
-  const row = tokens.map((t, i): Obj => ({ id: `token${i + 1}`, kind: "medal", at: [SX + (i - (tokens.length - 1) / 2) * step * -1, y, Z0 - 30], w: size, h: size, from: 0, to: T + 60, enter: "none", word: { text: t, size: Math.round(size * 0.62), weight: 900 }, states: [{ at: -20, glow: 0.7 }] }));
+  const row = tokens.map((t, i): Obj => ({ id: `token${i + 1}`, kind: "medal", at: [SX + (i - (tokens.length - 1) / 2) * step * -1, y, Z0 - 30], w: size, h: size, from: 0, to: T + 60, enter: "none", word: { text: t, size: Math.round(size * 0.62), weight: 900 }, states: [{ at: -20, glow: 0.7 }, { at: closeAt, dy: -160 }, { at: T - 16, dy: 0 }] }));
+  // at the close the tokens rise clear of the source line and the badge, and come back down for the loop
   return [title, second, ...row];
 }
 
@@ -285,7 +286,7 @@ export function planTrueFalse(p: TrueFalseProps & { rounds: (TrueFalseProps["rou
   const T = tl.total;
   const end = beat(tl, "end");
   const objects: Obj[] = [];
-  const open = opening(p.hook, p.sub, T, beat(tl, "s1").from + 8, p.rounds.map((_, i) => faDigits(i + 1)));
+  const open = opening(p.hook, p.sub, T, beat(tl, "s1").from + 8, p.rounds.map((_, i) => faDigits(i + 1)), end.from);
   objects.push(...open);
   const sub = open[1];
   const shots: Shot[] = [{ at: 0, pose: orbit(at(0), BASE + 40, -3, 0), move: "cut", push: openPush(beat(tl, "s1").from), sway: 0.5, why: "the opening, pushing toward the slabs" }];
@@ -352,7 +353,7 @@ export function planFive(p: FiveProps & { items: (FiveProps["items"][number] & {
   const end = beat(tl, "end");
   const objects: Obj[] = [];
   const first = beat(tl, `n${latin(String(p.items[0]?.n ?? "۵"))}`);
-  const open = opening(p.hook, p.sub, T, first.from + 8, p.items.map((it) => faDigits(latin(String(it.n)))));
+  const open = opening(p.hook, p.sub, T, first.from + 8, p.items.map((it) => faDigits(latin(String(it.n)))), end.from);
   objects.push(...open);
   const sub = open[1];
   const shots: Shot[] = [{ at: 0, pose: orbit(at(0), BASE + 40, -3, 0), move: "cut", push: openPush(first.from), sway: 0.5, why: "the opening, pushing toward the five" }];
