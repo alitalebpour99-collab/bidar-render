@@ -269,7 +269,7 @@ export const textOf = (o: Obj) => [...(o.lines ?? []).map((l) => l.text), o.tag 
 /** Below this scale a slab's letters are not drawn (only soft bars): far away they could not be read. */
 export const READ_SCALE = 0.86;
 /** How much of a slab's letters show at a scale: none far away, and none when the camera flies through it (they would leave the zones). */
-export const textAlpha = (s: number) => (s < READ_SCALE ? 0 : s < READ_SCALE + 0.08 ? (s - READ_SCALE) / 0.08 : s > 1.1 ? 0 : s > 1.06 ? (1.1 - s) / 0.04 : 1);
+export const textAlpha = (s: number) => (s < READ_SCALE ? 0 : s < READ_SCALE + 0.02 ? (s - READ_SCALE) / 0.02 : s > 1.1 ? 0 : s > 1.06 ? (1.1 - s) / 0.04 : 1);
 
 /**
  * The boxes the gate checks: for every object with text, the union of its
