@@ -23,18 +23,19 @@ function goodPlan() {
     punches: [{ at: 20, depth: 24 }],
     objects: [
       { id: "question", kind: "slab", from: 0, to: total, lines: [{ text: "سمرقند امروز در کدام کشور است؟", size: 76, weight: 900 }] },
-      { id: "answer", kind: "slab", from: 400, to: 600, claim: true, lines: [{ text: "پاسخ: ازبکستان", size: 52, weight: 900 }], chip: { text: "منبع: اطلسِ تاریخیِ بیدار", size: 30, weight: 600 } },
+      { id: "answer", kind: "slab", from: 400, to: 600, claim: true, lines: [{ text: "پاسخ: ازبکستان", size: 52, weight: 900, role: "answer", w: 380, max: 624 }], chip: [{ text: "منبع: اطلسِ تاریخیِ بیدار", size: 46, weight: 600, w: 420, max: 568 }] },
     ],
     hud: [
       { id: "badge", kind: "badge", box: { x: 82, y: 1483, w: 300, h: 80 }, from: 620, to: 680 },
-      { id: "source", kind: "source", box: { x: 402, y: 1470, w: 464, h: 99 }, from: 600, to: total - 12, lines: [{ text: "منبع: اطلسِ تاریخیِ بیدار", size: 32, weight: 600 }, { text: "bidar.ahura.cloud", size: 34, weight: 700 }] },
+      { id: "source", kind: "source", box: { x: 402, y: 1470, w: 464, h: 99 }, from: 600, to: total - 12, lines: [{ text: "منبع: اطلسِ تاریخیِ بیدار", size: 40, weight: 600 }, { text: "bidar.ahura.cloud", size: 42, weight: 700 }] },
     ],
     sfx: [{ at: 2, name: "rise" }, { at: 60, name: "swish" }, { at: 400, name: "chime" }, { at: 401, name: "hit" }],
     hook: { text: "سمرقند امروز در کدام کشور است؟", from: 0 },
     boxes: [
       { id: "question", box: { x: 144, y: 300, w: 660, h: 380 }, minSize: 70, from: 0, to: total },
-      { id: "answer", box: { x: 144, y: 1100, w: 660, h: 300 }, minSize: 30, from: 404, to: 600 },
+      { id: "answer", box: { x: 144, y: 1100, w: 660, h: 300 }, minSize: 46, minAnswer: 48, from: 404, to: 600 },
     ],
+    frames: Array.from({ length: total / 3 }, (_, i) => ({ f: i * 3, n: 2, bottom: 1300, whip: false })),
     length: [14, 30],
     badge: true,
   };
@@ -43,7 +44,7 @@ const failed = (plan, cover = "سمرقند امروز کجاست؟") => planChe
 
 test("the zones are the measured ones: header 11 %, rail 14 %, caption rows", () => {
   assert.deepEqual(ZONES, { top: 232, right: 888, left: 56, bottom: 1583 });
-  assert.equal(MIN_TEXT, 29);
+  assert.equal(MIN_TEXT, 40);
   assert.deepEqual(MIDDLE, { top: 640, bottom: 1280 });
 });
 
@@ -59,7 +60,12 @@ test("each fault fails its own check, and only that one", () => {
     ["loop-plan", (p) => (p.shots[p.shots.length - 1].pose = { ...home, z: 0 })],
     ["safe", (p) => (p.boxes[1].box.y = 1400)],
     ["safe", (p) => (p.boxes[0].box.x = 40)],
-    ["text-size", (p) => (p.boxes[1].minSize = 20)],
+    ["text-size", (p) => (p.boxes[1].minSize = 36)],
+    ["text-size", (p) => (p.boxes[1].minAnswer = 41)],
+    ["text-size", (p) => (p.hud[1].lines[0].size = 32)],
+    ["clip", (p) => (p.objects[1].chip[0].w = 700)],
+    ["empty", (p) => (p.frames[40].n = 0)],
+    ["fill-y", (p) => p.frames.slice(0, 50).forEach((x) => (x.bottom = 900))],
     ["source", (p) => (p.hud[1].to = p.hud[1].from + 30)],
     ["persian", (p) => (p.objects[0].lines[0].text = "بیدار · حقیقت")],
     ["badge", (p) => (p.hud[0].box.y = 900)],

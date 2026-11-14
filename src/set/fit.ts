@@ -78,17 +78,18 @@ export function fit(a: FitAsk): { lines: Line[]; overflow: boolean } {
     const lines = breakLines(words, size, weight, a.width);
     const wide = lines.some((l) => measure(l, size, weight) > a.width);
     const tall = a.height !== undefined && lines.length * size * lead > a.height;
-    if (!wide && !tall && lines.length <= a.maxLines) return { lines: lines.map((text) => ({ text, size, weight, color: a.color })), overflow: false };
+    if (!wide && !tall && lines.length <= a.maxLines) return { lines: lines.map((text) => ({ text, size, weight, color: a.color, w: Math.ceil(measure(text, size, weight)), max: a.width })), overflow: false };
   }
   const lines = breakLines(words, min, weight, a.width);
-  return { lines: lines.map((text) => ({ text, size: min, weight, color: a.color })), overflow: true };
+  return { lines: lines.map((text) => ({ text, size: min, weight, color: a.color, w: Math.ceil(measure(text, min, weight)), max: a.width })), overflow: true };
 }
 
 /** One line, made smaller until it fits (a tag, a chip, an option). */
 export function fitOne(text: string, width: number, size: number, weight = 800, min = MIN_TEXT): Line & { overflow: boolean } {
   let s = size;
   while (s > Math.max(MIN_TEXT, min) && measure(text, s, weight) > width) s -= 2;
-  return { text, size: s, weight, overflow: measure(text, s, weight) > width };
+  const w = Math.ceil(measure(text, s, weight));
+  return { text, size: s, weight, w, max: width, overflow: w > width };
 }
 
 /** Height of fitted lines at a line height. */

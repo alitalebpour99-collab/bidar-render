@@ -6,7 +6,7 @@ import React from "react";
 import { AbsoluteFill, Audio, Img, Sequence, interpolate, staticFile, useCurrentFrame } from "remotion";
 import { GULZAR, VAZIR, clamped } from "../kit";
 import type { Timeline } from "../props";
-import { ACCENT, CX, FLOOR, H, HZ, NAVY, NEAR, TAG_SIZE, W, poseAt, presence, project, speedAt, stateAt, textAlpha, type Hud, type Line, type Obj, type Plan, type Pose } from "./space";
+import { ACCENT, CHIP_LEAD, CX, FLOOR, H, HZ, NAVY, NEAR, TAG_ROOM, TAG_SIZE, TOP_ROOM, W, chipBlock, chipRoom, poseAt, presence, project, speedAt, stateAt, textAlpha, type Hud, type Line, type Obj, type Plan, type Pose } from "./space";
 
 /** the hall's own gradient: turquoise to violet to pink, Bidar's border on the site and the panel */
 export const EDGE = `linear-gradient(120deg, ${ACCENT.turq}, ${ACCENT.violet} 55%, #ff4d8d)`;
@@ -131,26 +131,42 @@ export const HallScene: React.FC<{ pose: Pose; frame: number }> = ({ pose, frame
 );
 
 // ---------- the things in the hall ----------
-const TextLines: React.FC<{ lines: Line[]; color?: string; lead?: number }> = ({ lines, color = NAVY.ink, lead = 1.45 }) => (
+const TextLines: React.FC<{ lines: Line[]; color?: string; lead?: number; force?: string }> = ({ lines, color = NAVY.ink, lead = 1.45, force }) => (
   <>
     {lines.map((l, i) => (
-      <div key={i} style={{ fontFamily: VAZIR, fontWeight: l.weight, fontSize: l.size, lineHeight: lead, color: l.color ?? color, whiteSpace: "nowrap", textAlign: "center" }}>
+      <div key={i} style={{ fontFamily: VAZIR, fontWeight: l.weight, fontSize: l.size, lineHeight: lead, color: force ?? l.color ?? color, whiteSpace: "nowrap", textAlign: "center" }}>
         {l.text}
       </div>
     ))}
   </>
 );
 
+/** The right answer's mark: a white disc on the slab's corner, a tick or a cross in the answer's colour, popping in with its light. */
+const Mark: React.FC<{ kind: "check" | "cross"; color: string; win: number }> = ({ kind, color, win }) => {
+  const k = win < 0.6 ? 0.4 + win * 1.4 : 1.24 - 0.24 * Math.min(1, (win - 0.6) / 0.4);
+  return (
+    <div style={{ position: "absolute", left: -30, top: -34, width: 104, height: 104, borderRadius: "50%", background: "#f4f6ff", border: `6px solid ${color}`, boxShadow: `0 0 36px ${color}`, display: "flex", alignItems: "center", justifyContent: "center", opacity: Math.min(1, win * 1.6), transform: `scale(${k})` }}>
+      <svg width={60} height={60} viewBox="0 0 24 24">
+        {kind === "check" ? <path d="M4.5 12.5 L10 18 L19.5 6.5" fill="none" stroke={color} strokeWidth={3.6} strokeLinecap="round" strokeLinejoin="round" /> : <path d="M6 6 L18 18 M18 6 L6 18" fill="none" stroke={color} strokeWidth={3.8} strokeLinecap="round" />}
+      </svg>
+    </div>
+  );
+};
+
 const Slab: React.FC<{ o: Obj; frame: number; s: number; total: number }> = ({ o, frame, s, total }) => {
   const st = stateAt(o, frame);
   const ta = textAlpha(s);
   const accent = ACCENT[st.accent];
-  const ghosts = 1 - ta;
+  // soft bars only for a slab far away; one the camera comes too near just fades (no empty glass)
+  const ghosts = s < 1 ? 1 - ta : 0;
   // a slight shine that runs across the glass every few seconds
   const shine = frame > total - 40 ? 0 : ((frame - o.from) % 150) / 150;
+  // the right answer: the glass fills with its colour and its letters turn dark
+  const win = st.win;
   return (
-    <div style={{ width: o.w, height: o.h, borderRadius: 40, padding: 4, background: st.glow > 0.05 ? `linear-gradient(120deg, ${accent}, ${accent} 40%, ${ACCENT.violet})` : EDGE, boxShadow: `0 0 ${30 + 70 * st.glow}px rgba(23,212,164,${0.18 + 0.4 * st.glow}), 0 40px 80px rgba(0,0,0,.5)` }}>
+    <div style={{ position: "relative", width: o.w, height: o.h, borderRadius: 40, padding: 4, background: st.glow > 0.05 ? `linear-gradient(120deg, ${accent}, ${accent} 40%, ${ACCENT.violet})` : EDGE, boxShadow: win > 0.05 ? `0 0 ${70 + 60 * win}px ${accent}, 0 40px 80px rgba(0,0,0,.5)` : `0 0 ${30 + 70 * st.glow}px rgba(23,212,164,${0.18 + 0.4 * st.glow}), 0 40px 80px rgba(0,0,0,.5)` }}>
       <div style={{ position: "relative", width: "100%", height: "100%", borderRadius: 36, overflow: "hidden", background: `linear-gradient(165deg, ${NAVY.panel2} 0%, ${NAVY.panel} 45%, ${NAVY.night} 100%)` }}>
+        {win > 0.02 ? <div style={{ position: "absolute", inset: 0, background: `linear-gradient(160deg, ${accent} 0%, ${accent} 60%, ${accent}cc 100%)`, opacity: win }} /> : null}
         {/* light from above, and the running shine */}
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0) 38%)" }} />
         <div style={{ position: "absolute", top: -o.h, bottom: -o.h, width: 120, left: -200 + (o.w + 400) * shine, transform: "rotate(18deg)", background: "linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.08), rgba(255,255,255,0))" }} />
@@ -158,14 +174,18 @@ const Slab: React.FC<{ o: Obj; frame: number; s: number; total: number }> = ({ o
         {o.tag ? (
           <div style={{ position: "absolute", top: 26, right: 30, padding: "4px 24px 10px", borderRadius: 30, background: accent, color: NAVY.dark, fontFamily: VAZIR, fontWeight: 900, fontSize: TAG_SIZE, direction: "rtl", opacity: ta, whiteSpace: "nowrap" }}>{o.tag}</div>
         ) : null}
-        <div style={{ position: "absolute", left: 40, right: 40, top: o.tag ? 92 : 24, bottom: o.chip ? 86 : 24, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", direction: "rtl", opacity: ta }}>
+        <div style={{ position: "absolute", left: 40, right: 40, top: o.tag ? TAG_ROOM : TOP_ROOM, bottom: chipRoom(o.chip), display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", direction: "rtl", opacity: ta }}>
           {o.image ? <Img src={o.image.src} style={{ height: o.image.h, width: "auto", borderRadius: 10, marginBottom: 18, boxShadow: "0 16px 40px rgba(0,0,0,.5)", background: "#fff", padding: 8 }} /> : null}
-          <TextLines lines={o.lines ?? []} />
+          <TextLines lines={o.lines ?? []} force={win > 0.5 ? NAVY.dark : undefined} />
         </div>
-        {o.chip ? (
-          <div style={{ position: "absolute", left: 30, right: 30, bottom: 22, display: "flex", justifyContent: "center", opacity: ta }}>
-            <div style={{ padding: "2px 22px 8px", borderRadius: 22, background: "rgba(244,246,255,.08)", border: "2px solid rgba(244,246,255,.16)", fontFamily: VAZIR, fontWeight: o.chip.weight, fontSize: o.chip.size, color: NAVY.muted, direction: "rtl", whiteSpace: "nowrap" }}>
-              <bdi>{o.chip.text}</bdi>
+        {o.chip?.length ? (
+          <div style={{ position: "absolute", left: 24, right: 24, bottom: 22, display: "flex", justifyContent: "center", opacity: ta }}>
+            <div style={{ height: chipBlock(o.chip), boxSizing: "border-box", padding: "4px 26px 14px", borderRadius: 24, background: "rgba(244,246,255,.10)", border: "2px solid rgba(244,246,255,.22)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", direction: "rtl" }}>
+              {o.chip.map((l, i) => (
+                <div key={i} style={{ fontFamily: VAZIR, fontWeight: l.weight, fontSize: l.size, lineHeight: CHIP_LEAD, color: "#c3cbe6", whiteSpace: "nowrap", textAlign: "center" }}>
+                  <bdi>{l.text}</bdi>
+                </div>
+              ))}
             </div>
           </div>
         ) : null}
@@ -178,17 +198,21 @@ const Slab: React.FC<{ o: Obj; frame: number; s: number; total: number }> = ({ o
           </div>
         ) : null}
       </div>
+      {o.mark && win > 0.02 ? <Mark kind={o.mark} color={accent} win={win} /> : null}
     </div>
   );
 };
 
 const Ring: React.FC<{ o: Obj; frame: number }> = ({ o, frame }) => {
   const secs = o.secs ?? 3;
-  const t = (frame - o.from) / 30;
+  const start = o.start ?? o.from;
+  // before its count: a full turquoise ring with «؟», breathing slowly
+  const waiting = frame < start;
+  const t = Math.max(0, frame - start) / 30;
   const left = Math.max(1, secs - Math.floor(t));
-  const p = clamp01(1 - t / secs);
-  const pulse = interpolate((frame - o.from) % 30, [0, 10], [1, 0], clamped);
-  const color = left >= 3 ? ACCENT.turq : left === 2 ? ACCENT.gold : "#ff4d8d";
+  const p = waiting ? 1 : clamp01(1 - t / secs);
+  const pulse = waiting ? 0.5 + 0.5 * Math.sin((frame - o.from) / 9) : interpolate((frame - start) % 30, [0, 10], [1, 0], clamped);
+  const color = waiting || left >= 3 ? ACCENT.turq : left === 2 ? ACCENT.gold : "#ff4d8d";
   const size = o.w;
   return (
     <div style={{ position: "relative", width: size, height: size, transform: `scale(${1 + 0.06 * pulse})` }}>
@@ -196,7 +220,7 @@ const Ring: React.FC<{ o: Obj; frame: number }> = ({ o, frame }) => {
         <circle cx={140} cy={140} r={116} fill="rgba(6,16,31,.85)" stroke="rgba(244,246,255,.12)" strokeWidth={20} />
         <circle cx={140} cy={140} r={116} fill="none" stroke={color} strokeWidth={20} strokeLinecap="round" pathLength={1} strokeDasharray={`${p} 1`} style={{ filter: `drop-shadow(0 0 ${10 + 14 * pulse}px ${color})` }} />
       </svg>
-      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: VAZIR, fontWeight: 900, fontSize: o.word?.size ?? 130, color, lineHeight: 1 }}>{"۰۱۲۳۴۵۶۷۸۹"[left]}</div>
+      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: VAZIR, fontWeight: 900, fontSize: o.word?.size ?? 130, color, lineHeight: 1 }}>{waiting ? "؟" : "۰۱۲۳۴۵۶۷۸۹"[left]}</div>
     </div>
   );
 };

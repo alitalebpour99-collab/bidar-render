@@ -8,7 +8,10 @@
 //   moves       a camera event at least every 3 s, and no 2.5 s of frozen picture (measured)
 //   loop        the camera ends where it began, and the last frame looks like the first (measured)
 //   safe        every text inside the frame and outside the apps' header, rail and caption rows
-//   text-size   no text smaller than 1.5 % of the frame's height
+//   text-size   no text under 40 px on screen, and no answer or explanation under 44 px (the review of 2026-11-14)
+//   clip        no line wider than the room it is drawn in (a source is never cut)
+//   empty       outside a whip, every frame has a text a viewer can read
+//   fill-y      on almost every frame the readable text reaches the lower part of the frame (row 1250)
 //   source      every claim carries its source on screen, and the source line shows at the close
 //   persian     no «·» and no «|» beside Persian in any text
 //   badge       the channel badge: in the bottom safe area, never in the middle, 1.5 to 2.5 s, at the close
@@ -33,7 +36,12 @@ const K = 2617 / H;
 const CUT = (W * K - 1320) / 2;
 export const ZONES = { top: Math.ceil((0.11 * 2868) / K), right: Math.floor((0.86 * 1320 + CUT) / K), left: Math.ceil(CUT / K), bottom: Math.floor(2158 / K) };
 export const MIDDLE = { top: Math.round(H / 3), bottom: Math.round((2 * H) / 3) };
-export const MIN_TEXT = Math.ceil(0.015 * H);
+// the same numbers as src/set/space.ts MIN_TEXT, ANSWER_TEXT, FILL_Y
+export const MIN_TEXT = 40;
+export const ANSWER_TEXT = 44;
+export const FILL_Y = 1250;
+/** the share of the frames (outside whips) whose readable text must reach FILL_Y */
+export const FILL_SHARE = 0.85;
 const HOOK_FRAMES = Math.round(1.5 * FPS);
 
 export const wordsOf = (s) => String(s).replace(/[؟?!.،,؛:«»"()]/g, " ").split(/\s+/).filter(Boolean);
@@ -46,7 +54,7 @@ const sec = (f) => (f / FPS).toFixed(1);
 
 function textsOf(plan) {
   const out = [];
-  for (const o of plan.objects) for (const t of [...(o.lines ?? []).map((l) => l.text), o.tag, o.chip?.text, o.word?.text]) if (t) out.push(t);
+  for (const o of plan.objects) for (const t of [...(o.lines ?? []).map((l) => l.text), o.tag, ...(o.chip ?? []).map((l) => l.text), o.word?.text]) if (t) out.push(t);
   for (const h of plan.hud) for (const l of h.lines ?? []) out.push(l.text);
   out.push(plan.hook.text);
   return out;
@@ -86,11 +94,35 @@ export function planChecks(plan, cover) {
   add("safe", !bad.length && !hudBad.length, bad.length || hudBad.length ? `outside the zones: ${[...bad, ...hudBad].join("; ")}` : `${plan.boxes.length + plan.hud.length} text boxes inside x ${ZONES.left}–${ZONES.right}, y ${ZONES.top}–${ZONES.bottom}`, "متنی بیرون از قابِ امن است (زیرِ نوار یا دکمه‌های اینستاگرام)");
 
   const small = plan.boxes.filter((b) => b.minSize < MIN_TEXT - 0.5).map((b) => `${b.id} ${b.minSize.toFixed(1)} px`);
+  const smallAnswer = plan.boxes.filter((b) => b.minAnswer !== undefined && b.minAnswer < ANSWER_TEXT - 0.5).map((b) => `${b.id} answer ${b.minAnswer.toFixed(1)} px`);
   const hudSmall = plan.hud.flatMap((h) => (h.lines ?? []).filter((l) => l.size < MIN_TEXT).map(() => h.id));
-  add("text-size", !small.length && !hudSmall.length, small.length || hudSmall.length ? `smaller than ${MIN_TEXT} px: ${[...small, ...hudSmall].join(", ")}` : `every text ${MIN_TEXT} px or more`, "متنی ریزتر از حدِ خواندن است");
+  const smallest = plan.boxes.length ? Math.min(...plan.boxes.map((b) => b.minSize)) : 0;
+  const answers = plan.boxes.filter((b) => b.minAnswer !== undefined);
+  const smallestAnswer = answers.length ? Math.min(...answers.map((b) => b.minAnswer)) : 0;
+  const tooSmall = [...small, ...smallAnswer, ...hudSmall];
+  add("text-size", !tooSmall.length, tooSmall.length ? `too small: ${tooSmall.join(", ")}` : `every text ${MIN_TEXT} px or more (smallest ${smallest.toFixed(1)}), every answer ${ANSWER_TEXT} px or more (smallest ${smallestAnswer.toFixed(1)})`, "متنی ریزتر از حدِ خواندن است (کف ۴۰ پیکسل، پاسخ و توضیح ۴۴)");
+
+  const lines = [];
+  for (const o of plan.objects) for (const l of [...(o.lines ?? []), ...(o.chip ?? []), ...(o.word ? [o.word] : [])]) lines.push([o.id, l]);
+  for (const h of plan.hud) for (const l of h.lines ?? []) lines.push([h.id, l]);
+  const clipped = lines.filter(([, l]) => l.w !== undefined && l.max !== undefined && l.w > l.max + 1).map(([id, l]) => `${id} «${l.text}» ${l.w}/${l.max}`);
+  const measured = lines.filter(([, l]) => l.w !== undefined).length;
+  add("clip", !clipped.length, clipped.length ? `wider than their room: ${clipped.join("; ")}` : `${measured} measured lines, none wider than its room`, "متنی از جایش بیرون زده و بریده می‌شود");
+
+  if (plan.frames?.length) {
+    const read = plan.frames.filter((x) => !x.whip);
+    const empty = read.filter((x) => x.n === 0).map((x) => sec(x.f));
+    add("empty", !empty.length, empty.length ? `no readable text at ${empty.join(", ")} s` : `${read.length} frames looked at, every one with readable text`, "فریمی بی‌متن و خالی در ویدیو هست");
+    const low = read.filter((x) => x.bottom < FILL_Y);
+    const share = read.length ? 1 - low.length / read.length : 0;
+    add("fill-y", share >= FILL_SHARE, `${Math.round(share * 100)} % of the frames reach row ${FILL_Y} (${Math.round(FILL_SHARE * 100)} % needed)${low.length ? `; short at ${low.slice(0, 8).map((x) => `${sec(x.f)} s (${x.bottom})`).join(", ")}${low.length > 8 ? " …" : ""}` : ""}`, "پایینِ قاب خالی مانده است");
+  } else {
+    add("empty", false, "the plan has no frame list", "فریمی بی‌متن و خالی در ویدیو هست");
+    add("fill-y", false, "the plan has no frame list", "پایینِ قاب خالی مانده است");
+  }
 
   const claims = plan.objects.filter((o) => o.claim);
-  const unsourced = claims.filter((o) => !o.chip?.text);
+  const unsourced = claims.filter((o) => !o.chip?.length);
   const src = plan.hud.find((h) => h.kind === "source");
   const srcShown = src && src.to - src.from >= 2 * FPS && (src.lines ?? []).some((l) => /منبع/.test(l.text));
   const pointer = src && (src.lines ?? []).some((l) => /زیرِ هر/.test(l.text));
