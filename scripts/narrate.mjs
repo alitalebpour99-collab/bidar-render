@@ -54,7 +54,8 @@ for (const file of files) {
   const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE}/with-timestamps?output_format=mp3_44100_128`, {
     method: "POST",
     headers: { "xi-api-key": key(), "content-type": "application/json" },
-    body: JSON.stringify({ text, model_id: MODEL, language_code: "fa" }),
+    // the site's own settings (bidar lib/social/voice.ts VOICE_SETTINGS), so a sample sounds as a Reel does
+    body: JSON.stringify({ text, model_id: MODEL, language_code: "fa", voice_settings: { stability: 0.35, similarity_boost: 0.8, style: 0.3, use_speaker_boost: true, speed: 1.1 } }),
     signal: AbortSignal.timeout(180_000),
   });
   const body = await res.json().catch(() => null);
