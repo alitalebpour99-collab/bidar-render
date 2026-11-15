@@ -1,6 +1,6 @@
 // «مرزهای ایران، دوره به دوره»: the extents Bidar's historical atlas draws for
-// each period (public/data/iran-eras.json of the site, historical-basemaps,
-// approximate), one after another, and at the end today's border drawn in gold.
+// each period (public/data/iran-eras.json of the site, from Cliopatria, Seshat,
+// CC BY 4.0, approximate), one after another, and at the end today's border drawn in gold.
 // Its own look: a lapis sea edge to edge, turquoise eras, gold for today, a
 // stamp «گسترهٔ تقریبی» on every past line. The map moves from the first frame.
 import React, { useMemo } from "react";

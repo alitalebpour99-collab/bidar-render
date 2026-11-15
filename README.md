@@ -127,9 +127,16 @@ Or run the «Samples» workflow and download its artifact.
 - `src/data/countries-110m.json`: Natural Earth 1:110m (public domain), the
   copy Bidar's site uses (`public/data/countries-110m.json`).
 - `src/data/iran-eras.json`: Bidar's period extents
-  (`public/data/iran-eras.json`), simplified from
-  [aourednik/historical-basemaps](https://github.com/aourednik/historical-basemaps);
-  approximate, and shown as such. Credited as on the site's atlas page.
+  (`public/data/iran-eras.json`, made by the site's `scripts/eras/cliopatria.py`):
+  one row per period of [Cliopatria](https://github.com/Seshat-Global-History-Databank/cliopatria)
+  (Seshat Global History Databank; Bennett, J. S. et al. 2025, «Cliopatria»,
+  *Scientific Data* 12, 247), licensed
+  [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); changed: simplified,
+  rounded to two decimals, a short-lived peak cut apart from the steady extent.
+  Approximate, and shown as such. Until 15 November 2026 this file held
+  extents simplified from aourednik/historical-basemaps, whose repository is
+  licensed GPL-3.0 (not CC BY-SA, as Bidar's notes said); none of them is used
+  any more, and the old copies stay only in this repository's history.
 - `src/data/flags.json`: the site's flag pictures (`public/flags/flag_*.svg`,
   Wikimedia Commons based or the site's own approximate reconstructions),
   split into their layers in the file's order: the field (a layer as large as

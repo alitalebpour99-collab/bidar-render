@@ -16,6 +16,8 @@ import fiveSample from "../samples/five-1.json";
 import sweepSample from "../samples/sweep-1.json";
 import storySample from "../samples/story.json";
 import cardsSample from "../samples/cards.json";
+import beliefSample from "../samples/belief-1.json";
+import frontierSample from "../samples/frontier-1.json";
 import { Book } from "./Book";
 import { Borders } from "./Borders";
 import { City } from "./City";
@@ -66,9 +68,11 @@ const as = <T,>(x: unknown) => x as T;
  * gate (gate.mjs) checks what was drawn.
  */
 type Switches = { style?: string; badge?: boolean };
+/** «باور یا سند؟» and «مرز ایران، دوره به دوره» (the owner's stars of 2026-11-15) exist only in the set style: the plan reads the site's shape as it comes. */
+const SET_ONLY = new Set<string>(["belief", "frontier"]);
 const styled = (format: SetFormat) => async ({ props: given }: { props: Base & Switches }) => {
-  if (given.style === "classic") return timed({ props: given });
-  const props = adapt<ReelProps>(given as never) as unknown as Base & Switches & { count?: number };
+  if (given.style === "classic" && !SET_ONLY.has(format)) return timed({ props: given });
+  const props = (SET_ONLY.has(format) ? given : adapt<ReelProps>(given as never)) as unknown as Base & Switches & { count?: number };
   const last = props.beats.length - 1;
   const beats = props.beats.map((b, i) => (i > 0 && i < last && !b.say.trim() && b.min ? { ...b, min: Math.min(b.min, HOLD_CAP[format]) } : b));
   const count = format === "quiz" ? Math.min(Number(props.count) || HOLD_CAP.quiz, HOLD_CAP.quiz) : props.count;
@@ -83,6 +87,8 @@ const either = <P,>(Classic: React.FC<P>) => {
   return Comp;
 };
 const QuizAny = either(Quiz);
+/** A format drawn only in the set: the hall, once calculateMetadata has made its plan. */
+const SetOnly: React.FC<{ plan?: Plan; tl?: Base["tl"]; music?: string }> = (p) => (p.plan && p.tl ? <Hall plan={p.plan} tl={p.tl} music={p.music} /> : null);
 const TrueFalseAny = either(TrueFalse);
 const FiveAny = either(Five);
 /** The tile: a set format's tile is one object and its big words, measured to fit. */
@@ -109,6 +115,9 @@ export const Root: React.FC = () => (
     {/* the round of 2026-10-31: «درست یا غلط؟», «پنج‌تایی», «تاریخِ ایران در یک دقیقه» (the book's v2 is the «book» above) */}
     <Composition id="truefalse" component={TrueFalseAny} {...frame} durationInFrames={1500} defaultProps={as<TrueFalseProps>(trueFalseSample)} calculateMetadata={styled("truefalse") as never} />
     <Composition id="five" component={FiveAny} {...frame} durationInFrames={1350} defaultProps={as<FiveProps>(fiveSample)} calculateMetadata={styled("five") as never} />
+    {/* the owner's two stars of 2026-11-15: «باور یا سند؟» and «مرز ایران، دوره به دوره», in the set only (src/set/doc.ts) */}
+    <Composition id="belief" component={SetOnly} {...frame} durationInFrames={900} defaultProps={as<object>(beliefSample)} calculateMetadata={styled("belief") as never} />
+    <Composition id="frontier" component={SetOnly} {...frame} durationInFrames={900} defaultProps={as<object>(frontierSample)} calculateMetadata={styled("frontier") as never} />
     <Composition id="sweep" component={Sweep} {...frame} durationInFrames={1800} defaultProps={as<SweepProps>(sweepSample)} calculateMetadata={(x: { props: SweepProps }) => timed(x)} />
     <Composition id="cover" component={CoverAny} {...frame} durationInFrames={1} defaultProps={as<CoverProps>(coverSample)} calculateMetadata={coverMeta as never} />
     {/* the Story that follows a Reel onto the page (ported from Divan's), and the carousel: one picture per frame, saved as stills (worker.mjs) */}

@@ -17,7 +17,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 /** How long the narration of a Reel should run, at most (seconds); the Reel adds its close of about 3 s. */
-export const VOICE_TARGET = { borders: 36, myth: 32, word: 36, quote: 0, figure: 34, quiz: 16, flag: 33, treaty: 34, city: 34, truefalse: 21, five: 30, sweep: 46 };
+export const VOICE_TARGET = { borders: 36, myth: 32, word: 36, quote: 0, figure: 34, quiz: 16, flag: 33, treaty: 34, city: 34, truefalse: 21, five: 30, sweep: 46, belief: 24, frontier: 23 };
 /** What is left of a pause, per series: a saying (often a verse) keeps its breath between its lines. */
 export const KEEP_PAUSES = { quote: 0.5 };
 // the owner, 2026-11-15: «خیلی آرام و کند». Every narrated take is brought up to at least MIN_TEMPO

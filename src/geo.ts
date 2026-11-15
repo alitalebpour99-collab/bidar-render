@@ -1,6 +1,6 @@
 // The maps: Bidar's own base map (Natural Earth 1:110m, public/data/countries-110m.json
 // of the site) and its period extents (public/data/iran-eras.json, from
-// aourednik/historical-basemaps, simplified), copied into src/data/.
+// Cliopatria, Seshat, CC BY 4.0, simplified), copied into src/data/.
 // A view is a Mercator camera: a centre and a scale, eased between beats.
 import { geoArea, geoGraticule, geoMercator, geoPath, type GeoPermissibleObjects } from "d3-geo";
 import { feature, mesh } from "topojson-client";

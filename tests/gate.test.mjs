@@ -82,6 +82,51 @@ test("each fault fails its own check, and only that one", () => {
   assert.deepEqual(failed(goodPlan(), "پایتخت؟"), ["cover"]);
 });
 
+/** A plan as src/set/doc.ts makes one for «باور یا سند؟»: the proof sourced by a line across the screen, the data's stamp, the call to comment. */
+function docPlan() {
+  const p = goodPlan();
+  p.format = "belief";
+  p.length = [20, 30];
+  const answer = p.objects[1];
+  delete answer.chip;
+  p.objects.push(
+    { id: "verdict", kind: "stamp", from: 600, to: 640, word: { text: "مورد اختلاف", size: 104, weight: 900, role: "answer" } },
+    { id: "cta", kind: "slab", from: 640, to: p.total - 12, lines: [{ text: "تو هم این را شنیده بودی؟", size: 68, weight: 900 }, { text: "باور بعدی را در کامنت بنویس.", size: 60, weight: 800 }] },
+  );
+  const line = (text) => ({ text, size: 40, weight: 600, w: 700, max: 784 });
+  p.hud = [
+    { id: "source1", kind: "source", box: { x: 82, y: 1453, w: 784, h: 116 }, from: 398, to: 598, lines: [line("منبع: Britannica, \"Cyrus Cylinder\";"), line("Encyclopaedia Iranica")] },
+    { id: "source", kind: "source", box: { x: 82, y: 1507, w: 784, h: 62 }, from: 640, to: p.total - 12, lines: [line("منبع: Britannica, \"Cyrus Cylinder\"; Encyclopaedia Iranica")] },
+    { id: "badge", kind: "badge", box: { x: 82, y: 1415, w: 300, h: 80 }, from: 645, to: 705 },
+    { id: "address", kind: "address", box: { x: 412, y: 1415, w: 454, h: 80 }, from: 640, to: p.total - 12, lines: [{ text: "bidar.ahura.cloud", size: 42, weight: 700 }] },
+  ];
+  p.stamps = [{ id: "verdict", word: "مورد اختلاف" }];
+  p.cta = "cta";
+  return p;
+}
+
+test("«باور یا سند؟» and «مرز ایران»: the data's stamp, the call to comment, whole sources on two lines", () => {
+  assert.deepEqual(failed(docPlan()), [], "a claim sourced by the line across the screen passes");
+  const cases = [
+    ["stamp", (p) => (p.stamps = [])],
+    ["stamp", (p) => (p.stamps = [{ id: "verdict", word: "شاید" }])],
+    ["stamp", (p) => (p.objects.find((o) => o.id === "verdict").word.text = "قطعی")],
+    ["cta", (p) => (p.cta = "nothing")],
+    ["cta", (p) => (p.objects.find((o) => o.id === "cta").lines[1].text = "باور بعدی را بنویس.")],
+    ["source-lines", (p) => p.hud[0].lines.push({ text: "و یک خطِ سوم", size: 40, weight: 600, w: 300, max: 784 })],
+    ["source", (p) => (p.hud[0].to = p.hud[0].from + 40)],
+  ];
+  for (const [id, spoil] of cases) {
+    const p = docPlan();
+    spoil(p);
+    assert.deepEqual(failed(p), [id], id);
+  }
+  // a source cut on its line fails its clip too
+  const p = docPlan();
+  p.hud[0].lines[1].w = 900;
+  assert.deepEqual(failed(p), ["clip", "source-lines"]);
+});
+
 test("the badge switched off is no fault", () => {
   const p = goodPlan();
   p.badge = false;

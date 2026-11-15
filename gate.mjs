@@ -17,6 +17,9 @@
 //   badge       the channel badge: in the bottom safe area, never in the middle, 1.5 to 2.5 s, at the close
 //   sound       at most two effects in any second; −14 LUFS within 1 LU; true peak −1 dBTP or lower (measured)
 //   cover       the tile shows three or four big words
+//   stamp       «باور یا سند؟» and «مرز ایران»: the confidence stamp of the data is on screen, one of قطعی, محتمل, مورد اختلاف
+//   cta         «باور یا سند؟» and «مرز ایران»: the call to comment is on screen at the close
+//   source-lines «باور یا سند؟» and «مرز ایران»: every source line is whole, on two lines at most
 //
 // The plan is the composition's own (src/set/space.ts, carried in its props),
 // so the gate checks exactly what was drawn. The plan's checks are pure and
@@ -43,6 +46,9 @@ export const FILL_Y = 1250;
 /** the share of the frames (outside whips) whose readable text must reach FILL_Y */
 export const FILL_SHARE = 0.85;
 const HOOK_FRAMES = Math.round(1.5 * FPS);
+/** the formats of the owner's stars of 2026-11-15 (src/set/doc.ts) and their stamps (STAMP_OF there) */
+export const DOC_FORMATS = new Set(["belief", "frontier"]);
+export const STAMP_WORDS = ["قطعی", "مورد اختلاف", "محتمل"];
 
 export const wordsOf = (s) => String(s).replace(/[؟?!.،,؛:«»"()]/g, " ").split(/\s+/).filter(Boolean);
 const inZones = (b) => b.x >= ZONES.left - 0.5 && b.y >= ZONES.top - 0.5 && b.x + b.w <= ZONES.right + 0.5 && b.y + b.h <= ZONES.bottom + 0.5;
@@ -122,11 +128,19 @@ export function planChecks(plan, cover) {
   }
 
   const claims = plan.objects.filter((o) => o.claim);
-  const unsourced = claims.filter((o) => !o.chip?.length);
-  const src = plan.hud.find((h) => h.kind === "source");
+  const sourceHuds = plan.hud.filter((h) => h.kind === "source");
+  // a claim is sourced by its own chip, or by a source line across the screen for most of the time it is up
+  const covered = (o) => {
+    const life = Math.max(1, Math.min(o.to, total) - o.from);
+    const seen = sourceHuds.reduce((n, h) => n + Math.max(0, Math.min(h.to, o.to, total) - Math.max(h.from, o.from)), 0);
+    return seen / life >= 0.7;
+  };
+  const unsourced = claims.filter((o) => !o.chip?.length && !covered(o));
+  // the source line of the close: the last one
+  const src = [...sourceHuds].sort((a, b) => a.from - b.from).pop();
   const srcShown = src && src.to - src.from >= 2 * FPS && (src.lines ?? []).some((l) => /منبع/.test(l.text));
   const pointer = src && (src.lines ?? []).some((l) => /زیرِ هر/.test(l.text));
-  add("source", Boolean(srcShown) && (!unsourced.length || !pointer), `${claims.length} claims, ${unsourced.length} without a chip; source line ${srcShown ? `${sec(src.to - src.from)} s` : "missing"}`, "منبعِ یک ادعا روی ویدیو نیست");
+  add("source", Boolean(srcShown) && (DOC_FORMATS.has(plan.format) ? !unsourced.length : !unsourced.length || !pointer), `${claims.length} claims, ${unsourced.length} without a chip or a source line across the screen; source line ${srcShown ? `${sec(src.to - src.from)} s` : "missing"}`, "منبعِ یک ادعا روی ویدیو نیست");
 
   const dots = textsOf(plan).filter(dotBeside);
   add("persian", !dots.length, dots.length ? `«·» or «|» beside Persian: ${dots.length}` : "no «·» or «|» beside Persian", "کنارِ متنِ فارسی «·» یا «|» آمده است");
@@ -143,6 +157,19 @@ export function planChecks(plan, cover) {
   let dense = 0;
   for (const a of plan.sfx) dense = Math.max(dense, plan.sfx.filter((b) => b.at >= a.at && b.at < a.at + FPS).length);
   add("sound-effects", dense <= 2, `at most ${dense} effects in a second, ${plan.sfx.length} in all`, "صداها بیش از اندازه پشتِ هم‌اند");
+
+  // the formats of the owner's stars of 2026-11-15 must carry the data's stamp, the call to comment, and whole sources on two lines
+  if (DOC_FORMATS.has(plan.format) || plan.stamps || plan.cta) {
+    const stamps = plan.stamps ?? [];
+    const wrongStamp = stamps.filter((st) => !STAMP_WORDS.includes(st.word) || plan.objects.find((o) => o.id === st.id)?.word?.text !== st.word);
+    add("stamp", stamps.length > 0 && !wrongStamp.length, stamps.length ? `${stamps.length} stamps: ${[...new Set(stamps.map((st) => st.word))].join(", ")}${wrongStamp.length ? `; wrong: ${wrongStamp.map((st) => st.id).join(", ")}` : ""}` : "no stamp", "مُهرِ اطمینان (قطعی، محتمل یا مورد اختلاف) روی ویدیو نیست");
+    const cta = plan.objects.find((o) => o.id === plan.cta);
+    const closeAt = src?.from ?? total;
+    const ctaOk = cta && (cta.lines ?? []).some((l) => /کامنت/.test(l.text)) && cta.from <= closeAt + 10 && cta.to >= total - 20;
+    add("cta", Boolean(ctaOk), cta ? `«${(cta.lines ?? []).map((l) => l.text).join(" ")}» from ${sec(cta.from)} s` : "no call to comment", "دعوت به کامنت در پایانِ ویدیو نیست");
+    const long = sourceHuds.filter((h) => (h.lines ?? []).length > 2 || (h.lines ?? []).some((l) => l.w !== undefined && l.max !== undefined && l.w > l.max + 1)).map((h) => h.id);
+    add("source-lines", sourceHuds.length > 0 && !long.length, long.length ? `more than two lines or cut: ${long.join(", ")}` : `${sourceHuds.length} source lines, each whole on two lines at most`, "منبعی کامل در دو خط نیامده است");
+  }
 
   if (cover !== undefined) {
     const cw = wordsOf(cover).length;
