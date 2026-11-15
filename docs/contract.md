@@ -78,7 +78,7 @@ it saw).
 ```ts
 type RenderJob = {
   id: number;            // the post's row id
-  format: string;        // the composition: "borders" | "myth" | "word" | "book" | "quote" | "figure" | "quiz" | "flag" | "treaty" | "city" | "truefalse" | "five" | "sweep"
+  format: string;        // the composition: "borders" | "myth" | "word" | "book" | "quote" | "figure" | "quiz" | "flag" | "treaty" | "city" | "truefalse" | "five" | "sweep" | "belief" | "frontier"
   name: string;          // a file-safe name, e.g. "reel-7"
   props: object;         // the composition's props (below), built by the site from its own data
   cover: CoverProps;     // the still tile for the profile grid
@@ -182,6 +182,34 @@ silent holds are never mute and the check for holes (`finish.mjs`) holds.
   `close {q, a}`, `until` (where the line of time ends: 1979, or 651 for the
   periods before Islam). Beats: `start` («<hook>، <sub>.»), `p1` … («<name>،
   از <tick>.»), `end`.
+
+### «باور یا سند؟», «مرز ایران، دوره به دوره» (2026-11-15)
+
+The owner's two stars of 2026-11-15 (bidar `lib/social/doc.ts`, props
+`BeliefProps` and `FrontierProps` in its `lib/social/props.ts`), narrated in
+one take and drawn only in the set style (`src/set/doc.ts`; `BIDAR_STYLE=classic`
+does not apply to them). The plan reads the site's shape as it comes.
+
+- belief: `kicker` («باور یا سند؟», the hook), `episode` (its number in the
+  series), `topic`, `claim` (word for word), `intro`, `model` and `emblem`
+  (the object, `src/set/models.tsx`), `proofs[]` of `{text, src}` (one or two
+  phrases of the record, each with its sources whole), `verdict {tier, stamp,
+  label}` (FACT قطعی, CONTESTED مورد اختلاف, ALLEGATION محتمل), `cta {q, a}`.
+  Beats: `start` («همه می‌گویند …»), `ask` («سند چه می‌گوید؟»), `q` (a hold:
+  the whip down the hall), `p1`, `p2`, `verdict` («داوریِ بیدار: <stamp>»),
+  `end` (the call to comment).
+- frontier: `kicker`, `hook {text}` («ایران ۲۵۰۰ سال پیش تا کجا بود؟»),
+  `episode`, `focus`, `frames[]` of `{id, name, years, when?, line?,
+  peakLabel?, model, emblem?, geometry, peak?, capital?: [lon, lat], stamp,
+  source, focus?}` (six, in the order of time), `today {label, geometry: null
+  (the renderer's Natural Earth line), stamp, source}`, `cta {q, a}`. Beats:
+  `start`, each period's id («<name>.») and a hold `<id>-h` after it, the
+  focus `<id>` («<name>. <when>.») and `<id>-x` (its reach), `today`, `end`.
+
+Both write each source whole on two lines of 40 px across the text column
+while what it backs is on screen, and the gate fails a Reel without the
+data's stamp (`stamp`), the call to comment (`cta`) or a source whole on two
+lines (`source-lines`).
 
 ### «سخنِ ماندگار», «چهره‌ها», «حدس بزن»: the site's shape, and holds
 

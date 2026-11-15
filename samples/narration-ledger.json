@@ -1,5 +1,5 @@
 {
-  "characters": 4092,
+  "characters": 5199,
   "calls": [
     {
       "name": "borders-1",
@@ -94,6 +94,34 @@
       "name": "truefalse-3-lively",
       "characters": 286,
       "at": "2026-11-15T05:23:58.967Z",
+      "model": "eleven_v3",
+      "voice": "rNb3hdSf0n4ROIbYC8Bl"
+    },
+    {
+      "name": "belief-1",
+      "characters": 323,
+      "at": "2026-11-15T11:57:26.881Z",
+      "model": "eleven_v3",
+      "voice": "rNb3hdSf0n4ROIbYC8Bl"
+    },
+    {
+      "name": "belief-2",
+      "characters": 270,
+      "at": "2026-11-15T11:57:34.976Z",
+      "model": "eleven_v3",
+      "voice": "rNb3hdSf0n4ROIbYC8Bl"
+    },
+    {
+      "name": "frontier-1",
+      "characters": 253,
+      "at": "2026-11-15T11:57:46.007Z",
+      "model": "eleven_v3",
+      "voice": "rNb3hdSf0n4ROIbYC8Bl"
+    },
+    {
+      "name": "frontier-2",
+      "characters": 261,
+      "at": "2026-11-15T11:57:55.266Z",
       "model": "eleven_v3",
       "voice": "rNb3hdSf0n4ROIbYC8Bl"
     }

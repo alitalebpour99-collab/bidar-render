@@ -7,9 +7,10 @@ import { AbsoluteFill } from "remotion";
 import { GULZAR, VAZIR, W, H, noDot } from "../kit";
 import type { CoverProps } from "../props";
 import { EDGE, HallScene } from "./Hall";
-import { ACCENT, NAVY, orbit, wordsOf, type Line } from "./space";
+import { ACCENT, NAVY, orbit, wordsOf, type Emblem, type Line, type Model } from "./space";
+import { Artifact, MODEL_SIZE } from "./models";
 
-export type SetCoverProps = CoverProps & { big?: string; fitted?: Line[] };
+export type SetCoverProps = CoverProps & { big?: string; fitted?: Line[]; model?: Model; emblem?: Emblem };
 
 const TOP = (H - W) / 2;
 
@@ -28,6 +29,13 @@ const Glyph: React.FC<{ format: string }> = ({ format }) => {
   return <span style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 250, lineHeight: 1, color: format === "five" ? ACCENT.gold : ACCENT.turq, textShadow: "0 0 40px rgba(23,212,164,.6)", transform: "translateY(-8px)" }}>{format === "five" ? "۵" : "؟"}</span>;
 };
 
+/** The episode's own object in the medallion («باور یا سند؟», «مرز ایران»): the Cyrus Cylinder, a coin, a column. */
+const TileObject: React.FC<{ model: Model; emblem?: Emblem }> = ({ model, emblem }) => {
+  const [mw, mh] = MODEL_SIZE[model];
+  const k = Math.min(290 / mw, 290 / mh);
+  return <Artifact id="tile" model={model} emblem={emblem} w={Math.round(mw * k)} h={Math.round(mh * k)} turn={model === "coin" ? 18 : 12} frame={0} />;
+};
+
 export const CoverSet: React.FC<SetCoverProps> = (c) => {
   const lines = c.fitted ?? [{ text: coverWords(c), size: 110, weight: 900 }];
   return (
@@ -43,7 +51,7 @@ export const CoverSet: React.FC<SetCoverProps> = (c) => {
       {/* the one object: a glass medallion in the hall's light */}
       <div style={{ position: "absolute", top: TOP + 190, left: (W - 400) / 2, width: 400, height: 400, borderRadius: "50%", padding: 8, background: EDGE, boxShadow: "0 0 90px rgba(23,212,164,.45), 0 40px 80px rgba(0,0,0,.55)" }}>
         <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: `radial-gradient(circle at 38% 32%, ${NAVY.panel2}, ${NAVY.night})`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Glyph format={c.format} />
+          {c.model ? <TileObject model={c.model} emblem={c.emblem} /> : <Glyph format={c.format} />}
         </div>
       </div>
       <div style={{ position: "absolute", top: TOP + 630, left: 80, right: 80, height: 380, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>

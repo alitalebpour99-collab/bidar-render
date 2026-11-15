@@ -172,7 +172,7 @@ export type Line = { text: string; size: number; weight: number; color?: string;
 export type State = { at: number; glow?: number; dim?: number; dy?: number; dz?: number; accent?: Accent; win?: number };
 export type Obj = {
   id: string;
-  kind: "slab" | "ring" | "stamp" | "burst" | "medal";
+  kind: "slab" | "ring" | "stamp" | "burst" | "medal" | "artifact" | "map";
   /** the object's centre in the world */
   at: V3;
   w: number;
@@ -198,10 +198,28 @@ export type Obj = {
   tilt?: number;
   /** a claim: something said as a fact; it needs a source on screen (the gate's `source`) */
   claim?: boolean;
+  /** an artifact (models.tsx): the real thing the episode is about, turning in the light; never a person */
+  model?: Model;
+  /** a coin's face (models.tsx) */
+  emblem?: Emblem;
+  /** an artifact's turn: degrees at its first frame, and degrees a second */
+  spin?: { from: number; speed: number };
+  /** a map board (MapBoard.tsx): the extents it shows, one after another */
+  map?: MapSpec;
 };
 
+/** The artifacts the set draws (models.tsx): each a real object of Iran's past, drawn in three dimensions. */
+export type Model = "cylinder" | "coin" | "column" | "tablet" | "ziggurat" | "book" | "dome" | "tower";
+/** A coin's face: a fire altar (Sasanian), an anchor (Seleucid), a bow (Parthian), a sun (Qajar, Pahlavi), a line of script (Afsharid). */
+export type Emblem = "altar" | "anchor" | "bow" | "sun" | "script";
+/** One extent of a map board, on it from frame `from`: `today` is drawn in gold, `peak` (a short-lived peak) in coral. */
+export type MapStop = { from: number; geometry: unknown; peak?: unknown; today?: boolean; capital?: [number, number] };
+/** A map board: its extents in order, today's outline (the faint reference), and the hook's zoom (out and back in over `zoom` frames from frame 0). */
+export type MapSpec = { stops: MapStop[]; today: unknown; zoom: number };
+
 /** The flat things over the world, in the screen's own pixels. */
-export type Hud = { id: string; kind: "source" | "badge"; box: Box; from: number; to: number; lines?: Line[] };
+/** `address`: the site's address beside the badge, in the formats whose source runs the full width on two lines. */
+export type Hud = { id: string; kind: "source" | "badge" | "address"; box: Box; from: number; to: number; lines?: Line[]; /** "start": from the right (the full-width source lines, in Persian order) */ align?: "start" | "end" };
 
 export type Sfx = { at: number; name: "whoosh" | "hit" | "tick" | "pop" | "rise" | "swish" | "stamp" | "paper" | "chime" | "draw"; volume: number; why: string };
 
@@ -224,6 +242,10 @@ export type Plan = {
   /** the length this format may run, in seconds (gate `length`) */
   length: [number, number];
   badge: boolean;
+  /** the confidence stamps the data gives (gate `stamp`): each its object and its word; for the formats that must carry one */
+  stamps?: { id: string; word: string }[];
+  /** the call to comment at the close (gate `cta`): its object */
+  cta?: string;
 };
 
 /** Words of a Persian text as a reader counts them («دربارهٔ» one word, a half-space joins). */

@@ -21,6 +21,8 @@ renamed for Bidar.
 | `src/Flag.tsx` | «پرچم‌های ایران»: a flag of the site's /iran/flags as a vexillologist's drawing (grid, frame, centre and dimension lines), built layer by layer from the site's own SVG (`src/data/flags.json`), a compass sweeping the emblem in, the colours with their names and codes, the stamp «بازسازیِ تقریبی», the flag waving at the end |
 | `src/Treaty.tsx` | «آنچه از دست رفت»: a treaty of the atlas as a parchment that unrolls and is sealed in wax, then a light regional map (the region's countries of Natural Earth 1:110m, projected once) where each lost place pins in and its label turns to «امروز: …» |
 | `src/City.tsx` | «شهرها در گذرِ دوره‌ها»: a city of the atlas on a brass astrolabe, the periods before 1979 round its rim, those that held the city lit one after another, gold where it was a capital |
+| `src/set/doc.ts` | «باور یا سند؟» (a numbered series: the series' question and the episode's object, the belief word for word with the stamp «باور», the record's own sentences down the hall with their sources whole on two lines, the site's trust label as the stamp قطعی، محتمل or مورد اختلاف, the call to comment) and «مرز ایران، دوره به دوره» (one map board: the hook zooms it out and in, six periods each with its extent from Cliopatria, its object and the data's stamp, the episode's period held longer, today's border in gold); the owner's two stars of 2026-11-15, in the set style only |
+| `src/set/models.tsx`, `src/set/MapBoard.tsx` | the set's objects in three dimensions (the Cyrus Cylinder, a coin's reverse, a column of Persepolis, a clay tablet, a ziggurat, a manuscript, a dome, a tower; never a person) and the map board |
 | `src/Cover.tsx` | the still tile for the profile grid, in each series' look |
 | `src/timeline.ts` | every beat's start and the burned-in captions, from the narrator's character alignment; a silent beat with `min` between two said ones is a hold: the one take is cut there and plays on after it |
 | `src/Safe.tsx` | the safe stage (Instagram's 4:5 feed crop, the viewers' buttons) and the captions |
@@ -127,9 +129,16 @@ Or run the «Samples» workflow and download its artifact.
 - `src/data/countries-110m.json`: Natural Earth 1:110m (public domain), the
   copy Bidar's site uses (`public/data/countries-110m.json`).
 - `src/data/iran-eras.json`: Bidar's period extents
-  (`public/data/iran-eras.json`), simplified from
-  [aourednik/historical-basemaps](https://github.com/aourednik/historical-basemaps);
-  approximate, and shown as such. Credited as on the site's atlas page.
+  (`public/data/iran-eras.json`, made by the site's `scripts/eras/cliopatria.py`):
+  one row per period of [Cliopatria](https://github.com/Seshat-Global-History-Databank/cliopatria)
+  (Seshat Global History Databank; Bennett, J. S. et al. 2025, «Cliopatria»,
+  *Scientific Data* 12, 247), licensed
+  [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); changed: simplified,
+  rounded to two decimals, a short-lived peak cut apart from the steady extent.
+  Approximate, and shown as such. Until 15 November 2026 this file held
+  extents simplified from aourednik/historical-basemaps, whose repository is
+  licensed GPL-3.0 (not CC BY-SA, as Bidar's notes said); none of them is used
+  any more, and the old copies stay only in this repository's history.
 - `src/data/flags.json`: the site's flag pictures (`public/flags/flag_*.svg`,
   Wikimedia Commons based or the site's own approximate reconstructions),
   split into their layers in the file's order: the field (a layer as large as

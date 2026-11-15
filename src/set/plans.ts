@@ -15,44 +15,45 @@ import type { QuizProps, Timeline } from "../props";
 import type { FiveProps } from "../Five";
 import type { TrueFalseProps } from "../TrueFalse";
 import { fit, fitOne, linesHeight, measure } from "./fit";
+import { planBelief, planFrontier } from "./doc";
 import { CHIP_SIZE, COL, COL_W, FPS, HZ, MIN_TEXT, TAG_ROOM, TOP_ROOM, ZONES, chipRoom, frameCover, orbit, poseAt, textBoxes, type Accent, type Hud, type Line, type Obj, type Plan, type Punch, type Sfx, type Shot, type V3 } from "./space";
 
 /** The formats drawn in the set style. */
-export const SET_FORMATS = ["quiz", "truefalse", "five"] as const;
+export const SET_FORMATS = ["quiz", "truefalse", "five", "belief", "frontier"] as const;
 export type SetFormat = (typeof SET_FORMATS)[number];
 export const isSetFormat = (f: string): f is SetFormat => (SET_FORMATS as readonly string[]).includes(f);
 
 /** How long each may run, in seconds (gate `length`): one idea each, the quiz the shortest; «درست یا غلط؟» two sentences in 30 s. */
-export const LENGTH: Record<SetFormat, [number, number]> = { quiz: [14, 30], truefalse: [16, 30], five: [22, 42] };
+export const LENGTH: Record<SetFormat, [number, number]> = { quiz: [14, 30], truefalse: [16, 30], five: [22, 42], belief: [20, 30], frontier: [20, 30] };
 /** The silent holds, at most (the quiz's countdown, the true-or-false pause): the audit's «nothing waits». */
-export const HOLD_CAP: Record<SetFormat, number> = { quiz: 3, truefalse: 2, five: 2 };
+export const HOLD_CAP: Record<SetFormat, number> = { quiz: 3, truefalse: 2, five: 2, belief: 1.2, frontier: 1.4 };
 
 /** The slab column: centred in the safe column, a little narrower so a punch keeps it inside. */
-const SX = COL.left + COL_W / 2 - 540;
-const SLAB_W = Math.min(720, COL_W - 64);
-const INNER = SLAB_W - 96;
-const Z0 = 1000;
+export const SX = COL.left + COL_W / 2 - 540;
+export const SLAB_W = Math.min(720, COL_W - 64);
+export const INNER = SLAB_W - 96;
+export const Z0 = 1000;
 /** the world's y of a row of the screen, for a thing at the camera's own distance (scale 1) */
-const rowY = (screenY: number) => screenY - HZ;
+export const rowY = (screenY: number) => screenY - HZ;
 /** the lowest a slab's bottom may stand (world), so the nearest camera of a Reel keeps it above the caption rows */
-const LOW = 780;
+export const LOW = 780;
 /** world sizes: a text 40 px on screen and an answer 44 px at the reading scale (about 0.9) */
-const TEXT = Math.ceil(MIN_TEXT / 0.86);
-const ANSWER = 52;
+export const TEXT = Math.ceil(MIN_TEXT / 0.86);
+export const ANSWER = 52;
 
 type B = { from: number; to: number };
-const beat = (tl: Timeline, id: string): B => tl.beats[id] ?? { from: 0, to: tl.total };
-const has = (tl: Timeline, id: string) => Boolean(tl.beats[id]);
-const asAnswer = (lines: Line[]): Line[] => lines.map((l) => ({ ...l, role: "answer" as const }));
+export const beat = (tl: Timeline, id: string): B => tl.beats[id] ?? { from: 0, to: tl.total };
+export const has = (tl: Timeline, id: string) => Boolean(tl.beats[id]);
+export const asAnswer = (lines: Line[]): Line[] => lines.map((l) => ({ ...l, role: "answer" as const }));
 
 /** A slab of lines, its height from its content (the room Hall.tsx gives the tag, the lines and the chip). */
-function slab(id: string, at: { x?: number; top: number; z: number }, from: number, to: number, body: Line[], extra: Partial<Obj> = {}): Obj {
+export function slab(id: string, at: { x?: number; top: number; z: number }, from: number, to: number, body: Line[], extra: Partial<Obj> = {}): Obj {
   const top = extra.tag ? TAG_ROOM : TOP_ROOM;
   const imgH = extra.image ? extra.image.h + 18 : 0;
   const h = Math.round(top + imgH + linesHeight(body) + chipRoom(extra.chip) + 10);
   return { id, kind: "slab", at: [at.x ?? SX, at.top + h / 2, at.z], w: SLAB_W, h, from, to, lines: body, ...extra };
 }
-const bottomOf = (o: Obj) => o.at[1] + o.h / 2;
+export const bottomOf = (o: Obj) => o.at[1] + o.h / 2;
 
 /** The chip's room for its letters: the slab's inner width less the chip's padding and border. */
 const CHIP_W = INNER - 56;
@@ -62,7 +63,7 @@ const CHIP_W = INNER - 56;
  * (Encyclopaedia Iranica, "Rāzī"), then the work alone. The whole source is
  * always in the caption and in the source line at the close.
  */
-function chipOf(text: string | undefined): Line[] | undefined {
+export function chipOf(text: string | undefined): Line[] | undefined {
   if (!text) return undefined;
   const raw = noDot(text.replace(/^\s*منبع\s*[:：]\s*/, ""));
   for (const t of sourceForms(raw)) {
@@ -85,7 +86,7 @@ export function sourceForms(s: string): string[] {
 type Parts = { shots: Shot[]; punches: Punch[]; objects: Obj[]; sfx: Sfx[]; hook: string; closeAt: number; source: string; claimsSourced: boolean };
 
 /** Keep the camera moving: a small punch into any stretch of more than 2.6 s without a move. */
-function keepMoving(shots: Shot[], punches: Punch[], total: number) {
+export function keepMoving(shots: Shot[], punches: Punch[], total: number) {
   const events = () => [...shots.map((s) => s.at), ...punches.map((p) => p.at)].sort((a, b) => a - b);
   for (let guard = 0; guard < 60; guard += 1) {
     const ev = [...events(), total];
@@ -98,7 +99,7 @@ function keepMoving(shots: Shot[], punches: Punch[], total: number) {
 
 /** Effects: no more than two in any second, the most important kept (the sound code of Pickwise, Bidar's sounds). */
 const RANK: Sfx["name"][] = ["stamp", "chime", "hit", "pop", "tick", "rise", "paper", "draw", "whoosh", "swish"];
-function thin(list: Sfx[]): Sfx[] {
+export function thin(list: Sfx[]): Sfx[] {
   const kept: Sfx[] = [];
   for (const s of [...list].sort((a, b) => RANK.indexOf(a.name) - RANK.indexOf(b.name) || a.at - b.at)) {
     const near = kept.filter((k) => Math.abs(k.at - s.at) < FPS);
@@ -246,9 +247,9 @@ export function planQuiz(p: QuizProps, tl: Timeline, opts: { badge: boolean }): 
 
 // ---------- the corridor: «درست یا غلط؟» and «پنج‌تایی» ----------
 /** A station down the hall: its slabs stand at this depth; the camera stops about 1060 in front of it. */
-const stationZ = (k: number) => Z0 + 2000 * k;
-const at = (k: number): V3 => [SX, 0, stationZ(k)];
-const BASE = 1080;
+export const stationZ = (k: number) => Z0 + 2000 * k;
+export const at = (k: number): V3 => [SX, 0, stationZ(k)];
+export const BASE = 1080;
 
 /**
  * The opening: the series' line in big letters (the hook), its second line a
@@ -271,7 +272,7 @@ function opening(hook: string, sub: string, T: number, subTo: number, tokens: st
 }
 
 /** The opening's push: 30 units a second, but never more than 90 in all, so a long opening does not fly into its own title (the review, 6.4 s of «پنج‌تایی»). */
-const openPush = (frames: number) => Math.min(30, 90 / Math.max(1, frames / FPS));
+export const openPush = (frames: number) => Math.min(30, 90 / Math.max(1, frames / FPS));
 
 /** The close at the opening slab: the question to the viewer under the title. */
 function closing(q: string, a: string, endFrom: number, T: number, top: number): Obj {
@@ -407,6 +408,8 @@ export function planFive(p: FiveProps & { items: (FiveProps["items"][number] & {
 
 export function planOf(format: SetFormat, props: unknown, tl: Timeline, opts: { badge: boolean }): Plan {
   if (format === "quiz") return planQuiz(props as QuizProps, tl, opts);
+  if (format === "belief") return planBelief(props as never, tl, opts);
+  if (format === "frontier") return planFrontier(props as never, tl, opts);
   if (format === "truefalse") return planTrueFalse(props as never, tl, opts);
   return planFive(props as never, tl, opts);
 }

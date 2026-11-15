@@ -6,6 +6,8 @@ import React from "react";
 import { AbsoluteFill, Audio, Img, Sequence, interpolate, staticFile, useCurrentFrame } from "remotion";
 import { GULZAR, VAZIR, clamped } from "../kit";
 import type { Timeline } from "../props";
+import { Artifact } from "./models";
+import { MapBoard } from "./MapBoard";
 import { ACCENT, CHIP_LEAD, CX, FLOOR, H, HZ, NAVY, NEAR, TAG_ROOM, TAG_SIZE, TOP_ROOM, W, chipBlock, chipRoom, poseAt, presence, project, speedAt, stateAt, textAlpha, type Hud, type Line, type Obj, type Plan, type Pose } from "./space";
 
 /** the hall's own gradient: turquoise to violet to pink, Bidar's border on the site and the panel */
@@ -263,6 +265,18 @@ const Burst: React.FC<{ o: Obj; frame: number }> = ({ o, frame }) => {
   );
 };
 
+/** An artifact turning in the light, a soft pool of light under it, and a slow bob so a held shot still breathes. */
+const ArtifactThing: React.FC<{ o: Obj; frame: number }> = ({ o, frame }) => {
+  const t = (frame - o.from) / 30;
+  const turn = (o.spin?.from ?? 0) + (o.spin?.speed ?? 24) * t;
+  const bob = Math.sin(t * 1.6) * 8;
+  return (
+    <div style={{ position: "relative", width: o.w, height: o.h, transform: `translateY(${bob}px)`, filter: "drop-shadow(0 30px 40px rgba(0,0,0,.55)) drop-shadow(0 0 26px rgba(23,212,164,.22))" }}>
+      <Artifact id={o.id} model={o.model ?? "coin"} emblem={o.emblem} w={o.w} h={o.h} turn={turn} frame={frame} />
+    </div>
+  );
+};
+
 /** One object where the camera sees it, with its light pool and its reflection on the floor. */
 const Thing: React.FC<{ o: Obj; pose: Pose; frame: number; total: number }> = ({ o, pose, frame, total }) => {
   const pr = presence(o, frame);
@@ -277,8 +291,8 @@ const Thing: React.FC<{ o: Obj; pose: Pose; frame: number; total: number }> = ({
   const alpha = pr.a * (1 - 0.6 * st.dim) * through;
   if (alpha <= 0.01) return null;
   const accent = ACCENT[st.accent];
-  const floor = o.kind === "slab" || o.kind === "medal" ? project([o.at[0], FLOOR, o.at[2] + st.dz], pose) : null;
-  const mirror = o.kind === "slab" ? project([o.at[0], 2 * FLOOR - (o.at[1] + st.dy + pr.lift + o.h / 2), o.at[2] + st.dz], pose) : null;
+  const floor = o.kind === "slab" || o.kind === "medal" || o.kind === "artifact" || o.kind === "map" ? project([o.at[0], FLOOR, o.at[2] + st.dz], pose) : null;
+  const mirror = o.kind === "slab" || o.kind === "map" ? project([o.at[0], 2 * FLOOR - (o.at[1] + st.dy + pr.lift + o.h / 2), o.at[2] + st.dz], pose) : null;
   return (
     <>
       {floor ? (
@@ -288,7 +302,7 @@ const Thing: React.FC<{ o: Obj; pose: Pose; frame: number; total: number }> = ({
         <div style={{ position: "absolute", left: mirror[0] - (o.w * mirror[2]) / 2, top: mirror[1], width: o.w * mirror[2], height: o.h * mirror[2] * 0.5, borderRadius: 30 * mirror[2], background: `linear-gradient(180deg, ${accent}2a, rgba(123,97,255,.08) 40%, rgba(0,0,0,0))`, opacity: alpha * 0.9 }} />
       ) : null}
       <div style={{ position: "absolute", left: sx, top: sy, width: o.w, height: o.h, transform: `translate(-50%, -50%) scale(${s}) perspective(1600px) rotateY(${-pose.yaw * 0.5}deg)`, opacity: alpha }}>
-        {o.kind === "slab" ? <Slab o={o} frame={frame} s={s0} total={total} /> : o.kind === "ring" ? <Ring o={o} frame={frame} /> : o.kind === "stamp" ? <Stamp o={o} frame={frame} /> : o.kind === "medal" ? <Medal o={o} frame={frame} s={s0} /> : <Burst o={o} frame={frame} />}
+        {o.kind === "slab" ? <Slab o={o} frame={frame} s={s0} total={total} /> : o.kind === "artifact" ? <ArtifactThing o={o} frame={frame} /> : o.kind === "map" && o.map ? <MapBoard id={o.id} w={o.w} h={o.h} map={o.map} frame={frame} /> : o.kind === "ring" ? <Ring o={o} frame={frame} /> : o.kind === "stamp" ? <Stamp o={o} frame={frame} /> : o.kind === "medal" ? <Medal o={o} frame={frame} s={s0} /> : <Burst o={o} frame={frame} />}
       </div>
     </>
   );
@@ -321,13 +335,32 @@ export const Badge: React.FC<{ h: Hud; frame: number }> = ({ h, frame }) => {
   );
 };
 
-const SourceBox: React.FC<{ h: Hud; frame: number }> = ({ h, frame }) => {
+/**
+ * A source line of Persian and Latin: the Persian words before the first Latin
+ * letter in the paragraph's own order, the rest (titles, their quotes and
+ * semicolons) isolated left to right, so «"Life of Crassus";» keeps its marks.
+ */
+const Mixed: React.FC<{ text: string }> = ({ text }) => {
+  let k = text.search(/[A-Za-z]/);
+  if (k < 0) return <bdi>{text}</bdi>;
+  // an opening quote or bracket just before the title goes with it; no Persian word before it: the whole line left to right
+  while (k > 0 && "«\"(".includes(text[k - 1])) k -= 1;
+  if (!/[ء-ۓ]/.test(text.slice(0, k))) k = 0;
+  return (
+    <>
+      {k > 0 ? <bdi>{text.slice(0, k)}</bdi> : null}
+      <bdi dir="ltr">{text.slice(k)}</bdi>
+    </>
+  );
+};
+
+const SourceBox: React.FC<{ h: Hud; frame: number; align?: "flex-start" | "flex-end" }> = ({ h, frame, align = "flex-end" }) => {
   const a = Math.min(1, (frame - h.from) / 8, (h.to - frame) / 6);
   return (
-    <div style={{ position: "absolute", left: h.box.x, top: h.box.y, width: h.box.w, height: h.box.h, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "flex-end", direction: "rtl", opacity: Math.max(0, a), transform: `translateY(${(1 - Math.max(0, a)) * 12}px)` }}>
+    <div style={{ position: "absolute", left: h.box.x, top: h.box.y, width: h.box.w, height: h.box.h, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: align, direction: "rtl", opacity: Math.max(0, a), transform: `translateY(${(1 - Math.max(0, a)) * 12}px)` }}>
       {(h.lines ?? []).map((l, i) => (
         <div key={i} style={{ fontFamily: VAZIR, fontWeight: l.weight, fontSize: l.size, lineHeight: 1.35, color: l.color ?? NAVY.muted, whiteSpace: "nowrap", direction: /^[a-z0-9.]+$/i.test(l.text) ? "ltr" : "rtl" }}>
-          <bdi>{l.text}</bdi>
+          {h.align === "start" ? <Mixed text={l.text} /> : <bdi>{l.text}</bdi>}
         </div>
       ))}
     </div>
@@ -361,7 +394,7 @@ export const Hall: React.FC<{ plan: Plan; tl: Timeline; music?: string }> = ({ p
       </AbsoluteFill>
       {/* the edges fall into shadow, so the light stays on the slab */}
       <AbsoluteFill style={{ background: "radial-gradient(closest-side at 50% 46%, rgba(0,0,0,0) 62%, rgba(2,4,12,.55) 100%)" }} />
-      {plan.hud.map((h) => (frame >= h.from && frame < h.to ? h.kind === "badge" ? <Badge key={h.id} h={h} frame={frame} /> : <SourceBox key={h.id} h={h} frame={frame} /> : null))}
+      {plan.hud.map((h) => (frame >= h.from && frame < h.to ? h.kind === "badge" ? <Badge key={h.id} h={h} frame={frame} /> : <SourceBox key={h.id} h={h} frame={frame} align={h.align === "start" ? "flex-start" : "flex-end"} /> : null))}
       {music ? <Audio src={staticFile(music)} /> : null}
       {tl.voice.map((v, i) => (
         <Sequence key={`${v.file}-${i}`} from={v.from} durationInFrames={v.frames ?? Infinity} layout="none">

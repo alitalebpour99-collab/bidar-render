@@ -51,6 +51,11 @@ const MOODS = {
   // «از کتاب» (v2, the book's look since 2026-10-31): room tone only, far under the book's reading;
   // it carries the title page and the last card, so neither is dead silence
   book: { root: 38, bpm: 48, voice: "room", level: 0.55 },
+  // the owner's two stars of 2026-11-15, in the set: «باور یا سند؟» an investigation, D, 84 bpm, a muted
+  // pulse, a sub on the downbeat and a soft tick (a case being read); «مرز ایران» a map walking through
+  // the centuries, C, 90 bpm, the same steady bed a little brighter. Dark, minimal, no melody.
+  belief: { root: 38, bpm: 84, voice: "steady", sub: true, tick: 0.03, level: 0.82 },
+  frontier: { root: 36, bpm: 90, voice: "steady", sub: true, tick: 0.035, level: 0.85 },
 };
 
 // i  VI  III  VII
