@@ -40,6 +40,8 @@ function borders(p: Site): BordersProps {
     name: String(f.name),
     years: String(f.years),
     line: f.extent ?? f.government ?? undefined,
+    // the date the drawn extent shows (the site's «بیشترین گستره، ۴۸۰ پ.م» or «در سال ۱۸۰۰ م»)
+    when: f.when ? String(f.when) : undefined,
     tick: tickOf(String(f.years)),
     capital: f.capitals?.[0] ? { name: String(f.capitals[0].name), lonlat: [Number(f.capitals[0].lon), Number(f.capitals[0].lat)] } : undefined,
   }));
@@ -47,7 +49,7 @@ function borders(p: Site): BordersProps {
   stops.push({ at: "today", era: "today", name: String(p.today?.label ?? "مرزهای امروز"), years: "", tick: "امروز" });
   const made: Beat[] = [
     { id: "start", say: end(hookText(p, p.title ?? "")) },
-    ...frames.map((f) => ({ id: String(f.id), say: end(`${f.name}، ${f.years}. ${f.extent ?? ""}`) })),
+    ...frames.map((f) => ({ id: String(f.id), say: end(f.when ? `${f.name}، ${f.years}. ${f.when}. ${f.extent ?? ""}` : `${f.name}، ${f.years}. ${f.extent ?? ""}`) })),
     { id: "today", say: end(String(p.today?.label ?? "مرزهای امروز")), min: 2.4 },
     { id: "end", say: p.caveat ? end(String(p.caveat)) : "", min: 3 },
   ];
@@ -328,10 +330,14 @@ export function adapt<P extends ReelProps>(p: P | Site): P {
   if (s.format === "five" && Array.isArray(s.items)) return site<P>(lineHook(s), fiveBeats(s));
   if (s.format === "sweep" && Array.isArray(s.periods)) return site<P>(lineHook(s), sweepBeats(s));
   if (s.format === "book" && Array.isArray(s.words)) return { ...book(s), music: s.music, voiceIn: s.voiceIn } as unknown as P;
-  // a hook sent as {text, figure} is drawn as its text: React cannot draw the object (error #31)
-  if (Array.isArray(s.beats) && s.beats.length && (s.stops || s.evidence)) return { ...s, hook: hookText(s, String(s.title ?? "")), source: sourceText(s.source) } as P;
+  // the site's borders and myth first: Remotion lays the props over the composition's sample (its
+  // `stops`, its `evidence`), so a site Reel with its own beats also carried the sample's stops and,
+  // through the line below, was drawn with the sample's three maps under its own narration (the
+  // owner, 2026-11-15: «مرزِ اشکانی غلطه … بقیه هم غلطه»)
   if (s.format === "borders" && Array.isArray(s.frames)) return { ...borders(s), music: s.music, voiceIn: s.voiceIn } as unknown as P;
   if (s.format === "myth" && Array.isArray(s.reality)) return { ...myth(s), music: s.music, voiceIn: s.voiceIn } as unknown as P;
+  // a hook sent as {text, figure} is drawn as its text: React cannot draw the object (error #31)
+  if (Array.isArray(s.beats) && s.beats.length && (s.stops || s.evidence)) return { ...s, hook: hookText(s, String(s.title ?? "")), source: sourceText(s.source) } as P;
   if (s.format === "word" && Array.isArray(s.chain)) return { ...word(s), music: s.music, voiceIn: s.voiceIn } as unknown as P;
   return p as P;
 }

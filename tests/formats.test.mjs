@@ -55,3 +55,16 @@ test("the tile carries the episode's number, and «درست یا غلط؟» a th
   assert.match(read("src/Five.tsx"), /ICONS\[it\.icon\] \?\? Star/, "an item without a drawing of its own gets the girih star");
   assert.match(read("src/Sweep.tsx"), /p\.until/, "an episode of part of the line ends where its last period does");
 });
+
+test("a site borders or myth Reel is drawn from its own frames, never from the sample's stops (the owner, 2026-11-15)", () => {
+  // Remotion lays a job's props over the composition's sample: the sample's `stops` and `evidence` ride along,
+  // so the site's own shape must be read before the line that takes `stops` or `evidence` as they are
+  const adapt = read("src/adapt.ts");
+  const at = (re) => adapt.search(re);
+  const generic = at(/Array\.isArray\(s\.beats\) && s\.beats\.length && \(s\.stops \|\| s\.evidence\)/);
+  assert.ok(generic > 0, "the line for props already in the compositions' shape");
+  assert.ok(at(/s\.format === "borders" && Array\.isArray\(s\.frames\)/) < generic, "borders: the site's frames first");
+  assert.ok(at(/s\.format === "myth" && Array\.isArray\(s\.reality\)/) < generic, "myth: the site's reality first");
+  const sample = JSON.parse(read("samples/borders-1.json"));
+  assert.ok(Array.isArray(sample.stops), "the sample does carry stops (what rode along)");
+});

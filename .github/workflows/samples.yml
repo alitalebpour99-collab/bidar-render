@@ -48,7 +48,7 @@ jobs:
           node build.mjs
       - name: Render every pair, and its tile
         env:
-          RENDER_GL: swangle
+          # no swangle GL, as render.yml since 2 November: the map Reels hung under it
           LIST: ${{ inputs.list }}
           MODE: ${{ inputs.mode }}
           # a sample is for looking: the gate reports (out/<name>.gate.json) and the run goes on

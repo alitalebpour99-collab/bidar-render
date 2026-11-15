@@ -229,9 +229,10 @@ export const Borders: React.FC<BordersProps> = (p) => {
         return (
           <div key={s.at} style={{ position: "absolute", top: DESIGN_TOP + 140, right: SIDE, left: SIDE, direction: "rtl", opacity: o, transform: `translateY(${rise(frame, from, 60, 16) - interpolate(frame, [to - 8, to + 2], [0, 40], clamped)}px)` }}>
             <div style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 46, color: isToday ? LAPIS.gold : LAPIS.turq, opacity: fade(frame, from + 4, 10) }}>{s.years}</div>
+            {s.when ? <div style={{ fontFamily: VAZIR, fontWeight: 800, fontSize: 44, color: LAPIS.gold, marginTop: 4, opacity: fade(frame, from + 10, 10) }}>{s.when}</div> : null}
             <div style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 132, lineHeight: 1.2, color: LAPIS.ink, letterSpacing: 0 }}>{s.name}</div>
             {s.line ? (
-              <div style={{ fontFamily: VAZIR, fontWeight: 500, fontSize: 38, lineHeight: 1.5, color: LAPIS.muted, marginTop: 6, opacity: fade(frame, from + 52, 12), transform: `translateX(${-rise(frame, from + 52, 30, 14)}px)` }}>{s.line}</div>
+              <div style={{ fontFamily: VAZIR, fontWeight: 500, fontSize: 42, lineHeight: 1.5, color: LAPIS.muted, marginTop: 6, opacity: fade(frame, from + 52, 12), transform: `translateX(${-rise(frame, from + 52, 30, 14)}px)` }}>{s.line}</div>
             ) : null}
           </div>
         );
