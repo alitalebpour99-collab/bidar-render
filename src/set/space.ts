@@ -219,7 +219,7 @@ export type MapSpec = { stops: MapStop[]; today: unknown; zoom: number };
 
 /** The flat things over the world, in the screen's own pixels. */
 /** `address`: the site's address beside the badge, in the formats whose source runs the full width on two lines. */
-export type Hud = { id: string; kind: "source" | "badge" | "address"; box: Box; from: number; to: number; lines?: Line[] };
+export type Hud = { id: string; kind: "source" | "badge" | "address"; box: Box; from: number; to: number; lines?: Line[]; /** "start": from the right (the full-width source lines, in Persian order) */ align?: "start" | "end" };
 
 export type Sfx = { at: number; name: "whoosh" | "hit" | "tick" | "pop" | "rise" | "swish" | "stamp" | "paper" | "chime" | "draw"; volume: number; why: string };
 

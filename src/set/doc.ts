@@ -94,6 +94,19 @@ const srcBottom = ZONES.bottom - 14;
 /** A source in full, on two lines across the column (never cut; a source longer than two lines shows as it is and the gate's `clip` and `source-lines` fail it). */
 export function sourceLines(text: string): Line[] {
   const raw = noDot(String(text).replace(/^\s*منبع(?:‌ها)?\s*[:：]\s*/, ""));
+  // one line when it fits; else broken between two sources when each fits its line, so no title is split
+  const one = fitOne(`منبع: ${raw}`, SRC_W, SRC_SIZE, 600, SRC_SIZE);
+  const tidy = (ls: (Line & { overflow?: boolean })[]): Line[] => ls.map(({ overflow: _o, ...l }) => ({ ...l, color: "#c3cbe6" }));
+  if (!one.overflow) return tidy([one]);
+  const parts = raw.split(/(?<=[;؛،])\s+/);
+  let best: Line[] | null = null;
+  for (let k = 1; k < parts.length; k += 1) {
+    const a = fitOne(`منبع: ${parts.slice(0, k).join(" ")}`, SRC_W, SRC_SIZE, 600, SRC_SIZE);
+    const b = fitOne(parts.slice(k).join(" "), SRC_W, SRC_SIZE, 600, SRC_SIZE);
+    if (a.overflow || b.overflow) continue;
+    if (!best || Math.abs((a.w ?? 0) - (b.w ?? 0)) < Math.abs((best[0].w ?? 0) - (best[1].w ?? 0))) best = [a, b];
+  }
+  if (best) return tidy(best);
   const r = fit({ text: `منبع: ${raw}`, width: SRC_W, maxLines: 2, size: SRC_SIZE, min: SRC_SIZE, weight: 600 });
   return r.lines.map((l) => ({ ...l, color: "#c3cbe6" }));
 }
@@ -117,19 +130,19 @@ function finishDoc(format: SetFormat, tl: Timeline, p: Parts, opts: { badge: boo
   // the source of what is on screen, in full on two lines, while it is there
   p.sources.forEach((s, i) => {
     const lines = sourceLines(s.text);
-    hud.push({ id: `source${i + 1}`, kind: "source", box: srcBox(lines), from: s.from, to: Math.min(s.to, p.closeAt), lines });
+    hud.push({ id: `source${i + 1}`, kind: "source", box: srcBox(lines), from: s.from, to: Math.min(s.to, p.closeAt), lines, align: "start" });
   });
   // the close: every source of the Reel, and on the row above it the badge and the address
   const closeLines = sourceLines(p.close);
   const closeBox = srcBox(closeLines);
-  hud.push({ id: "source", kind: "source", box: closeBox, from: p.closeAt, to: total - 12, lines: closeLines });
+  hud.push({ id: "source", kind: "source", box: closeBox, from: p.closeAt, to: total - 12, lines: closeLines, align: "start" });
   const rowY = closeBox.y - 12 - 80;
   if (opts.badge) {
     const from = p.closeAt + 16;
     hud.push({ id: "badge", kind: "badge", box: { x: COL.left, y: rowY, w: 300, h: 80 }, from, to: Math.min(from + 66, total - 20) });
   }
   const addr = { ...fitOne("bidar.ahura.cloud", SRC_W - 330, 42, 700), color: "#f4f6ff" };
-  hud.push({ id: "address", kind: "address", box: { x: COL.left + 330, y: rowY, w: SRC_W - 330, h: 80 }, from: p.closeAt, to: total - 12, lines: [addr] });
+  hud.push({ id: "address", kind: "address", box: { x: COL.left + 330, y: rowY, w: SRC_W - 330, h: 80 }, from: p.closeAt, to: total - 12, lines: [addr], align: "start" });
 
   return {
     style: "set",
@@ -187,7 +200,7 @@ export function planBelief(p: BeliefSite, tl: Timeline, opts: { badge: boolean }
   objects.push(title);
   const objTop = bottomOf(title) + 30;
   const claimTop = rowAt(950);
-  objects.push(artifact("object", p.model, p.emblem, [SX, Math.round((objTop + claimTop - 30) / 2), Z0 + 40], Math.min(280, claimTop - 30 - objTop), 0, T + 60, { states: [{ at: -20, glow: 0.6 }] }));
+  objects.push(artifact("object", p.model, p.emblem, [SX, Math.round((objTop + claimTop - 30) / 2), Z0 + 40], Math.min(300, claimTop - 20 - objTop), 0, T + 60, { states: [{ at: -20, glow: 0.6 }] }, 760));
 
   // the belief, word for word, under the object: in at 1.4 s (the hook alone in the first second and a half), back at the verdict
   const claimFrom = Math.max(42, start.from + 42);
@@ -201,12 +214,12 @@ export function planBelief(p: BeliefSite, tl: Timeline, opts: { badge: boolean }
   objects.push(stampObj("belief", "باور", [SX - 210, claim!.at[1] - claim!.h / 2 + 20, Z0 - 60], Math.max(claimFrom + 10, ask.from - 2), verdict.from - 4, 70, -9));
   // the verdict: the site's trust label comes down as the owner's stamp, over the belief
   const stampWord = STAMP_OF[p.verdict.tier] ?? p.verdict.stamp;
-  objects.push(stampObj("verdict", stampWord, [SX + 40, claim!.at[1] + 10, Z0 - 90], verdict.from - 2, end.from + 6, 104, -5));
+  objects.push(stampObj("verdict", stampWord, [SX + 40, claim!.at[1] + claim!.h / 2 + 10, Z0 - 90], verdict.from - 2, end.from + 6, 104, -5));
 
   // down the hall: the object close, and the record's sentences under it, each in while it is read
   const z1 = at(1)[2];
   const pTop = rowAt(842);
-  const big = artifact("close", p.model, p.emblem, [SX, Math.round((rowAt(300) + pTop - 20) / 2), z1 + 60], Math.min(440, pTop - 20 - rowAt(300)), Math.max(1, proofs[0].from - 14), verdict.from + 6, { spin: { from: 20, speed: p.model === "coin" ? 80 : 34 } });
+  const big = artifact("close", p.model, p.emblem, [SX, Math.round((rowAt(300) + pTop - 20) / 2), z1 + 60], Math.min(440, pTop - 20 - rowAt(300)), Math.max(1, proofs[0].from - 14), verdict.from + 6, { spin: { from: 20, speed: p.model === "coin" ? 80 : 34 } }, 880);
   objects.push(big);
   const sources: Parts["sources"] = [];
   p.proofs.slice(0, 2).forEach((pr, i) => {
@@ -296,7 +309,7 @@ export function planFrontier(p: FrontierSite, tl: Timeline, opts: { badge: boole
       punches.push({ at: ext.from + 4, depth: 24, why: `${f.id} reach` });
     }
     // its object, standing in front of the map's lower corner
-    objects.push(artifact(`object${i + 1}`, f.model, f.emblem, [SX - 200, slabTop - 150, Z0 - 230], 270, Math.max(1, b.from - 2), leave + 4, { enter: "pop" }, 270));
+    objects.push(artifact(`object${i + 1}`, f.model, f.emblem, [SX - 210, slabTop - 170, Z0 - 260], 320, Math.max(1, b.from - 2), leave + 4, { enter: "pop" }, 300));
     // the stamp of the data, on the slab's corner
     const st = stampObj(`stamp${i + 1}`, f.stamp, [SX + 230, slabTop - 40, Z0 - 60], b.from + 8, leave + 4, 64, -7);
     objects.push(st);

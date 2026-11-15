@@ -65,6 +65,8 @@ const Cylinder: React.FC<P> = ({ id, w, h, turn }) => {
   const bottom = [...xs].reverse().map((x) => `L${x.toFixed(1)} ${(cy + r(x)).toFixed(1)}`).join("");
   const endR = r(cx + L / 2);
   const endRx = endR * 0.3;
+  // the outline with both ends rounded (the far end's curve; the near end's face is drawn over it)
+  const body = `${top}A${endRx} ${endR} 0 0 1 ${cx + L / 2} ${cy + endR}${bottom}A${endRx} ${endR} 0 0 1 ${cx - L / 2} ${cy - endR}Z`;
   // the lines of writing run along the barrel, all round it; it rolls, so they climb and set
   const LINES = 40;
   const rows: React.ReactNode[] = [];
@@ -99,10 +101,10 @@ const Cylinder: React.FC<P> = ({ id, w, h, turn }) => {
           <stop offset="1" stopColor="#6b4529" />
         </radialGradient>
         <clipPath id={`${id}k`}>
-          <path d={`${top}${bottom}Z`} />
+          <path d={body} />
         </clipPath>
       </defs>
-      <path d={`${top}${bottom}Z`} fill={`url(#${id}c)`} />
+      <path d={body} fill={`url(#${id}c)`} />
       <g clipPath={`url(#${id}k)`}>
         {rows}
         {/* the crack and the chipped edge of the real piece */}

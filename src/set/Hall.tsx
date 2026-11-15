@@ -375,7 +375,7 @@ export const Hall: React.FC<{ plan: Plan; tl: Timeline; music?: string }> = ({ p
       </AbsoluteFill>
       {/* the edges fall into shadow, so the light stays on the slab */}
       <AbsoluteFill style={{ background: "radial-gradient(closest-side at 50% 46%, rgba(0,0,0,0) 62%, rgba(2,4,12,.55) 100%)" }} />
-      {plan.hud.map((h) => (frame >= h.from && frame < h.to ? h.kind === "badge" ? <Badge key={h.id} h={h} frame={frame} /> : <SourceBox key={h.id} h={h} frame={frame} align={h.kind === "address" ? "flex-start" : "flex-end"} /> : null))}
+      {plan.hud.map((h) => (frame >= h.from && frame < h.to ? h.kind === "badge" ? <Badge key={h.id} h={h} frame={frame} /> : <SourceBox key={h.id} h={h} frame={frame} align={h.align === "start" ? "flex-start" : "flex-end"} /> : null))}
       {music ? <Audio src={staticFile(music)} /> : null}
       {tl.voice.map((v, i) => (
         <Sequence key={`${v.file}-${i}`} from={v.from} durationInFrames={v.frames ?? Infinity} layout="none">
