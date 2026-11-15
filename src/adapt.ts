@@ -40,6 +40,8 @@ function borders(p: Site): BordersProps {
     name: String(f.name),
     years: String(f.years),
     line: f.extent ?? f.government ?? undefined,
+    // the date the drawn extent shows (the site's «بیشترین گستره، ۴۸۰ پ.م» or «در سال ۱۸۰۰ م»)
+    when: f.when ? String(f.when) : undefined,
     tick: tickOf(String(f.years)),
     capital: f.capitals?.[0] ? { name: String(f.capitals[0].name), lonlat: [Number(f.capitals[0].lon), Number(f.capitals[0].lat)] } : undefined,
   }));
@@ -47,7 +49,7 @@ function borders(p: Site): BordersProps {
   stops.push({ at: "today", era: "today", name: String(p.today?.label ?? "مرزهای امروز"), years: "", tick: "امروز" });
   const made: Beat[] = [
     { id: "start", say: end(hookText(p, p.title ?? "")) },
-    ...frames.map((f) => ({ id: String(f.id), say: end(`${f.name}، ${f.years}. ${f.extent ?? ""}`) })),
+    ...frames.map((f) => ({ id: String(f.id), say: end(f.when ? `${f.name}، ${f.years}. ${f.when}. ${f.extent ?? ""}` : `${f.name}، ${f.years}. ${f.extent ?? ""}`) })),
     { id: "today", say: end(String(p.today?.label ?? "مرزهای امروز")), min: 2.4 },
     { id: "end", say: p.caveat ? end(String(p.caveat)) : "", min: 3 },
   ];

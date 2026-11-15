@@ -59,6 +59,8 @@ export type BordersStop = {
   name: string;
   years: string;
   line?: string;
+  /** the date the drawn extent shows: «بیشترین گستره، ۴۸۰ پ.م» or «در سال ۱۸۰۰ م» */
+  when?: string;
   /** its short mark on the line of time, e.g. «۵۵۰ پ.م» */
   tick: string;
   /** a capital to mark on the map */
