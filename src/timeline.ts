@@ -12,7 +12,7 @@ const VOICE_AT = 5;
 /** a cut lands a few frames before the word that belongs to it */
 const CUT_LEAD = 5;
 /** between two separate lines (one call per beat) */
-const GAP = 7;
+const GAP = 4;
 /** after the last word: the close and the source line stand (the source line shows in the last 2.6 s) */
 const TAIL = Math.round(2.8 * FPS);
 /** no beat is shorter than this */

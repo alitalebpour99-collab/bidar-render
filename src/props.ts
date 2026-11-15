@@ -61,6 +61,8 @@ export type BordersStop = {
   line?: string;
   /** the date the drawn extent shows: «بیشترین گستره، ۴۸۰ پ.م» or «در سال ۱۸۰۰ م» */
   when?: string;
+  /** a short-lived peak beyond the steady extent (Khosrow II's conquests), drawn in coral with its label and years */
+  peak?: { geometry: unknown; label: string };
   /** its short mark on the line of time, e.g. «۵۵۰ پ.م» */
   tick: string;
   /** a capital to mark on the map */

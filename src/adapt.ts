@@ -42,6 +42,8 @@ function borders(p: Site): BordersProps {
     line: f.extent ?? f.government ?? undefined,
     // the date the drawn extent shows (the site's «بیشترین گستره، ۴۸۰ پ.م» or «در سال ۱۸۰۰ م»)
     when: f.when ? String(f.when) : undefined,
+    // a short-lived peak beyond the steady extent, drawn apart (the site's `peak`)
+    peak: f.peak?.geometry ? { geometry: f.peak.geometry, label: String(f.peak.label ?? "") } : undefined,
     tick: tickOf(String(f.years)),
     capital: f.capitals?.[0] ? { name: String(f.capitals[0].name), lonlat: [Number(f.capitals[0].lon), Number(f.capitals[0].lat)] } : undefined,
   }));
@@ -49,7 +51,7 @@ function borders(p: Site): BordersProps {
   stops.push({ at: "today", era: "today", name: String(p.today?.label ?? "مرزهای امروز"), years: "", tick: "امروز" });
   const made: Beat[] = [
     { id: "start", say: end(hookText(p, p.title ?? "")) },
-    ...frames.map((f) => ({ id: String(f.id), say: end(f.when ? `${f.name}، ${f.years}. ${f.when}. ${f.extent ?? ""}` : `${f.name}، ${f.years}. ${f.extent ?? ""}`) })),
+    ...frames.map((f) => ({ id: String(f.id), say: [end(f.when ? `${f.name}، ${f.years}. ${f.when}. ${f.extent ?? ""}` : `${f.name}، ${f.years}. ${f.extent ?? ""}`), f.peak?.label ? end(String(f.peak.label)) : ""].filter(Boolean).join(" ") })),
     { id: "today", say: end(String(p.today?.label ?? "مرزهای امروز")), min: 2.4 },
     { id: "end", say: p.caveat ? end(String(p.caveat)) : "", min: 3 },
   ];

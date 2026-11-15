@@ -23,13 +23,19 @@ type Shot = { id: string; view: View; stop?: BordersStop };
 /** A stop's extent: the geometry the site sent, else the era of src/data/iran-eras.json. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const stopShape = (s: BordersStop): any => (s.geometry ? { type: "Feature", properties: {}, geometry: s.geometry } : shapeOf(s.era));
+/** A stop's short-lived peak (Khosrow II's conquests): its own shape, drawn in CORAL. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const peakShape = (s: BordersStop): any => ({ type: "Feature", properties: {}, geometry: s.peak?.geometry });
+/** the colour of a short-lived peak: apart from the period's turquoise and today's gold */
+export const CORAL = "#ff8a65";
 
 function shots(p: BordersProps): Shot[] {
   const iranClose = fit(IRAN, 520, 420);
   const list: Shot[] = [{ id: p.beats[0].id, view: iranClose }];
   for (const b of p.beats.slice(1)) {
     const stop = p.stops.find((s) => s.at === b.id);
-    if (stop) list.push({ id: b.id, view: stop.era === "today" ? fit(IRAN, 700, 560) : fit(stopShape(stop), 1000, 720), stop });
+    // a stop with a short-lived peak is framed to hold the peak too
+    if (stop) list.push({ id: b.id, view: stop.era === "today" ? fit(IRAN, 700, 560) : fit(stop.peak ? { type: "FeatureCollection", features: [stopShape(stop), peakShape(stop)] } : stopShape(stop), 1000, 720), stop });
     else list.push({ id: b.id, view: push(list[list.length - 1].view, 0.82) });
   }
   return list;
@@ -95,6 +101,12 @@ const Ground: React.FC<{ p: BordersProps; list: Shot[] }> = ({ p, list }) => {
                   <path d={d} fill="rgba(63,182,201,.36)" stroke="none" />
                   <path d={d} fill="none" stroke={LAPIS.turq} strokeWidth="10" opacity=".55" filter="url(#glow)" />
                   <path d={d} fill="none" stroke={LAPIS.turq} strokeWidth="3.4" strokeLinejoin="round" />
+                  {s.peak ? (
+                    <g opacity={fade(frame, from + 40, 16)}>
+                      <path d={m.d(peakShape(s))} fill="rgba(255,138,101,.30)" stroke="none" />
+                      <path d={m.d(peakShape(s))} fill="none" stroke={CORAL} strokeWidth="3.2" strokeDasharray="12 8" strokeLinejoin="round" />
+                    </g>
+                  ) : null}
                 </g>
               ) : (
                 <path d={d} fill="none" stroke={LAPIS.turq} strokeWidth="2.4" strokeDasharray="10 9" opacity={ghost} />
@@ -230,6 +242,7 @@ export const Borders: React.FC<BordersProps> = (p) => {
           <div key={s.at} style={{ position: "absolute", top: DESIGN_TOP + 140, right: SIDE, left: SIDE, direction: "rtl", opacity: o, transform: `translateY(${rise(frame, from, 60, 16) - interpolate(frame, [to - 8, to + 2], [0, 40], clamped)}px)` }}>
             <div style={{ fontFamily: VAZIR, fontWeight: 700, fontSize: 46, color: isToday ? LAPIS.gold : LAPIS.turq, opacity: fade(frame, from + 4, 10) }}>{s.years}</div>
             {s.when ? <div style={{ fontFamily: VAZIR, fontWeight: 800, fontSize: 44, color: LAPIS.gold, marginTop: 4, opacity: fade(frame, from + 10, 10) }}>{s.when}</div> : null}
+            {s.peak ? <div style={{ fontFamily: VAZIR, fontWeight: 800, fontSize: 40, lineHeight: 1.4, color: CORAL, marginTop: 4, opacity: fade(frame, from + 40, 12) }}>{s.peak.label}</div> : null}
             <div style={{ fontFamily: VAZIR, fontWeight: 900, fontSize: 132, lineHeight: 1.2, color: LAPIS.ink, letterSpacing: 0 }}>{s.name}</div>
             {s.line ? (
               <div style={{ fontFamily: VAZIR, fontWeight: 500, fontSize: 42, lineHeight: 1.5, color: LAPIS.muted, marginTop: 6, opacity: fade(frame, from + 52, 12), transform: `translateX(${-rise(frame, from + 52, 30, 14)}px)` }}>{s.line}</div>

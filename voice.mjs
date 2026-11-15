@@ -5,7 +5,7 @@
 //
 // Shahram on eleven_v3 reads slowly and rests long between sentences (a take
 // of 480 characters runs about 45 s). Before a Reel is laid out, every pause
-// is shortened and the take is brought, by at most 15 % of tempo (pitch kept),
+// is shortened and the take is made 12 % to 22 % faster (pitch kept),
 // toward its series' length; the alignment is moved with it, so the captions
 // and the cuts still land on their words. Needs ffmpeg (the workflows install
 // it); without it the take is used as it came.
@@ -20,9 +20,12 @@ import path from "node:path";
 export const VOICE_TARGET = { borders: 36, myth: 32, word: 36, quote: 0, figure: 34, quiz: 16, flag: 33, treaty: 34, city: 34, truefalse: 21, five: 30, sweep: 46 };
 /** What is left of a pause, per series: a saying (often a verse) keeps its breath between its lines. */
 export const KEEP_PAUSES = { quote: 0.5 };
-const MAX_TEMPO = 1.15;
+// the owner, 2026-11-15: «خیلی آرام و کند». Every narrated take is brought up to at least MIN_TEMPO
+// (pitch kept), and up to MAX_TEMPO toward its series' length; eleven_v3 does not honour a speed setting
+const MIN_TEMPO = 1.12;
+const MAX_TEMPO = 1.22;
 /** what is left of a pause between two sentences */
-const KEEP_PAUSE = 0.2;
+const KEEP_PAUSE = 0.12;
 
 const hasFfmpeg = () => spawnSync("ffmpeg", ["-version"], { stdio: "ignore" }).status === 0;
 
@@ -51,7 +54,7 @@ export function tighten(file, alignment, target, keepPause = KEEP_PAUSE) {
     .filter(([a, b]) => b - a > 0.03);
   const removed = cuts.reduce((s, [a, b]) => s + (b - a), 0);
   const tight = length - removed;
-  const tempo = target ? Math.min(MAX_TEMPO, Math.max(1, tight / target)) : 1;
+  const tempo = target ? Math.min(MAX_TEMPO, Math.max(MIN_TEMPO, tight / target)) : 1;
   if (!cuts.length && tempo === 1) return null;
   const keep = [];
   let at = 0;
