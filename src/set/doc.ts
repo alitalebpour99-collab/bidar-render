@@ -278,7 +278,7 @@ export function planFrontier(p: FrontierSite, tl: Timeline, opts: { badge: boole
   const hookText = noDot(p.hook?.text ?? "");
   const hook = slab("hook", { top: slabTop, z: Z0 - 10 }, 0, T + 60, fit({ text: hookText, width: INNER, maxLines: 2, size: 96, min: 72, weight: 900 }).lines, {
     enter: "none",
-    states: [{ at: first.from - 4, dz: 1800, dy: -80, dim: 1 }, { at: T - 22, dz: 0, dy: 0, dim: 0 }],
+    states: [{ at: first.from - 4, dz: 1800, dy: -80, dim: 1 }, { at: T - 34, dz: 0, dy: 0, dim: 0 }],
   });
   objects.push(hook);
 
