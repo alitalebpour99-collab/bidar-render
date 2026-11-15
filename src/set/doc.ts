@@ -196,7 +196,7 @@ export function planBelief(p: BeliefSite, tl: Timeline, opts: { badge: boolean }
   const kicker = noDot(p.kicker || "باور یا سند؟");
 
   // the opening: the series' question big, its number in the tag, and the object under it, turning from the first frame
-  const title = slab("title", { top: rowAt(292), z: Z0 }, 0, T + 60, fit({ text: kicker, width: INNER, maxLines: 1, size: 132, min: 96, weight: 900 }).lines, { tag: p.episode ? `قسمتِ ${faDigits(p.episode)}` : "قسمتِ تازه", enter: "none" });
+  const title = slab("title", { top: rowAt(318), z: Z0 }, 0, T + 60, fit({ text: kicker, width: INNER, maxLines: 1, size: 132, min: 96, weight: 900 }).lines, { tag: p.episode ? `قسمتِ ${faDigits(p.episode)}` : "قسمتِ تازه", enter: "none" });
   objects.push(title);
   const objTop = bottomOf(title) + 30;
   const claimTop = rowAt(950);
@@ -268,7 +268,7 @@ export function planFrontier(p: FrontierSite, tl: Timeline, opts: { badge: boole
 
   // the map board, from the first frame to the last; under it the slab of the hook, then of each period
   const mapTop = rowAt(286);
-  const mapH = 660;
+  const mapH = 700;
   const mapW = 760;
   const stops: MapStop[] = [...frames.map((f) => ({ from: beat(tl, f.id).from, geometry: f.geometry, ...(f.peak ? { peak: f.peak } : {}), ...(f.capital ? { capital: f.capital } : {}) })), { from: todayB.from, geometry: p.today.geometry, today: true }];
   objects.push({ id: "map", kind: "map", at: [SX, mapTop + mapH / 2, Z0 + 30], w: mapW, h: mapH, from: 0, to: T + 60, enter: "none", map: { stops, today: p.today.geometry, zoom: Math.max(30, Math.min(90, first.from - 4)) } });
@@ -276,7 +276,7 @@ export function planFrontier(p: FrontierSite, tl: Timeline, opts: { badge: boole
 
   // the hook: its question big under the map; it steps back into the hall when the first period comes, and returns for the loop
   const hookText = noDot(p.hook?.text ?? "");
-  const hook = slab("hook", { top: slabTop, z: Z0 - 10 }, 0, T + 60, fit({ text: hookText, width: INNER, maxLines: 2, size: 84, min: 60, weight: 900 }).lines, {
+  const hook = slab("hook", { top: slabTop, z: Z0 - 10 }, 0, T + 60, fit({ text: hookText, width: INNER, maxLines: 2, size: 96, min: 72, weight: 900 }).lines, {
     enter: "none",
     states: [{ at: first.from - 4, dz: 1800, dy: -80, dim: 1 }, { at: T - 22, dz: 0, dy: 0, dim: 0 }],
   });
@@ -305,25 +305,25 @@ export function planFrontier(p: FrontierSite, tl: Timeline, opts: { badge: boole
       const body = fit({ text: noDot(f.line ?? ""), width: INNER, maxLines: 3, size: 56, min: ANSWER, weight: 700 }).lines.map((l) => ({ ...l, role: "answer" as const }));
       const peak = f.peakLabel ? fit({ text: noDot(f.peakLabel), width: INNER, maxLines: 1, size: 50, min: TEXT, weight: 800 }).lines.map((l) => ({ ...l, color: "#ff8a65" })) : [];
       objects.push(slab(`reach${i + 1}`, { top: slabTop, z: Z0 - 10 }, ext.from - 2, leave + 6, [...body, ...peak], { enter: "rise", claim: true }));
-      shots.push({ at: ext.from - 2, pose: orbit(at(0), BASE - 40, i % 2 ? -5 : 5, -26), move: "glide", push: 16, sway: 0.7, why: `${f.id}: its reach` });
-      punches.push({ at: ext.from + 4, depth: 24, why: `${f.id} reach` });
+      shots.push({ at: ext.from - 2, pose: orbit(at(0), BASE - 10, i % 2 ? -5 : 5, -26), move: "glide", push: 8, sway: 0.7, why: `${f.id}: its reach` });
+      punches.push({ at: ext.from + 4, depth: 16, why: `${f.id} reach` });
     }
     // its object, standing in front of the map's lower corner
     objects.push(artifact(`object${i + 1}`, f.model, f.emblem, [SX - 210, slabTop - 170, Z0 - 260], 320, Math.max(1, b.from - 2), leave + 4, { enter: "pop" }, 300));
     // the stamp of the data, on the slab's corner
-    const st = stampObj(`stamp${i + 1}`, f.stamp, [SX + 230, slabTop - 40, Z0 - 60], b.from + 8, leave + 4, 64, -7);
+    const st = stampObj(`stamp${i + 1}`, f.stamp, [SX + 205, slabTop - 40, Z0 - 60], b.from + 8, leave + 4, 64, -7);
     objects.push(st);
     stamps.push({ id: st.id, word: f.stamp });
     sources.push({ from: Math.max(1, b.from - 2), to: leave - 2, text: f.source });
-    shots.push({ at: b.from - 3, pose: orbit(at(0), BASE - (f.focus ? 30 : 0), i % 2 ? 4 : -4, i % 2 ? -16 : 16), move: "glide", push: f.focus ? 20 : 14, sway: 0.5, why: `${f.id}` });
-    punches.push({ at: b.from + 3, depth: f.focus ? 36 : 22, why: `${f.id}` });
+    shots.push({ at: b.from - 3, pose: orbit(at(0), BASE - (f.focus ? 10 : 0), i % 2 ? 4 : -4, i % 2 ? -16 : 16), move: "glide", push: f.focus ? 10 : 14, sway: 0.5, why: `${f.id}` });
+    punches.push({ at: b.from + 3, depth: f.focus ? 24 : 22, why: `${f.id}` });
     sfx.push({ at: b.from + 6, name: "stamp", volume: 0.3, why: `${f.id} stamp` });
   });
 
   // today: the border drawn in gold, its label, the stamp قطعی
   const todayName = fitOne(noDot(p.today.label), INNER, 96, 900, 64);
   objects.push(slab("today", { top: slabTop, z: Z0 - 10 }, todayB.from - 2, end.from + 6, [{ ...todayName, color: "#e8c56a" }], { enter: "pop", states: [{ at: todayB.from, glow: 0.8, accent: "gold" }] }));
-  const ts = stampObj("stampToday", p.today.stamp, [SX + 230, slabTop - 40, Z0 - 60], todayB.from + 8, end.from + 4, 64, -7);
+  const ts = stampObj("stampToday", p.today.stamp, [SX + 205, slabTop - 40, Z0 - 60], todayB.from + 8, end.from + 4, 64, -7);
   objects.push(ts);
   stamps.push({ id: ts.id, word: p.today.stamp });
   sources.push({ from: todayB.from - 2, to: end.from, text: p.today.source });
