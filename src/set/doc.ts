@@ -309,7 +309,7 @@ export function planFrontier(p: FrontierSite, tl: Timeline, opts: { badge: boole
       punches.push({ at: ext.from + 4, depth: 16, why: `${f.id} reach` });
     }
     // its object, standing in front of the map's lower corner
-    objects.push(artifact(`object${i + 1}`, f.model, f.emblem, [SX - 210, slabTop - 170, Z0 - 260], 320, Math.max(1, b.from - 2), leave + 4, { enter: "pop" }, 300));
+    objects.push(artifact(`object${i + 1}`, f.model, f.emblem, [SX - 180, slabTop - 170, Z0 - 260], 320, Math.max(1, b.from - 2), leave + 4, { enter: "pop" }, 300));
     // the stamp of the data, on the slab's corner
     const st = stampObj(`stamp${i + 1}`, f.stamp, [SX + 205, slabTop - 40, Z0 - 60], b.from + 8, leave + 4, 64, -7);
     objects.push(st);

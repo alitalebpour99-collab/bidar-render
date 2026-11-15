@@ -335,13 +335,32 @@ export const Badge: React.FC<{ h: Hud; frame: number }> = ({ h, frame }) => {
   );
 };
 
+/**
+ * A source line of Persian and Latin: the Persian words before the first Latin
+ * letter in the paragraph's own order, the rest (titles, their quotes and
+ * semicolons) isolated left to right, so «"Life of Crassus";» keeps its marks.
+ */
+const Mixed: React.FC<{ text: string }> = ({ text }) => {
+  let k = text.search(/[A-Za-z]/);
+  if (k < 0) return <bdi>{text}</bdi>;
+  // an opening quote or bracket just before the title goes with it; no Persian word before it: the whole line left to right
+  while (k > 0 && "«\"(".includes(text[k - 1])) k -= 1;
+  if (!/[ء-ۓ]/.test(text.slice(0, k))) k = 0;
+  return (
+    <>
+      {k > 0 ? <bdi>{text.slice(0, k)}</bdi> : null}
+      <bdi dir="ltr">{text.slice(k)}</bdi>
+    </>
+  );
+};
+
 const SourceBox: React.FC<{ h: Hud; frame: number; align?: "flex-start" | "flex-end" }> = ({ h, frame, align = "flex-end" }) => {
   const a = Math.min(1, (frame - h.from) / 8, (h.to - frame) / 6);
   return (
     <div style={{ position: "absolute", left: h.box.x, top: h.box.y, width: h.box.w, height: h.box.h, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: align, direction: "rtl", opacity: Math.max(0, a), transform: `translateY(${(1 - Math.max(0, a)) * 12}px)` }}>
       {(h.lines ?? []).map((l, i) => (
         <div key={i} style={{ fontFamily: VAZIR, fontWeight: l.weight, fontSize: l.size, lineHeight: 1.35, color: l.color ?? NAVY.muted, whiteSpace: "nowrap", direction: /^[a-z0-9.]+$/i.test(l.text) ? "ltr" : "rtl" }}>
-          <bdi>{l.text}</bdi>
+          {h.align === "start" ? <Mixed text={l.text} /> : <bdi>{l.text}</bdi>}
         </div>
       ))}
     </div>
