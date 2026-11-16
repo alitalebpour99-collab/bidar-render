@@ -27,10 +27,10 @@ function goodPlan() {
       { id: "mark", kind: "artifact", model: "dome", from: 0, to: total + 60, at: [-66, 300, 980], w: 300, h: 360 },
     ],
     hud: [
-      { id: "badge", kind: "badge", box: { x: 82, y: 1483, w: 300, h: 80 }, from: 620, to: 680 },
+      { id: "badge", kind: "badge", box: { x: 82, y: 1483, w: 300, h: 80 }, from: 620, to: 680, cue: { at: 620, frame: 620, level: -9, shift: 0, speech: [] } },
       { id: "source", kind: "source", box: { x: 402, y: 1470, w: 464, h: 99 }, from: 600, to: total - 12, lines: [{ text: "منبع: اطلسِ تاریخیِ بیدار", size: 40, weight: 600 }, { text: "bidar.ahura.cloud", size: 42, weight: 700 }] },
     ],
-    sfx: [{ at: 2, name: "rise" }, { at: 60, name: "swish" }, { at: 400, name: "chime" }, { at: 401, name: "hit" }],
+    sfx: [{ at: 2, name: "rise" }, { at: 60, name: "swish" }, { at: 400, name: "chime" }, { at: 401, name: "hit" }, { at: 620, name: "badge" }],
     hook: { text: "سمرقند امروز در کدام کشور است؟", from: 0 },
     boxes: [
       { id: "question", box: { x: 144, y: 300, w: 660, h: 380 }, minSize: 70, from: 0, to: total },
@@ -98,9 +98,10 @@ function docPlan() {
   p.hud = [
     { id: "source1", kind: "source", box: { x: 82, y: 1453, w: 784, h: 116 }, from: 398, to: 598, lines: [line("منبع: Britannica, \"Cyrus Cylinder\";"), line("Encyclopaedia Iranica")] },
     { id: "source", kind: "source", box: { x: 82, y: 1507, w: 784, h: 62 }, from: 640, to: p.total - 12, lines: [line("منبع: Britannica, \"Cyrus Cylinder\"; Encyclopaedia Iranica")] },
-    { id: "badge", kind: "badge", box: { x: 82, y: 1415, w: 300, h: 80 }, from: 645, to: 705 },
+    { id: "badge", kind: "badge", box: { x: 82, y: 1415, w: 300, h: 80 }, from: 645, to: 705, cue: { at: 645, frame: 645, level: -9, shift: 0, speech: [] } },
     { id: "address", kind: "address", box: { x: 412, y: 1415, w: 454, h: 80 }, from: 640, to: p.total - 12, lines: [{ text: "bidar.ahura.cloud", size: 42, weight: 700 }] },
   ];
+  p.sfx = [...p.sfx.filter((x) => x.name !== "badge"), { at: 645, name: "badge" }];
   p.stamps = [{ id: "verdict", word: "مورد اختلاف" }];
   p.cta = "cta";
   return p;
@@ -132,6 +133,7 @@ test("the badge switched off is no fault", () => {
   const p = goodPlan();
   p.badge = false;
   p.hud = p.hud.filter((h) => h.kind !== "badge");
+  p.sfx = p.sfx.filter((x) => x.name !== "badge");
   assert.deepEqual(failed(p), []);
 });
 

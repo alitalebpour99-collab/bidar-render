@@ -222,9 +222,9 @@ export type MapSpec = { stops: MapStop[]; today: unknown; zoom: number };
 
 /** The flat things over the world, in the screen's own pixels. */
 /** `address`: the site's address beside the badge, in the formats whose source runs the full width on two lines. */
-export type Hud = { id: string; kind: "source" | "badge" | "address"; box: Box; from: number; to: number; lines?: Line[]; /** "start": from the right (the full-width source lines, in Persian order) */ align?: "start" | "end" };
+export type Hud = { id: string; kind: "source" | "badge" | "address"; box: Box; from: number; to: number; lines?: Line[]; /** "start": from the right (the full-width source lines, in Persian order) */ align?: "start" | "end"; /** the badge's bell (badge-sound.js) */ cue?: { at: number; frame: number | null; why?: string; level?: number; shift?: number; speech: [number, number][] } };
 
-export type Sfx = { at: number; name: "whoosh" | "hit" | "tick" | "pop" | "rise" | "swish" | "stamp" | "paper" | "chime" | "draw"; volume: number; why: string };
+export type Sfx = { at: number; name: "whoosh" | "hit" | "tick" | "pop" | "rise" | "swish" | "stamp" | "paper" | "chime" | "draw" | "badge"; volume: number; why: string };
 
 /** Everything a set Reel draws and plays, and what the gate needs to check it. */
 export type Plan = {

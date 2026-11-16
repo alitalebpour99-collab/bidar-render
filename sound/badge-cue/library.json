@@ -1,0 +1,62 @@
+{
+  "about": "The like/follow badge cue (badge-cue.mjs VERSION 1, owner 2026-11-16): Setavaz-owned SFX for the hub library to import (ahura-library register() shape). The master is the wav beside this file, made by cueSamples() with its default step.",
+  "entries": [
+    {
+      "kind": "sfx",
+      "id": "setavaz-badge-cue-bidar",
+      "names": {
+        "en": "Bidar badge cue: soft museum bell",
+        "fa": "صدای نشان بیدار: زنگِ نرمِ موزه"
+      },
+      "description": "one soft small bell, like a quiet museum hall chime, as the badge appears",
+      "depicts": "one soft small bell, like a quiet museum hall chime, as the badge appears",
+      "tags": [
+        "badge",
+        "like",
+        "follow",
+        "subscribe",
+        "ui",
+        "bell",
+        "soft",
+        "museum",
+        "short"
+      ],
+      "style": "badge-cue-bidar",
+      "facts": {
+        "seconds": 0.7,
+        "step": null,
+        "body": 0.45,
+        "levelUnderVoiceDb": -9,
+        "family": "badge-cue",
+        "version": 1
+      },
+      "made": {
+        "tool": "code",
+        "model": null,
+        "prompt": null,
+        "source": "badge-cue.mjs",
+        "detail": "synthesised in code (bell): sine partials and shaped noise, no samples"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "Setavaz",
+        "credit": null,
+        "url": null
+      },
+      "owner": "setavaz",
+      "origin": {
+        "project": "bidar",
+        "made": "2026-11-16",
+        "by": "badge-cue.mjs VERSION 1"
+      },
+      "use": "on the like/follow channel badge of every video, ducked under the narrator",
+      "files": [
+        {
+          "path": "sound/badge-cue/bidar.wav",
+          "role": "master",
+          "label": "wav 48 kHz mono"
+        }
+      ]
+    }
+  ]
+}

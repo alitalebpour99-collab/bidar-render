@@ -1,9 +1,10 @@
 // The Reels' sound effects, synthesized like the score (music.mjs): no sample, no licence, no download.
 // Written once into public/sfx/ and committed; a Reel plays them at its own moments (kit.tsx, <Sfx>).
 // The first six are Divan's (divan-render/sfx.mjs); stamp, paper, chime and draw are Bidar's.
-//   node sfx.mjs        writes public/sfx/{whoosh,hit,tick,pop,rise,swish,stamp,paper,chime,draw}.wav
+//   node sfx.mjs        writes public/sfx/{whoosh,hit,tick,pop,rise,swish,stamp,paper,chime,draw,badge}.wav
 import fs from "node:fs";
 import path from "node:path";
+import { cueSamples } from "./src/badge-cue.mjs";
 
 const RATE = 44100;
 const TAU = Math.PI * 2;
@@ -226,7 +227,13 @@ function draw(seconds = 1.2) {
 
 const out = path.join(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:)/, "$1")), "public", "sfx");
 fs.mkdirSync(out, { recursive: true });
-const all = { whoosh: whoosh(), hit: hit(), tick: tick(), pop: pop(), rise: rise(), swish: swish(), stamp: stamp(), paper: paper(), chime: chime(), draw: draw() };
+/** The badge's bell (owner 2026-11-16): Bidar's flavour of the shared badge cue (src/badge-cue.mjs), a soft museum bell. */
+function badge() {
+  const pcm = cueSamples("bidar", { sr: RATE });
+  return wav(pcm, pcm);
+}
+
+const all = { whoosh: whoosh(), hit: hit(), tick: tick(), pop: pop(), rise: rise(), swish: swish(), stamp: stamp(), paper: paper(), chime: chime(), draw: draw(), badge: badge() };
 for (const [name, bytes] of Object.entries(all)) {
   fs.writeFileSync(path.join(out, `${name}.wav`), bytes);
   console.log(`${name}.wav`, `${Math.round(bytes.length / 1024)} KB`);
