@@ -213,7 +213,7 @@ export function planQuiz(p: QuizProps, tl: Timeline, opts: { badge: boolean }): 
   const medalY = Math.min(optTop + medal / 2 + 60, LOW - medal / 2 - 100);
   // the hook's one object: the real thing the question is about (a dome for a city, a coin for a dynasty), on its plinth under the question;
   // it steps back into the hall when the options come, and returns for the loop
-  objects.push(thingObj("mark", thingFor(p.question, p.options[p.answer]), [SX, medalY, Z0 - 20], medal, 0, T + 60, { enter: "none", states: [{ at: -20, glow: 0.8 }, { at: Math.max(10, o[0].from - 8), dz: 1400, dy: -120, dim: 0.6, glow: 0 }, { at: end.from + 16, dz: 0, dy: 0, dim: 0, glow: 0.8 }] });
+  objects.push(thingObj("mark", thingFor(p.question, p.options[p.answer]), [SX, medalY, Z0 - 20], medal, 0, T + 60, { enter: "none", states: [{ at: -20, glow: 0.8 }, { at: Math.max(10, o[0].from - 8), dz: 1400, dy: -120, dim: 0.6, glow: 0 }, { at: end.from + 16, dz: 0, dy: 0, dim: 0, glow: 0.8 }] }));
 
   // the countdown: a ring of light under the options
   const secs = Math.max(1, Math.round((count.to - count.from) / FPS));
