@@ -1,5 +1,5 @@
 // Draws a set plan (space.ts): Bidar's hall of arches, lit in turquoise,
-// violet and pink, its glossy floor, the episode's glass slabs, and over them
+// gilding and warm lamps, its stone floor, the episode's labels and objects, and over them
 // the source line and the channel badge; then the bed, the narrator and the
 // sound of every move.
 import React from "react";
@@ -7,14 +7,15 @@ import { AbsoluteFill, Audio, Img, Sequence, interpolate, staticFile, useCurrent
 import { GULZAR, VAZIR, clamped } from "../kit";
 import type { Timeline } from "../props";
 import { Artifact } from "./models";
+import { MUSEUM, Plinth, RopeBarrier, Tazhib, Vitrine } from "./props/Museum";
 import { MapBoard } from "./MapBoard";
 import { ACCENT, CHIP_LEAD, CX, FLOOR, H, HZ, NAVY, NEAR, TAG_ROOM, TAG_SIZE, TOP_ROOM, W, chipBlock, chipRoom, poseAt, presence, project, speedAt, stateAt, textAlpha, type Hud, type Line, type Obj, type Plan, type Pose } from "./space";
 
 /** the hall's own gradient: turquoise to violet to pink, Bidar's border on the site and the panel */
-export const EDGE = `linear-gradient(120deg, ${ACCENT.turq}, ${ACCENT.violet} 55%, #ff4d8d)`;
+export const EDGE = `linear-gradient(120deg, ${MUSEUM.goldDeep}, ${MUSEUM.goldLight} 28%, ${ACCENT.turq} 62%, ${MUSEUM.gold})`;
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 /** the sky of the hall, dark navy, the horizon a little lighter */
-const SKY = `linear-gradient(180deg, ${NAVY.hall} 0%, ${NAVY.night} ${(HZ / H) * 100 - 6}%, #0b1d3a ${(HZ / H) * 100}%, ${NAVY.deep} ${(HZ / H) * 100 + 4}%, #050b1d 100%)`;
+const SKY = `linear-gradient(180deg, ${NAVY.hall} 0%, ${NAVY.night} ${(HZ / H) * 100 - 6}%, #1a3f8a ${(HZ / H) * 100}%, ${NAVY.deep} ${(HZ / H) * 100 + 4}%, #040b22 100%)`;
 
 // ---------- the hall ----------
 /** The arches down both sides, a far gate, in depth order. */
@@ -39,17 +40,19 @@ const Arch: React.FC<{ a: (typeof ARCHES)[number]; pose: Pose; i: number }> = ({
       <defs>
         <linearGradient id={`${id}s`} x1="0" y1="1" x2="1" y2="0">
           <stop offset="0" stopColor={ACCENT.turq} />
-          <stop offset="0.55" stopColor={ACCENT.violet} />
-          <stop offset="1" stopColor="#ff4d8d" />
+          <stop offset="0.55" stopColor="#58d8cc" />
+          <stop offset="1" stopColor={ACCENT.turq} />
         </linearGradient>
         <radialGradient id={`${id}f`} cx="0.5" cy="0.55" r="0.6">
-          <stop offset="0" stopColor="rgba(23,212,164,.10)" />
-          <stop offset="1" stopColor="rgba(23,212,164,0)" />
+          <stop offset="0" stopColor="rgba(255,214,150,.10)" />
+          <stop offset="1" stopColor="rgba(255,214,150,0)" />
         </radialGradient>
       </defs>
       <path d={`${archPath(a.w, a.h)} Z`} fill={`url(#${id}f)`} />
-      <path d={archPath(a.w, a.h)} fill="none" stroke={`url(#${id}s)`} strokeWidth={a.far ? 10 : 7} />
-      <path d={archPath(a.w, a.h)} fill="none" stroke={`url(#${id}s)`} strokeWidth={a.far ? 34 : 26} opacity={0.16} />
+      {/* the tile band: turquoise tiles set edge to edge, a gilded line down their middle */}
+      <path d={archPath(a.w, a.h)} fill="none" stroke="#0b3f4c" strokeWidth={a.far ? 74 : 56} opacity={0.9} />
+      <path d={archPath(a.w, a.h)} fill="none" stroke={`url(#${id}s)`} strokeWidth={a.far ? 60 : 44} strokeDasharray={a.far ? "96 10" : "70 8"} opacity={0.92} />
+      <path d={archPath(a.w, a.h)} fill="none" stroke={MUSEUM.goldLight} strokeWidth={a.far ? 8 : 6} opacity={0.9} />
     </svg>
   );
 };
@@ -73,15 +76,15 @@ const Floor: React.FC<{ pose: Pose }> = ({ pose }) => {
     <svg width={W} height={H} style={{ position: "absolute", inset: 0 }}>
       <defs>
         <linearGradient id="floorline" gradientUnits="userSpaceOnUse" x1="0" y1={HZ} x2="0" y2={H}>
-          <stop offset="0" stopColor="rgba(23,212,164,0)" />
-          <stop offset="0.35" stopColor="rgba(23,212,164,.10)" />
-          <stop offset="1" stopColor="rgba(123,97,255,.34)" />
+          <stop offset="0" stopColor="rgba(255,214,150,0)" />
+          <stop offset="0.35" stopColor="rgba(255,214,150,.10)" />
+          <stop offset="1" stopColor="rgba(216,178,90,.34)" />
         </linearGradient>
         <linearGradient id="aisle" gradientUnits="userSpaceOnUse" x1="0" y1={HZ} x2="0" y2={H}>
-          <stop offset="0" stopColor="rgba(23,212,164,0)" />
-          <stop offset="0.3" stopColor="rgba(23,212,164,.55)" />
-          <stop offset="0.7" stopColor="rgba(123,97,255,.6)" />
-          <stop offset="1" stopColor="rgba(255,77,141,.55)" />
+          <stop offset="0" stopColor="rgba(255,214,150,0)" />
+          <stop offset="0.3" stopColor="rgba(255,214,150,.55)" />
+          <stop offset="0.7" stopColor="rgba(216,178,90,.6)" />
+          <stop offset="1" stopColor="rgba(244,220,154,.6)" />
         </linearGradient>
       </defs>
       {segs.map(([a, b, c, d], i) => (
@@ -114,16 +117,16 @@ const Dust: React.FC<{ pose: Pose; frame: number }> = ({ pose, frame }) => (
       const p = project([m.x + 40 * Math.sin(t * 0.5 + m.ph), y, m.z], pose);
       if (!p) return null;
       const a = clamp01(1.1 - 1000 / p[2] / 9000) * (0.35 + 0.4 * m.big) * (0.6 + 0.4 * Math.sin(t * 1.3 + m.ph));
-      return <circle key={i} cx={p[0]} cy={p[1]} r={Math.min(9, (1.6 + 2.6 * m.big) * p[2] + 0.5)} fill={m.big > 0.7 ? "#bfefff" : "#9ff5df"} opacity={a} />;
+      return <circle key={i} cx={p[0]} cy={p[1]} r={Math.min(9, (1.6 + 2.6 * m.big) * p[2] + 0.5)} fill={m.big > 0.7 ? "#fff0c8" : "#ffd9a0"} opacity={a} />;
     })}
   </svg>
 );
 
 /** The hall alone (sky, arches, floor, dust) for a camera: the tile draws it under its object. */
-export const HallScene: React.FC<{ pose: Pose; frame: number }> = ({ pose, frame }) => (
+export const HallScene: React.FC<{ pose: Pose; frame: number; field?: { field: string; deep: string; light: string } }> = ({ pose, frame, field }) => (
   <AbsoluteFill>
-    <AbsoluteFill style={{ background: SKY }} />
-    <AbsoluteFill style={{ background: `radial-gradient(900px 420px at ${CX}px ${HZ}px, rgba(23,212,164,.22), rgba(23,212,164,0) 70%), radial-gradient(700px 900px at ${CX + 260}px 260px, rgba(123,97,255,.16), rgba(123,97,255,0) 70%)` }} />
+    <AbsoluteFill style={{ background: field ? `linear-gradient(180deg, ${field.field} 0%, ${field.field} 38%, ${field.deep} 100%)` : SKY }} />
+    <AbsoluteFill style={{ background: `radial-gradient(900px 420px at ${CX}px ${HZ}px, rgba(255,214,150,.22), rgba(255,214,150,0) 70%), radial-gradient(700px 900px at ${CX + 260}px 260px, rgba(216,178,90,.16), rgba(216,178,90,0) 70%)` }} />
     {ARCHES.map((a, i) => ({ a, i })).reverse().map(({ a, i }) => (
       <Arch key={i} a={a} pose={pose} i={i} />
     ))}
@@ -166,9 +169,18 @@ const Slab: React.FC<{ o: Obj; frame: number; s: number; total: number }> = ({ o
   // the right answer: the glass fills with its colour and its letters turn dark
   const win = st.win;
   return (
-    <div style={{ position: "relative", width: o.w, height: o.h, borderRadius: 40, padding: 4, background: st.glow > 0.05 ? `linear-gradient(120deg, ${accent}, ${accent} 40%, ${ACCENT.violet})` : EDGE, boxShadow: win > 0.05 ? `0 0 ${70 + 60 * win}px ${accent}, 0 40px 80px rgba(0,0,0,.5)` : `0 0 ${30 + 70 * st.glow}px rgba(23,212,164,${0.18 + 0.4 * st.glow}), 0 40px 80px rgba(0,0,0,.5)` }}>
+    <div style={{ position: "relative", width: o.w, height: o.h, borderRadius: 40, padding: 4, background: st.glow > 0.05 ? `linear-gradient(120deg, ${accent}, ${accent} 40%, ${ACCENT.gold})` : EDGE, boxShadow: win > 0.05 ? `0 0 ${70 + 60 * win}px ${accent}, 0 40px 80px rgba(0,0,0,.5)` : `0 0 ${30 + 70 * st.glow}px rgba(255,214,150,${0.18 + 0.4 * st.glow}), 0 40px 80px rgba(0,0,0,.5)` }}>
       <div style={{ position: "relative", width: "100%", height: "100%", borderRadius: 36, overflow: "hidden", background: `linear-gradient(165deg, ${NAVY.panel2} 0%, ${NAVY.panel} 45%, ${NAVY.night} 100%)` }}>
         {win > 0.02 ? <div style={{ position: "absolute", inset: 0, background: `linear-gradient(160deg, ${accent} 0%, ${accent} 60%, ${accent}cc 100%)`, opacity: win }} /> : null}
+        {/* the label's gilded corners, as on an illuminated page (the upper right is the tag's) */}
+        {s >= 0.5 ? (
+          <>
+            {o.tag ? null : <div style={{ position: "absolute", top: 10, right: 10, opacity: 0.85 * ta }}><Tazhib size={58} turn={0} /></div>}
+            <div style={{ position: "absolute", top: 10, left: 10, opacity: 0.85 * ta }}><Tazhib size={58} turn={3} /></div>
+            <div style={{ position: "absolute", bottom: 10, left: 10, opacity: 0.85 * ta }}><Tazhib size={58} turn={2} /></div>
+            <div style={{ position: "absolute", bottom: 10, right: 10, opacity: 0.85 * ta }}><Tazhib size={58} turn={1} /></div>
+          </>
+        ) : null}
         {/* light from above, and the running shine */}
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0) 38%)" }} />
         <div style={{ position: "absolute", top: -o.h, bottom: -o.h, width: 120, left: -200 + (o.w + 400) * shine, transform: "rotate(18deg)", background: "linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.08), rgba(255,255,255,0))" }} />
@@ -214,7 +226,7 @@ const Ring: React.FC<{ o: Obj; frame: number }> = ({ o, frame }) => {
   const left = Math.max(1, secs - Math.floor(t));
   const p = waiting ? 1 : clamp01(1 - t / secs);
   const pulse = waiting ? 0.5 + 0.5 * Math.sin((frame - o.from) / 9) : interpolate((frame - start) % 30, [0, 10], [1, 0], clamped);
-  const color = waiting || left >= 3 ? ACCENT.turq : left === 2 ? ACCENT.gold : "#ff4d8d";
+  const color = waiting || left >= 3 ? ACCENT.turq : left === 2 ? ACCENT.gold : ACCENT.wrong;
   const size = o.w;
   return (
     <div style={{ position: "relative", width: size, height: size, transform: `scale(${1 + 0.06 * pulse})` }}>
@@ -252,7 +264,7 @@ const Medal: React.FC<{ o: Obj; frame: number; s: number }> = ({ o, frame, s }) 
 
 const Burst: React.FC<{ o: Obj; frame: number }> = ({ o, frame }) => {
   const t = frame - o.from;
-  const colors = [ACCENT.right, ACCENT.gold, ACCENT.turq, "#ff4d8d", ACCENT.violet];
+  const colors = [ACCENT.right, ACCENT.gold, ACCENT.turq, ACCENT.wrong, MUSEUM.goldLight];
   return (
     <div style={{ position: "relative", width: o.w, height: o.h }}>
       {Array.from({ length: 22 }, (_, k) => {
@@ -269,10 +281,19 @@ const Burst: React.FC<{ o: Obj; frame: number }> = ({ o, frame }) => {
 const ArtifactThing: React.FC<{ o: Obj; frame: number }> = ({ o, frame }) => {
   const t = (frame - o.from) / 30;
   const turn = (o.spin?.from ?? 0) + (o.spin?.speed ?? 24) * t;
-  const bob = Math.sin(t * 1.6) * 8;
+  // the museum's way: the object stands on a plinth in a glass case, a warm lamp over it; it turns slowly and does not float
+  const ph = Math.max(34, Math.round(o.h * 0.2));
   return (
-    <div style={{ position: "relative", width: o.w, height: o.h, transform: `translateY(${bob}px)`, filter: "drop-shadow(0 30px 40px rgba(0,0,0,.55)) drop-shadow(0 0 26px rgba(23,212,164,.22))" }}>
-      <Artifact id={o.id} model={o.model ?? "coin"} emblem={o.emblem} w={o.w} h={o.h} turn={turn} frame={frame} />
+    <div style={{ position: "relative", width: o.w, height: o.h }}>
+      <div style={{ position: "absolute", left: -o.w * 0.08, top: o.h - ph * 0.42, width: o.w * 1.16, height: ph }}>
+        <Plinth w={Math.round(o.w * 1.16)} h={ph} />
+      </div>
+      <div style={{ position: "absolute", left: -o.w * 0.06, top: -o.h * 0.12, width: o.w * 1.12, height: o.h * 1.14 }}>
+        <Vitrine w={Math.round(o.w * 1.12)} h={Math.round(o.h * 1.14)} frame={frame} />
+      </div>
+      <div style={{ position: "relative", width: o.w, height: o.h, filter: `drop-shadow(0 22px 26px rgba(0,0,0,.6)) drop-shadow(0 0 30px rgba(${MUSEUM.warm},.28))` }}>
+        <Artifact id={o.id} model={o.model ?? "coin"} emblem={o.emblem} w={o.w} h={o.h} turn={turn} frame={frame} />
+      </div>
     </div>
   );
 };
@@ -299,7 +320,7 @@ const Thing: React.FC<{ o: Obj; pose: Pose; frame: number; total: number }> = ({
         <div style={{ position: "absolute", left: floor[0] - o.w * floor[2] * 0.75, top: floor[1] - o.w * floor[2] * 0.12, width: o.w * floor[2] * 1.5, height: o.w * floor[2] * 0.24, borderRadius: "50%", background: `radial-gradient(closest-side, ${accent}${Math.round(60 + 80 * st.glow).toString(16).padStart(2, "0")}, ${accent}00)`, opacity: alpha }} />
       ) : null}
       {mirror ? (
-        <div style={{ position: "absolute", left: mirror[0] - (o.w * mirror[2]) / 2, top: mirror[1], width: o.w * mirror[2], height: o.h * mirror[2] * 0.5, borderRadius: 30 * mirror[2], background: `linear-gradient(180deg, ${accent}2a, rgba(123,97,255,.08) 40%, rgba(0,0,0,0))`, opacity: alpha * 0.9 }} />
+        <div style={{ position: "absolute", left: mirror[0] - (o.w * mirror[2]) / 2, top: mirror[1], width: o.w * mirror[2], height: o.h * mirror[2] * 0.5, borderRadius: 30 * mirror[2], background: `linear-gradient(180deg, ${accent}2a, rgba(216,178,90,.08) 40%, rgba(0,0,0,0))`, opacity: alpha * 0.9 }} />
       ) : null}
       <div style={{ position: "absolute", left: sx, top: sy, width: o.w, height: o.h, transform: `translate(-50%, -50%) scale(${s}) perspective(1600px) rotateY(${-pose.yaw * 0.5}deg)`, opacity: alpha }}>
         {o.kind === "slab" ? <Slab o={o} frame={frame} s={s0} total={total} /> : o.kind === "artifact" ? <ArtifactThing o={o} frame={frame} /> : o.kind === "map" && o.map ? <MapBoard id={o.id} w={o.w} h={o.h} map={o.map} frame={frame} /> : o.kind === "ring" ? <Ring o={o} frame={frame} /> : o.kind === "stamp" ? <Stamp o={o} frame={frame} /> : o.kind === "medal" ? <Medal o={o} frame={frame} s={s0} /> : <Burst o={o} frame={frame} />}
@@ -324,7 +345,7 @@ export const Badge: React.FC<{ h: Hud; frame: number }> = ({ h, frame }) => {
       <div style={{ width: "100%", height: "100%", borderRadius: h.box.h / 2, background: "rgba(6,16,31,.92)", display: "flex", alignItems: "center", justifyContent: "center", gap: 18, direction: "rtl" }}>
         <span style={{ fontFamily: GULZAR, fontSize: 44, lineHeight: 1.1, color: ACCENT.turq, transform: "translateY(-4px)" }}>بیدار</span>
         <svg width={34} height={34} viewBox="0 0 24 24" style={{ transform: `scale(${beat})` }}>
-          <path d="M12 21 C 5 15.5, 2 12, 2 8.2 C 2 5.3, 4.3 3, 7.1 3 C 9.1 3, 10.9 4.2, 12 5.9 C 13.1 4.2, 14.9 3, 16.9 3 C 19.7 3, 22 5.3, 22 8.2 C 22 12, 19 15.5, 12 21 Z" fill="#ff4d8d" />
+          <path d="M12 21 C 5 15.5, 2 12, 2 8.2 C 2 5.3, 4.3 3, 7.1 3 C 9.1 3, 10.9 4.2, 12 5.9 C 13.1 4.2, 14.9 3, 16.9 3 C 19.7 3, 22 5.3, 22 8.2 C 22 12, 19 15.5, 12 21 Z" fill="#e0523a" />
         </svg>
         <svg width={34} height={34} viewBox="0 0 24 24">
           <circle cx={12} cy={12} r={10.5} fill="none" stroke={ACCENT.turq} strokeWidth={2.4} />
@@ -381,7 +402,7 @@ export const Hall: React.FC<{ plan: Plan; tl: Timeline; music?: string }> = ({ p
     <AbsoluteFill style={{ background: NAVY.deep, overflow: "hidden" }}>
       {/* the sky of the hall and its horizon's light */}
       <AbsoluteFill style={{ background: SKY }} />
-      <AbsoluteFill style={{ background: `radial-gradient(900px 420px at ${CX - pose.yaw * 18}px ${HZ}px, rgba(23,212,164,.22), rgba(23,212,164,0) 70%), radial-gradient(700px 900px at ${CX + 260 - pose.yaw * 10}px 260px, rgba(123,97,255,.16), rgba(123,97,255,0) 70%)` }} />
+      <AbsoluteFill style={{ background: `radial-gradient(900px 420px at ${CX - pose.yaw * 18}px ${HZ}px, rgba(255,214,150,.22), rgba(255,214,150,0) 70%), radial-gradient(700px 900px at ${CX + 260 - pose.yaw * 10}px 260px, rgba(216,178,90,.16), rgba(216,178,90,0) 70%)` }} />
       <AbsoluteFill style={{ filter: blur > 0.3 ? `blur(${blur.toFixed(1)}px)` : undefined }}>
         {ARCHES.map((a, i) => ({ a, i })).reverse().map(({ a, i }) => (
           <Arch key={i} a={a} pose={pose} i={i} />
@@ -394,6 +415,8 @@ export const Hall: React.FC<{ plan: Plan; tl: Timeline; music?: string }> = ({ p
       </AbsoluteFill>
       {/* the edges fall into shadow, so the light stays on the slab */}
       <AbsoluteFill style={{ background: "radial-gradient(closest-side at 50% 46%, rgba(0,0,0,0) 62%, rgba(2,4,12,.55) 100%)" }} />
+      {/* the museum's rope across the bottom of the frame, under the platforms' caption rows: the lower part is never bare floor */}
+      <RopeBarrier width={W} drift={-pose.yaw * 5} />
       {plan.hud.map((h) => (frame >= h.from && frame < h.to ? h.kind === "badge" ? <Badge key={h.id} h={h} frame={frame} /> : <SourceBox key={h.id} h={h} frame={frame} align={h.align === "start" ? "flex-start" : "flex-end"} /> : null))}
       {music ? <Audio src={staticFile(music)} /> : null}
       {tl.voice.map((v, i) => (
