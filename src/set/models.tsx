@@ -94,7 +94,7 @@ const Cylinder: React.FC<P> = ({ id, w, h, turn }) => {
           <stop offset="0" stopColor="rgba(0,0,0,.45)" />
           <stop offset="0.16" stopColor="rgba(0,0,0,0)" />
           <stop offset="0.86" stopColor="rgba(0,0,0,0)" />
-          <stop offset="1" stopColor="rgba(23,212,164,.35)" />
+          <stop offset="1" stopColor="rgba(255,214,150,.35)" />
         </linearGradient>
         <radialGradient id={`${id}e`} cx="0.4" cy="0.4" r="0.7">
           <stop offset="0" stopColor="#caa57a" />
@@ -112,7 +112,7 @@ const Cylinder: React.FC<P> = ({ id, w, h, turn }) => {
         <rect x={0} y={0} width={w} height={h} fill={`url(#${id}s)`} />
       </g>
       {/* the right end, facing the light of the hall */}
-      <ellipse cx={cx + L / 2} cy={cy} rx={endRx} ry={endR} fill={`url(#${id}e)`} stroke="rgba(23,212,164,.5)" strokeWidth={3} />
+      <ellipse cx={cx + L / 2} cy={cy} rx={endRx} ry={endR} fill={`url(#${id}e)`} stroke="rgba(255,214,150,.5)" strokeWidth={3} />
       <ellipse cx={cx + L / 2} cy={cy} rx={endRx * 0.35} ry={endR * 0.3} fill="rgba(60,36,18,.35)" />
       <path d={top} fill="none" stroke="rgba(255,236,206,.55)" strokeWidth={3} />
     </svg>
@@ -200,7 +200,7 @@ const Coin: React.FC<P & { emblem?: Emblem }> = ({ id, w, h, turn, emblem = "alt
       {/* the edge: the face drawn again behind, moved by the coin's thickness, and the band between */}
       <ellipse cx={cx - shift} cy={cy} rx={rx} ry={d / 2} fill={metal[2]} />
       <rect x={Math.min(cx, cx - shift)} y={cy - d / 2} width={Math.abs(shift)} height={d} fill={`url(#${id}r)`} />
-      <ellipse cx={cx} cy={cy} rx={rx} ry={d / 2} fill={`url(#${id}m)`} stroke={sn > 0 ? "rgba(23,212,164,.55)" : "rgba(255,255,255,.4)"} strokeWidth={3} />
+      <ellipse cx={cx} cy={cy} rx={rx} ry={d / 2} fill={`url(#${id}m)`} stroke={sn > 0 ? "rgba(255,214,150,.55)" : "rgba(255,255,255,.4)"} strokeWidth={3} />
       <g transform={`translate(${cx} ${cy}) scale(${Math.max(0.02, Math.abs(c)) * (face ? 1 : -1)} 1)`} style={{ color: metal[2] }} fill={metal[2]} opacity={0.85}>
         {/* the ring of pellets round the face */}
         {Array.from({ length: 36 }, (_, i) => {
@@ -492,7 +492,7 @@ const Tower: React.FC<P> = ({ id, w, h, turn }) => {
           <stop offset="1" stopColor="#a9acb8" />
         </linearGradient>
       </defs>
-      <path d={front} transform={`translate(${depth} -6)`} fill={depth > 0 ? "rgba(23,212,164,.45)" : "#6d7180"} />
+      <path d={front} transform={`translate(${depth} -6)`} fill={depth > 0 ? "rgba(255,214,150,.45)" : "#6d7180"} />
       <path d={front} fill={`url(#${id}t)`} stroke="rgba(60,64,80,.5)" strokeWidth={2} />
       {/* the lattice of the shaft */}
       {Array.from({ length: 7 }, (_, i) => (

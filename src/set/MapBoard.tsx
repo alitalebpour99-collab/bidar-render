@@ -55,7 +55,7 @@ export const MapBoard: React.FC<{ id: string; w: number; h: number; map: MapSpec
   const gold = s.today ? interpolate(frame, [s.from, s.from + 34], [0, 1], { ...clamped, easing: ease }) : 0;
   const swell = (frame * 0.6) % 46;
   return (
-    <div style={{ width: w, height: h, borderRadius: 40, padding: 4, background: `linear-gradient(120deg, ${ACCENT.turq}, ${ACCENT.violet} 55%, #ff4d8d)`, boxShadow: "0 0 60px rgba(23,212,164,.25), 0 40px 80px rgba(0,0,0,.5)" }}>
+    <div style={{ width: w, height: h, borderRadius: 40, padding: 4, background: `linear-gradient(120deg, #8a6a24, #f4dc9a 28%, ${ACCENT.turq} 62%, #d8b25a)`, boxShadow: "0 0 60px rgba(255,214,150,.22), 0 40px 80px rgba(0,0,0,.5)" }}>
       <div style={{ position: "relative", width: "100%", height: "100%", borderRadius: 36, overflow: "hidden", background: `radial-gradient(900px 900px at 50% 45%, ${SEA}, ${NAVY.deep})` }}>
         <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(172deg, rgba(63,182,201,.05) 0 2px, transparent 2px 46px)", backgroundPosition: `${swell}px ${swell * 0.4}px` }} />
         <svg width={iw} height={ih} style={{ position: "absolute", inset: 0 }}>
@@ -73,7 +73,7 @@ export const MapBoard: React.FC<{ id: string; w: number; h: number; map: MapSpec
           {before && !before.today && ghost > 0 ? <path d={m.d(feat(before.geometry))} fill="none" stroke={ACCENT.turq} strokeWidth={3} strokeDasharray="12 10" opacity={ghost} /> : null}
           {!s.today ? (
             <g clipPath={`url(#${id}rv)`}>
-              <path d={m.d(feat(s.geometry))} fill="rgba(23,212,164,.34)" />
+              <path d={m.d(feat(s.geometry))} fill="rgba(46,196,182,.36)" />
               <path d={m.d(feat(s.geometry))} fill="none" stroke={ACCENT.turq} strokeWidth={12} opacity={0.5} filter={`url(#${id}gl)`} />
               <path d={m.d(feat(s.geometry))} fill="none" stroke={ACCENT.turq} strokeWidth={4} strokeLinejoin="round" />
               {s.peak && peakIn > 0 ? (

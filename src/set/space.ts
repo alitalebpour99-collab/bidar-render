@@ -5,7 +5,7 @@
 // what was drawn).
 //
 // The world is Bidar's «hall of arches»: a dark navy hall with a glossy floor,
-// pointed arches standing down both sides in turquoise, violet and pink light,
+// pointed arches standing down both sides in turquoise tile and warm lamp light,
 // and the episode's glass slabs floating in it. The camera never stands still:
 // it pushes in, orbits the slab it looks at, punches on a beat and whips from
 // one slab to the next.
@@ -153,14 +153,17 @@ export function speedAt(shots: Shot[], punches: Punch[], f: number) {
 // ---------- what is in the world ----------
 export type Accent = "turq" | "right" | "wrong" | "maybe" | "violet" | "gold";
 export const ACCENT: Record<Accent, string> = {
-  turq: "#17d4a4",
-  right: "#22e39b",
-  wrong: "#ff4d8d",
-  maybe: "#a78bfa",
-  violet: "#7b61ff",
-  gold: "#ffd23f",
+  // the museum's night hall (16 November 2026): kashi turquoise, gilding, cinnabar; no neon pink or violet.
+  // «violet» keeps its name for the plans that ask for it and is the hall's old gold now.
+  turq: "#2ec4b6",
+  right: "#3ecf8e",
+  wrong: "#e0523a",
+  maybe: "#e3ab4f",
+  violet: "#d8b25a",
+  gold: "#f4c95d",
 };
-export const NAVY = { deep: "#040816", night: "#071026", hall: "#0a1433", panel: "#0f1a3d", panel2: "#16224d", ink: "#f4f6ff", muted: "#a9b4d6", dark: "#06101f" };
+/** Lapis, from the deep of the hall to the lit wall; parchment for the ink. (The name stays from the first, navy, hall.) */
+export const NAVY = { deep: "#050f2c", night: "#0a1c4a", hall: "#123273", panel: "#10285e", panel2: "#1b3f86", ink: "#f8f1df", muted: "#cfc6ac", dark: "#081226" };
 
 /**
  * A line of text, already broken and sized (fit.ts): `w` is its measured width
