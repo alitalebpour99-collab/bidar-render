@@ -24,6 +24,7 @@
 import { faDigits, noDot } from "../kit";
 import type { Timeline } from "../props";
 import { fit, fitOne, linesHeight } from "./fit";
+import { badgeCue } from "./badge-sound";
 import { MODEL_SIZE } from "./models";
 import { ANSWER, BASE, INNER, LENGTH, SX, TEXT, Z0, at, beat, bottomOf, has, keepMoving, openPush, slab, thin, type SetFormat } from "./plans";
 import { COL, FPS, HZ, ZONES, frameCover, orbit, textBoxes, type Accent, type Emblem, type Hud, type Line, type MapStop, type Model, type Obj, type Plan, type Punch, type Sfx, type Shot } from "./space";
@@ -139,7 +140,10 @@ function finishDoc(format: SetFormat, tl: Timeline, p: Parts, opts: { badge: boo
   const rowY = closeBox.y - 12 - 80;
   if (opts.badge) {
     const from = p.closeAt + 16;
-    hud.push({ id: "badge", kind: "badge", box: { x: COL.left, y: rowY, w: 300, h: 80 }, from, to: Math.min(from + 66, total - 20) });
+    // its bell (owner 2026-11-16, badge-sound.js): on its first frame, or the nearest pause, or none
+    const bell = badgeCue(from, tl.words);
+    hud.push({ id: "badge", kind: "badge", box: { x: COL.left, y: rowY, w: 300, h: 80 }, from, to: Math.min(from + 66, total - 20), cue: bell.cue });
+    if (bell.sfx) p.sfx.push(bell.sfx);
   }
   const addr = { ...fitOne("bidar.ahura.cloud", SRC_W - 330, 42, 700), color: "#f4f6ff" };
   hud.push({ id: "address", kind: "address", box: { x: COL.left + 330, y: rowY, w: SRC_W - 330, h: 80 }, from: p.closeAt, to: total - 12, lines: [addr], align: "start" });

@@ -30,6 +30,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { FinalCheck, TARGET, loudness } from "./finish.mjs";
+import { badgeCueCheck } from "./src/set/badge-sound.js";
 
 const FPS = 30;
 const W = 1080;
@@ -153,6 +154,10 @@ export function planChecks(plan, cover) {
     const ok = badge && inZones(badge.box) && !middle && len >= 1.5 * FPS && len <= 2.5 * FPS && badge.from >= closeAt && badge.to <= total - 15;
     add("badge", Boolean(ok), badge ? `${sec(len)} s from ${sec(badge.from)} s at y ${badge.box.y}–${badge.box.y + badge.box.h}` : "no badge", "نشانِ کانال سرِ جایش نیست");
   } else add("badge", true, "switched off (BIDAR_BADGE=off)", "");
+
+  // the badge's bell (owner 2026-11-16, src/set/badge-sound.js): once near the badge, off the narrator, at its level
+  const bell = badgeCueCheck(plan);
+  add("badge-sound", bell.ok, bell.detail, "صدای نشانِ کانال جای درستی ندارد");
 
   let dense = 0;
   for (const a of plan.sfx) dense = Math.max(dense, plan.sfx.filter((b) => b.at >= a.at && b.at < a.at + FPS).length);
