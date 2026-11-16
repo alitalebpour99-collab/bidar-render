@@ -24,6 +24,7 @@ function goodPlan() {
     objects: [
       { id: "question", kind: "slab", from: 0, to: total, lines: [{ text: "سمرقند امروز در کدام کشور است؟", size: 76, weight: 900 }] },
       { id: "answer", kind: "slab", from: 400, to: 600, claim: true, lines: [{ text: "پاسخ: ازبکستان", size: 52, weight: 900, role: "answer", w: 380, max: 624 }], chip: [{ text: "منبع: اطلسِ تاریخیِ بیدار", size: 46, weight: 600, w: 420, max: 568 }] },
+      { id: "mark", kind: "artifact", model: "dome", from: 0, to: total + 60, at: [-66, 300, 980], w: 300, h: 360 },
     ],
     hud: [
       { id: "badge", kind: "badge", box: { x: 82, y: 1483, w: 300, h: 80 }, from: 620, to: 680 },
@@ -168,4 +169,12 @@ test("the measured checks: a still picture fails, a moving one that loops passes
   assert.equal(m.find((c) => c.id === "loop").ok, true, m.find((c) => c.id === "loop").detail);
   assert.match(m.find((c) => c.id === "loudness").detail, /LUFS, true peak/);
   fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test("a set Reel of words alone fails «object»; one with its thing on the screen half the film passes", () => {
+  const plan = goodPlan();
+  plan.objects = plan.objects.filter((o) => o.kind !== "artifact");
+  assert.ok(planChecks(plan, "سمرقند امروز کجاست؟").find((c) => c.id === "object")?.ok === false);
+  plan.objects.push({ id: "mark", kind: "artifact", model: "dome", from: 0, to: plan.total / 2 + 30, at: [0, 0, 1000], w: 300, h: 360 });
+  assert.ok(planChecks(plan, "سمرقند امروز کجاست؟").find((c) => c.id === "object")?.ok === true);
 });
