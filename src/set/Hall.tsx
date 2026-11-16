@@ -278,19 +278,25 @@ const Burst: React.FC<{ o: Obj; frame: number }> = ({ o, frame }) => {
 };
 
 /** An artifact turning in the light, a soft pool of light under it, and a slow bob so a held shot still breathes. */
-const ArtifactThing: React.FC<{ o: Obj; frame: number }> = ({ o, frame }) => {
+const ArtifactThing: React.FC<{ o: Obj; frame: number; cased: boolean }> = ({ o, frame, cased }) => {
   const t = (frame - o.from) / 30;
   const turn = (o.spin?.from ?? 0) + (o.spin?.speed ?? 24) * t;
   // the museum's way: the object stands on a plinth in a glass case, a warm lamp over it; it turns slowly and does not float
   const ph = Math.max(34, Math.round(o.h * 0.2));
+  // the case and the plinth are for the object a scene is about (the cylinder of «باور یا سند؟»). An object that stands
+  // against a map board has no room for them: they lay over the words under it in the first samples of «مرز ایران»
   return (
     <div style={{ position: "relative", width: o.w, height: o.h }}>
-      <div style={{ position: "absolute", left: -o.w * 0.08, top: o.h - ph * 0.42, width: o.w * 1.16, height: ph }}>
-        <Plinth w={Math.round(o.w * 1.16)} h={ph} />
-      </div>
-      <div style={{ position: "absolute", left: -o.w * 0.06, top: -o.h * 0.12, width: o.w * 1.12, height: o.h * 1.14 }}>
-        <Vitrine w={Math.round(o.w * 1.12)} h={Math.round(o.h * 1.14)} frame={frame} />
-      </div>
+      {cased ? (
+        <>
+          <div style={{ position: "absolute", left: -o.w * 0.08, top: o.h - ph * 0.42, width: o.w * 1.16, height: ph }}>
+            <Plinth w={Math.round(o.w * 1.16)} h={ph} />
+          </div>
+          <div style={{ position: "absolute", left: -o.w * 0.06, top: -o.h * 0.12, width: o.w * 1.12, height: o.h * 1.14 }}>
+            <Vitrine w={Math.round(o.w * 1.12)} h={Math.round(o.h * 1.14)} frame={frame} />
+          </div>
+        </>
+      ) : null}
       <div style={{ position: "relative", width: o.w, height: o.h, filter: `drop-shadow(0 22px 26px rgba(0,0,0,.6)) drop-shadow(0 0 30px rgba(${MUSEUM.warm},.28))` }}>
         <Artifact id={o.id} model={o.model ?? "coin"} emblem={o.emblem} w={o.w} h={o.h} turn={turn} frame={frame} />
       </div>
@@ -299,7 +305,7 @@ const ArtifactThing: React.FC<{ o: Obj; frame: number }> = ({ o, frame }) => {
 };
 
 /** One object where the camera sees it, with its light pool and its reflection on the floor. */
-const Thing: React.FC<{ o: Obj; pose: Pose; frame: number; total: number }> = ({ o, pose, frame, total }) => {
+const Thing: React.FC<{ o: Obj; pose: Pose; frame: number; total: number; cased: boolean }> = ({ o, pose, frame, total, cased }) => {
   const pr = presence(o, frame);
   if (pr.a <= 0) return null;
   const st = stateAt(o, frame);
@@ -323,7 +329,7 @@ const Thing: React.FC<{ o: Obj; pose: Pose; frame: number; total: number }> = ({
         <div style={{ position: "absolute", left: mirror[0] - (o.w * mirror[2]) / 2, top: mirror[1], width: o.w * mirror[2], height: o.h * mirror[2] * 0.5, borderRadius: 30 * mirror[2], background: `linear-gradient(180deg, ${accent}2a, rgba(216,178,90,.08) 40%, rgba(0,0,0,0))`, opacity: alpha * 0.9 }} />
       ) : null}
       <div style={{ position: "absolute", left: sx, top: sy, width: o.w, height: o.h, transform: `translate(-50%, -50%) scale(${s}) perspective(1600px) rotateY(${-pose.yaw * 0.5}deg)`, opacity: alpha }}>
-        {o.kind === "slab" ? <Slab o={o} frame={frame} s={s0} total={total} /> : o.kind === "artifact" ? <ArtifactThing o={o} frame={frame} /> : o.kind === "map" && o.map ? <MapBoard id={o.id} w={o.w} h={o.h} map={o.map} frame={frame} /> : o.kind === "ring" ? <Ring o={o} frame={frame} /> : o.kind === "stamp" ? <Stamp o={o} frame={frame} /> : o.kind === "medal" ? <Medal o={o} frame={frame} s={s0} /> : <Burst o={o} frame={frame} />}
+        {o.kind === "slab" ? <Slab o={o} frame={frame} s={s0} total={total} /> : o.kind === "artifact" ? <ArtifactThing o={o} frame={frame} cased={cased} /> : o.kind === "map" && o.map ? <MapBoard id={o.id} w={o.w} h={o.h} map={o.map} frame={frame} /> : o.kind === "ring" ? <Ring o={o} frame={frame} /> : o.kind === "stamp" ? <Stamp o={o} frame={frame} /> : o.kind === "medal" ? <Medal o={o} frame={frame} s={s0} /> : <Burst o={o} frame={frame} />}
       </div>
     </>
   );
@@ -394,6 +400,8 @@ export const Hall: React.FC<{ plan: Plan; tl: Timeline; music?: string }> = ({ p
   const pose = poseAt(plan.shots, plan.punches, frame);
   const speed = speedAt(plan.shots, plan.punches, frame);
   const blur = Math.min(9, Math.max(0, (speed - 30) / 22));
+  // objects get their plinth and glass case unless the Reel has a map board they stand against
+  const cased = !plan.objects.some((o) => o.kind === "map");
   const order = plan.objects
     .map((o) => ({ o, d: project([o.at[0], o.at[1], o.at[2] + stateAt(o, frame).dz], pose)?.[2] ?? 0 }))
     .filter((x) => x.d > 0)
@@ -410,7 +418,7 @@ export const Hall: React.FC<{ plan: Plan; tl: Timeline; music?: string }> = ({ p
         <Floor pose={pose} />
         <Dust pose={pose} frame={frame} />
         {order.map(({ o }) => (
-          <Thing key={o.id} o={o} pose={pose} frame={frame} total={plan.total} />
+          <Thing key={o.id} o={o} pose={pose} frame={frame} total={plan.total} cased={cased} />
         ))}
       </AbsoluteFill>
       {/* the lamps' pool on the stone floor in front of the camera, so the lower part of the hall is lit, not black */}
