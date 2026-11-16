@@ -42,6 +42,13 @@ const WORDS: [RegExp, EraKey][] = [
 /** A series that belongs to no period: its own colour, so the quiz and the true-or-false differ from each other too. */
 const SERIES: Record<string, EraKey> = { quiz: "safavid", truefalse: "sasanian", five: "achaemenid", belief: "today", frontier: "today" };
 
+/** Whether the tile's period is a real one (named by the site or read from its words), not the colour a series falls back to: only then the tile shows the period's name. */
+export function eraNamed(c: { era?: string; title?: string; big?: string }): boolean {
+  if (c.era && c.era in ERA) return c.era !== "today";
+  const text = `${c.title ?? ""} ${c.big ?? ""}`;
+  return WORDS.some(([re]) => re.test(text));
+}
+
 export function eraOf(c: { era?: string; format: string; title?: string; big?: string; kicker?: string }): EraKey {
   if (c.era && c.era in ERA) return c.era as EraKey;
   const text = `${c.title ?? ""} ${c.big ?? ""}`;

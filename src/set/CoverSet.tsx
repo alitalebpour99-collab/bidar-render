@@ -9,7 +9,7 @@ import type { CoverProps } from "../props";
 import { HallScene } from "./Hall";
 import { ACCENT, NAVY, orbit, wordsOf, type Emblem, type Line, type Model } from "./space";
 import { Artifact, MODEL_SIZE } from "./models";
-import { ERA, eraOf } from "./era";
+import { ERA, eraNamed, eraOf } from "./era";
 import { MUSEUM, Plinth, Tazhib, Vitrine } from "./props/Museum";
 
 export type SetCoverProps = CoverProps & { big?: string; fitted?: Line[]; model?: Model; emblem?: Emblem; /** the period the tile wears (era.ts); read from its words when left out */ era?: string };
@@ -43,7 +43,7 @@ export const CoverSet: React.FC<SetCoverProps> = (c) => {
   // the period's colour is the tile's whole field (era.ts): the grid of the page is many colours, each tile still the hall
   const key = eraOf(c);
   const era = ERA[key];
-  const named = key !== "today" && (Boolean(c.era) || new RegExp(era.fa.split(" ")[0]).test(`${c.title ?? ""} ${c.big ?? ""}`));
+  const named = eraNamed(c);
   return (
     <AbsoluteFill style={{ background: era.deep, direction: "rtl" }}>
       <HallScene pose={orbit([-66, 0, 1000], 1300, 0, 120)} frame={0} field={era} />

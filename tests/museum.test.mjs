@@ -57,3 +57,12 @@ test("every new set piece is in the manifest for the shared library, with both n
     assert.ok(src.includes(`export const ${name}`), `${name} is exported`);
   }
 });
+
+test("the period's name is shown only for a real period, never for a series' fallback colour", async () => {
+  const { eraNamed } = await import("../src/set/era.ts");
+  assert.equal(eraNamed({ title: "کوروش", big: "کوروش: باور یا سند؟" }), true);
+  assert.equal(eraNamed({ title: "ساسانی", big: "ایران تا کجا بود؟" }), true);
+  assert.equal(eraNamed({ big: "سمرقند امروز کجاست؟" }), false);
+  assert.equal(eraNamed({ era: "qajar" }), true);
+  assert.equal(eraNamed({ era: "today" }), false);
+});

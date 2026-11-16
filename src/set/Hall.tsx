@@ -413,8 +413,10 @@ export const Hall: React.FC<{ plan: Plan; tl: Timeline; music?: string }> = ({ p
           <Thing key={o.id} o={o} pose={pose} frame={frame} total={plan.total} />
         ))}
       </AbsoluteFill>
-      {/* the edges fall into shadow, so the light stays on the slab */}
-      <AbsoluteFill style={{ background: "radial-gradient(closest-side at 50% 46%, rgba(0,0,0,0) 62%, rgba(2,4,12,.55) 100%)" }} />
+      {/* the lamps' pool on the stone floor in front of the camera, so the lower part of the hall is lit, not black */}
+      <AbsoluteFill style={{ background: `radial-gradient(760px 330px at ${CX - pose.yaw * 8}px ${HZ + 520}px, rgba(${MUSEUM.warm},.17), rgba(${MUSEUM.warm},0) 72%)` }} />
+      {/* the edges fall into shadow, so the light stays on the label */}
+      <AbsoluteFill style={{ background: "radial-gradient(closest-side at 50% 46%, rgba(0,0,0,0) 66%, rgba(2,4,12,.42) 100%)" }} />
       {/* the museum's rope across the bottom of the frame, under the platforms' caption rows: the lower part is never bare floor */}
       <RopeBarrier width={W} drift={-pose.yaw * 5} />
       {plan.hud.map((h) => (frame >= h.from && frame < h.to ? h.kind === "badge" ? <Badge key={h.id} h={h} frame={frame} /> : <SourceBox key={h.id} h={h} frame={frame} align={h.align === "start" ? "flex-start" : "flex-end"} /> : null))}
