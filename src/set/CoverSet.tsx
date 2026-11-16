@@ -10,6 +10,7 @@ import { HallScene } from "./Hall";
 import { ACCENT, NAVY, orbit, wordsOf, type Emblem, type Line, type Model } from "./space";
 import { Artifact, MODEL_SIZE } from "./models";
 import { ERA, eraNamed, eraOf } from "./era";
+import { thingFor } from "./things";
 import { MUSEUM, Plinth, Tazhib, Vitrine } from "./props/Museum";
 
 export type SetCoverProps = CoverProps & { big?: string; fitted?: Line[]; model?: Model; emblem?: Emblem; /** the period the tile wears (era.ts); read from its words when left out */ era?: string };
@@ -66,7 +67,7 @@ export const CoverSet: React.FC<SetCoverProps> = (c) => {
           <Plinth w={560} h={96} />
         </div>
         <div style={{ position: "absolute", left: 30, top: 30, width: 500, height: 360, display: "flex", alignItems: "center", justifyContent: "center", filter: "drop-shadow(0 24px 26px rgba(0,0,0,.55))" }}>
-          {c.model ? <TileObject model={c.model} emblem={c.emblem} /> : <Glyph format={c.format} />}
+          {c.model ? <TileObject model={c.model} emblem={c.emblem} /> : <TileObject {...thingFor(c.title, c.big)} />}
         </div>
       </div>
       <div style={{ position: "absolute", top: TOP + 640, left: 70, right: 70, height: named ? 290 : 380, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
@@ -76,6 +77,12 @@ export const CoverSet: React.FC<SetCoverProps> = (c) => {
           </div>
         ))}
       </div>
+      {/* the series' sign («؟», «۵», the tick and cross), small on the case's corner, when the tile shows a thing of its words */}
+      {!c.model ? (
+        <div style={{ position: "absolute", top: TOP + 150, left: W / 2 + 170, width: 150, height: 150, borderRadius: "50%", background: "rgba(6,16,31,.82)", border: `4px solid ${MUSEUM.gold}`, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+          <div style={{ transform: "scale(.5)" }}><Glyph format={c.format} /></div>
+        </div>
+      ) : null}
       {/* the lower part of the square: the period's name on a parchment label with gilded corners */}
       {named ? (
         <div style={{ position: "absolute", top: TOP + 944, left: 0, right: 0, display: "flex", justifyContent: "center" }}>

@@ -17,6 +17,8 @@ import type { TrueFalseProps } from "../TrueFalse";
 import { fit, fitOne, linesHeight, measure } from "./fit";
 import { planBelief, planFrontier } from "./doc";
 import { CHIP_SIZE, COL, COL_W, FPS, HZ, MIN_TEXT, TAG_ROOM, TOP_ROOM, ZONES, chipRoom, frameCover, orbit, poseAt, textBoxes, type Accent, type Hud, type Line, type Obj, type Plan, type Punch, type Sfx, type Shot, type V3 } from "./space";
+import { thingFor } from "./things";
+import { MODEL_SIZE } from "./models";
 
 /** The formats drawn in the set style. */
 export const SET_FORMATS = ["quiz", "truefalse", "five", "belief", "frontier"] as const;
@@ -80,6 +82,13 @@ export function sourceForms(s: string): string[] {
     out.push(`${m[1]}, "${head}"`, m[1].trim());
   }
   return [...new Set(out)];
+}
+
+/** A real object of the set (models.tsx), sized from its model to `height`, turning slowly. */
+export function thingObj(id: string, thing: { model: Obj["model"]; emblem?: Obj["emblem"] }, centre: [number, number, number], height: number, from: number, to: number, extra: Partial<Obj> = {}, maxW = 520): Obj {
+  const [mw, mh] = MODEL_SIZE[thing.model!];
+  const k = Math.min(height / mh, maxW / mw);
+  return { id, kind: "artifact", model: thing.model, emblem: thing.emblem, at: centre, w: Math.round(mw * k), h: Math.round(mh * k), from, to, enter: "pop", spin: { from: thing.model === "coin" ? -30 : 0, speed: thing.model === "coin" ? 60 : 18 }, ...extra };
 }
 
 // ---------- the parts every set Reel shares ----------
@@ -202,7 +211,9 @@ export function planQuiz(p: QuizProps, tl: Timeline, opts: { badge: boolean }): 
   // the hook's one object: a medallion with «؟» under the question; it steps back into the hall when the options come, and returns for the loop
   const medal = 370;
   const medalY = Math.min(optTop + medal / 2 + 60, LOW - medal / 2 - 100);
-  objects.push({ id: "mark", kind: "medal", at: [SX, medalY, Z0 - 20], w: medal, h: medal, from: 0, to: T + 60, enter: "none", word: { text: "؟", size: 230, weight: 900 }, states: [{ at: -20, glow: 0.8 }, { at: Math.max(10, o[0].from - 8), dz: 1400, dy: -120, dim: 0.6, glow: 0 }, { at: end.from + 16, dz: 0, dy: 0, dim: 0, glow: 0.8 }] });
+  // the hook's one object: the real thing the question is about (a dome for a city, a coin for a dynasty), on its plinth under the question;
+  // it steps back into the hall when the options come, and returns for the loop
+  objects.push(thingObj("mark", thingFor(p.question, p.options[p.answer]), [SX, medalY, Z0 - 20], medal, 0, T + 60, { enter: "none", states: [{ at: -20, glow: 0.8 }, { at: Math.max(10, o[0].from - 8), dz: 1400, dy: -120, dim: 0.6, glow: 0 }, { at: end.from + 16, dz: 0, dy: 0, dim: 0, glow: 0.8 }] }));
 
   // the countdown: a ring of light under the options
   const secs = Math.max(1, Math.round((count.to - count.from) / FPS));
@@ -322,10 +333,13 @@ export function planTrueFalse(p: TrueFalseProps & { rounds: (TrueFalseProps["rou
       const rowBottom = rowAt + pick / 2;
       // the ring stands under the answers while the sentence is read («؟», the viewer's turn), counts the pause, and gives its place to the proof
       const ringW = Math.round(Math.max(200, Math.min(320, LOW + 20 - rowBottom - 40)));
-      const ring: Obj = { id: `ring${k}`, kind: "ring", at: [SX, rowBottom + 40 + ringW / 2, stationZ(k)], w: ringW, h: ringW, from: Math.min(c.from - 4, s.from + 10), start: c.from, to: v.from + 4, enter: "pop", secs: Math.max(1, Math.round((c.to - c.from) / FPS)), word: { text: "۲", size: Math.round(ringW * 0.54), weight: 900 } };
+      const ring: Obj = { id: `ring${k}`, kind: "ring", at: [SX + 150, rowBottom + 40 + ringW / 2, stationZ(k)], w: ringW, h: ringW, from: Math.min(c.from - 4, s.from + 10), start: c.from, to: v.from + 4, enter: "pop", secs: Math.max(1, Math.round((c.to - c.from) / FPS)), word: { text: "۲", size: Math.round(ringW * 0.54), weight: 900 } };
       const proof = asAnswer(fit({ text: noDot(r.proof), width: INNER, maxLines: pl, size: ps, min: ANSWER, weight: 600 }).lines);
       const pr = slab(`proof${k}`, { top: rowBottom + 22, z: stationZ(k) - 20 }, v.from + 8, leave + 6, proof, { enter: "rise", chip, claim: true });
-      made = [st, yes, no, ring, pr];
+      // the sentence's own thing, beside the ring while it is read and counted; the proof takes the place of both
+      // the sentence's own thing, beside the ring while it is read and counted; at the verdict it steps back into the hall behind the proof and stays
+      const thing = thingObj(`thing${k}`, thingFor(r.text), [SX - 170, rowBottom + 40 + ringW / 2, stationZ(k) - 30], Math.min(300, ringW + 20), Math.max(1, s.from + 8), leave + 6, { states: [{ at: v.from + 2, dz: 1300, dy: -260, dim: 0.45 }] }, 300);
+      made = [st, yes, no, ring, thing, pr];
       if (bottomOf(pr) <= LOW) break;
     }
     objects.push(...made);
@@ -390,7 +404,10 @@ export function planFive(p: FiveProps & { items: (FiveProps["items"][number] & {
     const size = 112;
     const step = 132;
     const y = bottomOf(lineSlab) + 40 + size / 2;
-    if (y + size / 2 <= LOW + 20)
+    // the item's own thing (a manuscript for a scholar, a dome for a city) where there is room under its slabs; else the row of numbers
+    const room = LOW + 120 - bottomOf(lineSlab) - 30;
+    if (room >= 170) objects.push(thingObj(`thing${k}`, thingFor(it.name, it.line), [SX, bottomOf(lineSlab) + 30 + Math.min(300, room) / 2, stationZ(k) - 40], Math.min(300, room), Math.max(1, b.from + 8), leave + 6));
+    else if (y + size / 2 <= LOW + 20)
       p.items.forEach((other, j) => {
         const state = j === i ? { glow: 1, accent: "gold" as Accent } : j < i ? { glow: 0.5 } : { dim: 0.7 };
         objects.push({ id: `step${k}-${j + 1}`, kind: "medal", at: [SX - (j - (n - 1) / 2) * step, y, stationZ(k) - 20], w: size, h: size, from: Math.max(1, b.from + 14), to: leave + 6, enter: "pop", word: { text: faDigits(latin(String(other.n))), size: 66, weight: 900 }, states: [{ at: b.from + 14, ...state }] });

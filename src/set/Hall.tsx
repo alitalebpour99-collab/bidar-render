@@ -43,11 +43,31 @@ const Arch: React.FC<{ a: (typeof ARCHES)[number]; pose: Pose; i: number }> = ({
           <stop offset="0.55" stopColor="#58d8cc" />
           <stop offset="1" stopColor={ACCENT.turq} />
         </linearGradient>
+        <linearGradient id={`${id}w`} x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0" stopColor="#1e4a9a" />
+          <stop offset="0.45" stopColor="#163a80" />
+          <stop offset="1" stopColor="#0a1c4a" />
+        </linearGradient>
+        <pattern id={`${id}t`} width="60" height="60" patternUnits="userSpaceOnUse">
+          <rect width="60" height="60" fill="none" stroke="rgba(10,20,50,.7)" strokeWidth="3" />
+          <path d="M30 8 L52 30 L30 52 L8 30 Z" fill="none" stroke="rgba(120,200,220,.35)" strokeWidth="2.5" />
+          <circle cx="30" cy="30" r="5" fill="rgba(244,220,154,.4)" />
+        </pattern>
+        <linearGradient id={`${id}n`} x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0" stopColor="#3a2a18" />
+          <stop offset="0.25" stopColor="#0b1430" />
+          <stop offset="1" stopColor="#050a1c" />
+        </linearGradient>
         <radialGradient id={`${id}f`} cx="0.5" cy="0.55" r="0.6">
           <stop offset="0" stopColor="rgba(255,214,150,.10)" />
           <stop offset="1" stopColor="rgba(255,214,150,0)" />
         </radialGradient>
       </defs>
+      {/* the wall the arch is cut into: lapis tiles, lit by the lamp under the arch and falling into shadow above */}
+      <rect x={-a.w * 0.16} y={-a.h * 0.06} width={a.w * 1.32} height={a.h * 1.06} fill={`url(#${id}w)`} />
+      <rect x={-a.w * 0.16} y={-a.h * 0.06} width={a.w * 1.32} height={a.h * 1.06} fill={`url(#${id}t)`} opacity={0.55} />
+      {/* the niche: its recess dark, with the warm light of its lamp on the floor of it */}
+      <path d={`${archPath(a.w, a.h)} Z`} fill={`url(#${id}n)`} />
       <path d={`${archPath(a.w, a.h)} Z`} fill={`url(#${id}f)`} />
       {/* the tile band: turquoise tiles set edge to edge, a gilded line down their middle */}
       <path d={archPath(a.w, a.h)} fill="none" stroke="#0b3f4c" strokeWidth={a.far ? 74 : 56} opacity={0.9} />

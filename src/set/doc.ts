@@ -267,12 +267,13 @@ export function planFrontier(p: FrontierSite, tl: Timeline, opts: { badge: boole
   const first = beat(tl, frames[0].id);
 
   // the map board, from the first frame to the last; under it the slab of the hook, then of each period
-  const mapTop = rowAt(286);
-  const mapH = 700;
-  const mapW = 760;
+  const mapTop = rowAt(250);
+  const mapH = 860;
+  const mapW = 900;
   const stops: MapStop[] = [...frames.map((f) => ({ from: beat(tl, f.id).from, geometry: f.geometry, ...(f.peak ? { peak: f.peak } : {}), ...(f.capital ? { capital: f.capital } : {}) })), { from: todayB.from, geometry: p.today.geometry, today: true }];
   objects.push({ id: "map", kind: "map", at: [SX, mapTop + mapH / 2, Z0 + 30], w: mapW, h: mapH, from: 0, to: T + 60, enter: "none", map: { stops, today: p.today.geometry, zoom: Math.max(30, Math.min(90, first.from - 4)) } });
-  const slabTop = mapTop + mapH + 22;
+  // the label overlaps the map's lower edge a little, as a museum label is pinned to its board
+  const slabTop = mapTop + mapH - 70;
 
   // the hook: its question big under the map; it steps back into the hall when the first period comes, and returns for the loop
   const hookText = noDot(p.hook?.text ?? "");

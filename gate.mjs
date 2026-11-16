@@ -70,6 +70,7 @@ function textsOf(plan) {
 export function planChecks(plan, cover) {
   const out = [];
   const add = (id, ok, detail, faText) => out.push({ id, ok, detail, fa: faText });
+  const OBJECT_SHARE = 0.5;
   const total = plan.total;
 
   const hw = wordsOf(plan.hook.text).length;
@@ -143,6 +144,15 @@ export function planChecks(plan, cover) {
   add("source", Boolean(srcShown) && (DOC_FORMATS.has(plan.format) ? !unsourced.length : !unsourced.length || !pointer), `${claims.length} claims, ${unsourced.length} without a chip or a source line across the screen; source line ${srcShown ? `${sec(src.to - src.from)} s` : "missing"}`, "منبعِ یک ادعا روی ویدیو نیست");
 
   const dots = textsOf(plan).filter(dotBeside);
+  // a real thing, not only words (the owner's review of 2026-11-16): an object of the set or the map board is on the screen for at
+  // least half the film; the hall's numbered medallions and the countdown ring do not count
+  {
+    const things = (plan.objects ?? []).filter((o) => o.kind === "artifact" || o.kind === "map");
+    let seen = 0;
+    for (let f = 0; f < total; f += 1) if (things.some((o) => f >= o.from && f < o.to)) seen += 1;
+    const share = total ? seen / total : 0;
+    add("object", share >= OBJECT_SHARE, `a real thing (an object of the set or the map) on the screen ${Math.round(share * 100)} % of the film (${Math.round(OBJECT_SHARE * 100)} % needed)`, "بیشترِ ویدیو فقط نوشته است و هیچ چیزِ واقعی‌ای در تصویر نیست");
+  }
   add("persian", !dots.length, dots.length ? `«·» or «|» beside Persian: ${dots.length}` : "no «·» or «|» beside Persian", "کنارِ متنِ فارسی «·» یا «|» آمده است");
 
   const badge = plan.hud.find((h) => h.kind === "badge");
