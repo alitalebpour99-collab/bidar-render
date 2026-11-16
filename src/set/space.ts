@@ -374,6 +374,13 @@ export function frameCover(objects: Obj[], hud: Hud[], shots: Shot[], punches: P
     let n = 0;
     let bottom = 0;
     for (const o of objects) {
+      // an object of the set fills the frame as a slab does (it is not counted as readable): the five's and the quiz's things stand
+      // where a row of numbered medallions stood (the owner's review of 2026-11-16)
+      if (o.kind === "artifact") {
+        const v = seen(o, pose, f);
+        if (v.b && v.a >= 0.3) bottom = Math.max(bottom, v.b.box.y + v.b.box.h);
+        continue;
+      }
       if (!textOf(o).length) continue;
       const v = seen(o, pose, f);
       if (!v.b || v.t < 0.5 || v.a < 0.3) continue;

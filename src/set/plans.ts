@@ -337,7 +337,8 @@ export function planTrueFalse(p: TrueFalseProps & { rounds: (TrueFalseProps["rou
       const proof = asAnswer(fit({ text: noDot(r.proof), width: INNER, maxLines: pl, size: ps, min: ANSWER, weight: 600 }).lines);
       const pr = slab(`proof${k}`, { top: rowBottom + 22, z: stationZ(k) - 20 }, v.from + 8, leave + 6, proof, { enter: "rise", chip, claim: true });
       // the sentence's own thing, beside the ring while it is read and counted; the proof takes the place of both
-      const thing = thingObj(`thing${k}`, thingFor(r.text), [SX - 170, rowBottom + 40 + ringW / 2, stationZ(k) - 30], Math.min(300, ringW + 20), Math.max(1, s.from + 8), v.from + 6, {}, 300);
+      // the sentence's own thing, beside the ring while it is read and counted; at the verdict it steps back into the hall behind the proof and stays
+      const thing = thingObj(`thing${k}`, thingFor(r.text), [SX - 170, rowBottom + 40 + ringW / 2, stationZ(k) - 30], Math.min(300, ringW + 20), Math.max(1, s.from + 8), leave + 6, { states: [{ at: v.from + 2, dz: 1300, dy: -260, dim: 0.45 }] }, 300);
       made = [st, yes, no, ring, thing, pr];
       if (bottomOf(pr) <= LOW) break;
     }
