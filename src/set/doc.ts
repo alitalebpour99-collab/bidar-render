@@ -24,7 +24,7 @@
 import { faDigits, noDot } from "../kit";
 import type { Timeline } from "../props";
 import { fit, fitOne, linesHeight } from "./fit";
-import { badgeCue } from "./badge-sound";
+import { badgeCue, badgeFrom } from "./badge-sound";
 import { MODEL_SIZE } from "./models";
 import { ANSWER, BASE, INNER, LENGTH, SX, TEXT, Z0, at, beat, bottomOf, has, keepMoving, openPush, slab, thin, type SetFormat } from "./plans";
 import { COL, FPS, HZ, ZONES, frameCover, orbit, textBoxes, type Accent, type Emblem, type Hud, type Line, type MapStop, type Model, type Obj, type Plan, type Punch, type Sfx, type Shot } from "./space";
@@ -139,8 +139,8 @@ function finishDoc(format: SetFormat, tl: Timeline, p: Parts, opts: { badge: boo
   hud.push({ id: "source", kind: "source", box: closeBox, from: p.closeAt, to: total - 12, lines: closeLines, align: "start" });
   const rowY = closeBox.y - 12 - 80;
   if (opts.badge) {
-    const from = p.closeAt + 16;
-    // its bell (owner 2026-11-16, badge-sound.js): on its first frame, or the nearest pause, or none
+    // in a pause of the narration (owner 2026-11-17, badge-sound.js), and its bell on its first frame
+    const from = badgeFrom(tl, p.closeAt, format);
     const bell = badgeCue(from, tl.words);
     hud.push({ id: "badge", kind: "badge", box: { x: COL.left, y: rowY, w: 300, h: 80 }, from, to: Math.min(from + 66, total - 20), cue: bell.cue });
     if (bell.sfx) p.sfx.push(bell.sfx);

@@ -41,6 +41,7 @@ import { Hall } from "./set/Hall";
 import { CoverSet, coverWords } from "./set/CoverSet";
 import { HOLD_CAP, isSetFormat, planOf, type SetFormat } from "./set/plans";
 import { fit, ready } from "./set/fit";
+import { badgeRoom } from "./set/badge-sound";
 import type { Plan } from "./set/space";
 
 // One composition per format (the id is the format the site names in a job,
@@ -76,7 +77,8 @@ const styled = (format: SetFormat) => async ({ props: given }: { props: Base & S
   const last = props.beats.length - 1;
   const beats = props.beats.map((b, i) => (i > 0 && i < last && !b.say.trim() && b.min ? { ...b, min: Math.min(b.min, HOLD_CAP[format]) } : b));
   const count = format === "quiz" ? Math.min(Number(props.count) || HOLD_CAP.quiz, HOLD_CAP.quiz) : props.count;
-  const tl = timeline(beats, props.voiceIn);
+  // the badge comes in a pause of the narration (owner 2026-11-17): a breath in the close when it has none
+  const tl = given.badge !== false ? badgeRoom(timeline(beats, props.voiceIn), format) : timeline(beats, props.voiceIn);
   await ready();
   const plan = planOf(format, { ...props, beats, count }, tl, { badge: given.badge !== false });
   return { durationInFrames: tl.total, props: { ...props, beats, count, tl, plan } };
