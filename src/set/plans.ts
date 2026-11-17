@@ -16,7 +16,7 @@ import type { FiveProps } from "../Five";
 import type { TrueFalseProps } from "../TrueFalse";
 import { fit, fitOne, linesHeight, measure } from "./fit";
 import { planBelief, planFrontier } from "./doc";
-import { badgeCue } from "./badge-sound";
+import { badgeCue, badgeFrom } from "./badge-sound";
 import { CHIP_SIZE, COL, COL_W, FPS, HZ, MIN_TEXT, TAG_ROOM, TOP_ROOM, ZONES, chipRoom, frameCover, orbit, poseAt, textBoxes, type Accent, type Hud, type Line, type Obj, type Plan, type Punch, type Sfx, type Shot, type V3 } from "./space";
 import { thingFor } from "./things";
 import { MODEL_SIZE } from "./models";
@@ -135,8 +135,8 @@ function finish(format: SetFormat, tl: Timeline, p: Parts, opts: { badge: boolea
   const bottom = ZONES.bottom - 14;
   const badgeBox = { x: COL.left, y: bottom - 86, w: 300, h: 80 };
   if (opts.badge) {
-    const from = closeFrom + 20;
-    // its bell (owner 2026-11-16, badge-sound.js): on its first frame, or the nearest pause, or none
+    // in a pause of the narration (owner 2026-11-17, badge-sound.js), and its bell on its first frame
+    const from = badgeFrom(tl, closeFrom, format);
     const bell = badgeCue(from, tl.words);
     hud.push({ id: "badge", kind: "badge", box: badgeBox, from, to: Math.min(from + 66, total - 20), cue: bell.cue });
     if (bell.sfx) p.sfx.push(bell.sfx);

@@ -41,15 +41,19 @@ function charTimes(text: string, seconds: number, al?: Align | null): { s: numbe
   return { s, e };
 }
 
+/** a letter, a digit or a mark: what is said (the alignment gives a word's pause to its last punctuation) */
+const SAID = /[p{L}p{N}p{M}]/u;
+
 /** Words of a line on the film's clock (frames), from where the line starts. */
 function lineWords(text: string, seconds: number, al: Align | null | undefined, at: number, beatOf: (charIndex: number) => string): Word[] {
   const t = charTimes(text, seconds, al);
-  return spans(text).map(({ w, a, b }) => ({
-    text: plain(w),
-    from: at + Math.round((t.s[a] ?? 0) * FPS),
-    to: at + Math.round((t.e[b - 1] ?? seconds) * FPS),
-    beat: beatOf(a),
-  }));
+  return spans(text).map(({ w, a, b }) => {
+    // `said`: where the word's last letter ends; ElevenLabs hands the pause after a sentence to its «.» or «؟»
+    let z = b - 1;
+    while (z > a && !SAID.test(text[z] ?? "")) z -= 1;
+    const to = at + Math.round((t.e[b - 1] ?? seconds) * FPS);
+    return { text: plain(w), from: at + Math.round((t.s[a] ?? 0) * FPS), to, said: Math.min(to, at + Math.round((t.e[z] ?? seconds) * FPS)), beat: beatOf(a) };
+  });
 }
 
 export function timeline(beats: Beat[], voiceIn: VoiceIn[] | undefined): Timeline {
@@ -95,7 +99,7 @@ export function timeline(beats: Beat[], voiceIn: VoiceIn[] | undefined): Timelin
       else from[b.id] = k === 0 ? 0 : Math.max(onFilm(VOICE_AT + Math.round((t.s[starts[k]] ?? 0) * FPS)) - CUT_LEAD, 0);
     });
     const beatOf = (c: number) => beats[Math.max(0, starts.findLastIndex((s) => s <= c))].id;
-    words = lineWords(text, seconds, all.alignment, VOICE_AT, beatOf).map((w) => ({ ...w, from: onFilm(w.from), to: onFilm(w.to) }));
+    words = lineWords(text, seconds, all.alignment, VOICE_AT, beatOf).map((w) => ({ ...w, from: onFilm(w.from), to: onFilm(w.to), said: onFilm(w.said ?? w.to) }));
     // the take in pieces: each piece from one cut to the next, played that much later
     const cuts = [VOICE_AT, ...holds.map((h) => h.cut)];
     cuts.forEach((c, i) => {

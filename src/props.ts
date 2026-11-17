@@ -12,7 +12,8 @@ export type VoiceIn = { file: string; cue: string; frames: number; text?: string
 export type Beat = { id: string; say: string; min?: number };
 
 /** A word of the narration on the film's clock (frames), and the beat it belongs to. */
-export type Word = { text: string; from: number; to: number; beat: string };
+/** `said`: the frame where the word's last letter ends (its `to` also holds the pause after a «.» or «؟») */
+export type Word = { text: string; from: number; to: number; said?: number; beat: string };
 
 /** Set by the composition's metadata from the beats and the voice (timeline.ts), never by the site. */
 export type Timeline = {
