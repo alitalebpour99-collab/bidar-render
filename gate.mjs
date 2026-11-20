@@ -20,12 +20,16 @@
 //   stamp       «باور یا سند؟» and «مرز ایران»: the confidence stamp of the data is on screen, one of قطعی, محتمل, مورد اختلاف
 //   cta         «باور یا سند؟» and «مرز ایران»: the call to comment is on screen at the close
 //   source-lines «باور یا سند؟» and «مرز ایران»: every source line is whole, on two lines at most
+//   seam-video  a seamless loop («یک دوره، یک نشان», plan.cycle): the first and the last frame alike, SSIM 0.97 or more (measured)
+//   seam-audio  a seamless loop: at the wrap the sound keeps its level (the last and the first 50 ms within 3 dB) and has no
+//               click (the last and the first sample no further apart than a tenth of the peak, or twice the largest step
+//               between neighbouring samples there); a loop's sound as long as its picture (measured)
 //
 // The plan is the composition's own (src/set/space.ts, carried in its props),
 // so the gate checks exactly what was drawn. The plan's checks are pure and
 // tested (tests/gate.test.mjs); the measured ones need ffmpeg.
 //   BIDAR_GATE=warn   report and go on      BIDAR_GATE=off   no gate at all
-import { spawnSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -217,8 +221,92 @@ export function likeness(file, a, b) {
   return Number(/All:([\d.]+)/.exec(log)?.[1] ?? NaN);
 }
 
-/** The checks measured on the finished file. */
-export function fileChecks(file) {
+// ---------- the seam of a loop (the Ahura round of 2026-11-20; the thresholds of the round's brief) ----------
+/** The seam's limits: the first and the last frame's SSIM, the level step at the wrap (dB), the click (share of the peak), the window (s). */
+export const SEAM = { ssim: 0.97, db: 3, click: 0.1, window: 0.05, length: 0.05 };
+
+const rmsOf = (a) => {
+  let s = 0;
+  for (let i = 0; i < a.length; i += 1) s += a[i] * a[i];
+  return a.length ? Math.sqrt(s / a.length) : 0;
+};
+const QUIET = 1e-4;
+
+/**
+ * The sound at the wrap of a loop, from its decoded samples (one array per channel, −1 to 1, the whole track): the
+ * level of the last and of the first `window` seconds, and the step from the last sample to the first against the
+ * peak there and the largest step between neighbouring samples there. Pure, so it is tested on made-up sound.
+ * Silence on both sides is a seam too (a silent format), and says so.
+ */
+export function audioSeam(channels, rate, { window = SEAM.window, db: maxDb = SEAM.db, click = SEAM.click } = {}) {
+  const n = Math.max(2, Math.round(window * rate));
+  let worstDb = 0;
+  let jump = 0;
+  let step = 0;
+  let peak = 0;
+  let quiet = true;
+  for (const x of channels) {
+    if (!x || x.length < 2 * n) return { ok: false, silent: false, db: Infinity, jump: Infinity, step: 0, peak: 0, why: "the sound is shorter than the windows" };
+    const head = x.subarray(0, n);
+    const tail = x.subarray(x.length - n);
+    const rh = rmsOf(head);
+    const rt = rmsOf(tail);
+    if (rh > QUIET || rt > QUIET) quiet = false;
+    worstDb = Math.max(worstDb, Math.abs(20 * Math.log10(Math.max(rh, QUIET) / Math.max(rt, QUIET))));
+    for (const a of [head, tail]) for (let i = 0; i < a.length; i += 1) {
+      peak = Math.max(peak, Math.abs(a[i]));
+      if (i) step = Math.max(step, Math.abs(a[i] - a[i - 1]));
+    }
+    jump = Math.max(jump, Math.abs(x[0] - x[x.length - 1]));
+  }
+  if (quiet) return { ok: true, silent: true, db: 0, jump, step, peak, why: "silence on both sides of the wrap" };
+  const clickOk = jump <= Math.max(click * peak, 2 * step);
+  const levelOk = worstDb <= maxDb;
+  return { ok: clickOk && levelOk, silent: false, db: worstDb, jump, step, peak, why: `${levelOk ? "" : "the level steps at the wrap; "}${clickOk ? "" : "a click at the wrap"}`.replace(/; $/, "") };
+}
+
+/** A file's sound, decoded to 48 kHz float samples, one array per channel (ffmpeg). Null without sound. */
+export function decodeSound(file, rate = 48000) {
+  let raw;
+  try {
+    raw = execFileSync("ffmpeg", ["-v", "error", "-i", file, "-vn", "-ac", "2", "-ar", String(rate), "-f", "f32le", "-"], { maxBuffer: 256 * 1024 * 1024 });
+  } catch {
+    return null;
+  }
+  const all = new Float32Array(raw.buffer, raw.byteOffset, Math.floor(raw.byteLength / 4));
+  const frames = Math.floor(all.length / 2);
+  if (!frames) return null;
+  const L = new Float32Array(frames);
+  const R = new Float32Array(frames);
+  for (let i = 0; i < frames; i += 1) {
+    L[i] = all[2 * i];
+    R[i] = all[2 * i + 1];
+  }
+  return { channels: [L, R], rate, seconds: frames / rate };
+}
+
+/** The seam of a finished loop: the picture (SSIM of the first and the last frame) and the sound at the wrap. */
+export function seamChecks(file, { seconds } = {}) {
+  const out = [];
+  const add = (id, ok, detail, faText) => out.push({ id, ok, detail, fa: faText });
+  const v = likeness(file, 0, "last");
+  add("seam-video", v >= SEAM.ssim, `first and last frame SSIM ${v.toFixed(3)} (${SEAM.ssim} or more for a loop)`, "فریمِ آخرِ حلقه به فریمِ اولش نمی‌چسبد");
+  const sound = decodeSound(file);
+  if (!sound) {
+    add("seam-audio", false, "no sound to measure", "صدای حلقه خوانده نشد");
+    return out;
+  }
+  // the wrap is where the picture wraps: the encoder's padding after the last frame (a few ms of near silence) is not the loop's
+  const n = seconds ? Math.min(sound.channels[0].length, Math.round(seconds * sound.rate)) : sound.channels[0].length;
+  const a = audioSeam(sound.channels.map((c) => c.subarray(0, n)), sound.rate);
+  const long = seconds ? Math.abs(sound.seconds - seconds) : 0;
+  const lengthOk = long <= SEAM.length;
+  add("seam-audio", a.ok && lengthOk, `${a.silent ? "silent at the wrap" : `level step ${a.db.toFixed(2)} dB (≤ ${SEAM.db}), wrap jump ${a.jump.toFixed(4)} against peak ${a.peak.toFixed(3)} and largest step ${a.step.toFixed(4)}`}; sound ${sound.seconds.toFixed(3)} s${seconds ? ` for ${seconds.toFixed(3)} s of picture` : ""}`, lengthOk ? "صدای حلقه در نقطهٔ اتصال می‌پرد یا تق می‌زند" : "صدای حلقه هم‌اندازهٔ تصویرش نیست");
+  return out;
+}
+
+/** The checks measured on the finished file (and, for a loop, its seam). */
+export function fileChecks(file, plan) {
   const out = [];
   const add = (id, ok, detail, faText) => out.push({ id, ok, detail, fa: faText });
   const early = freezes(file, { min: 0.8, until: 1.6 });
@@ -230,12 +318,13 @@ export function fileChecks(file) {
   add("loop", loop >= 0.9, `first and last frame SSIM ${loop.toFixed(3)} (0.90 or more)`, "فریمِ آخر به فریمِ اول نمی‌خورد");
   const loud = loudness(file);
   add("loudness", Math.abs(loud.lufs - TARGET.lufs) <= TARGET.tolerance && loud.tp <= TARGET.tp, `${loud.lufs.toFixed(1)} LUFS, true peak ${loud.tp.toFixed(1)} dBTP`, "بلندیِ صدا اندازه نیست");
+  if (plan?.cycle) out.push(...seamChecks(file, { seconds: plan.total / FPS }));
   return out;
 }
 
 /** The whole gate for a set Reel. Returns {ok, checks}; writes nothing. */
 export function gate({ plan, file, cover }) {
-  const checks = [...planChecks(plan, cover), ...(file ? fileChecks(file) : [])];
+  const checks = [...planChecks(plan, cover), ...(file ? fileChecks(file, plan) : [])];
   return { ok: checks.every((c) => c.ok), checks };
 }
 

@@ -9,7 +9,7 @@ import type { Timeline } from "../props";
 import { Artifact } from "./models";
 import { MUSEUM, Plinth, RopeBarrier, Tazhib, Vitrine } from "./props/Museum";
 import { MapBoard } from "./MapBoard";
-import { ACCENT, CHIP_LEAD, CX, FLOOR, H, HZ, NAVY, NEAR, TAG_ROOM, TAG_SIZE, TOP_ROOM, W, chipBlock, chipRoom, poseAt, presence, project, speedAt, stateAt, textAlpha, type Hud, type Line, type Obj, type Plan, type Pose } from "./space";
+import { ACCENT, CHIP_LEAD, CX, FLOOR, H, HZ, NAVY, NEAR, TAG_ROOM, TAG_SIZE, TOP_ROOM, W, chipBlock, chipRoom, cyclePeriod, poseAt, presence, project, speedAt, stateAt, textAlpha, type Hud, type Line, type Obj, type Plan, type Pose } from "./space";
 
 /** the hall's own gradient: turquoise to violet to pink, Bidar's border on the site and the panel */
 export const EDGE = `linear-gradient(120deg, ${MUSEUM.goldDeep}, ${MUSEUM.goldLight} 28%, ${ACCENT.turq} 62%, ${MUSEUM.gold})`;
@@ -129,14 +129,16 @@ const MOTES = Array.from({ length: 70 }, (_, i) => {
   };
   return { x: -1700 + 3300 * r(1), y: -950 + 1500 * r(2), z: 250 + 9000 * r(3), sp: 4 + 8 * r(4), ph: 6.28 * r(5), big: r(6) };
 });
-const Dust: React.FC<{ pose: Pose; frame: number }> = ({ pose, frame }) => (
+/** In a loop (`cycle` frames, set/loop.ts) every mote bobs and glints on the cycle instead of drifting away, so the last frame's air is the first's. */
+const Dust: React.FC<{ pose: Pose; frame: number; cycle?: number }> = ({ pose, frame, cycle }) => (
   <svg width={W} height={H} style={{ position: "absolute", inset: 0 }}>
     {MOTES.map((m, i) => {
       const t = frame / 30;
-      const y = ((m.y - m.sp * t * 10 + 950) % 1500) - 950;
-      const p = project([m.x + 40 * Math.sin(t * 0.5 + m.ph), y, m.z], pose);
+      const th = cycle ? (2 * Math.PI * frame) / cycle : 0;
+      const y = cycle ? m.y - (30 + 40 * m.big) * Math.sin(th + m.ph) : ((m.y - m.sp * t * 10 + 950) % 1500) - 950;
+      const p = project([m.x + 40 * (cycle ? Math.sin(th + m.ph * 2) : Math.sin(t * 0.5 + m.ph)), y, m.z], pose);
       if (!p) return null;
-      const a = clamp01(1.1 - 1000 / p[2] / 9000) * (0.35 + 0.4 * m.big) * (0.6 + 0.4 * Math.sin(t * 1.3 + m.ph));
+      const a = clamp01(1.1 - 1000 / p[2] / 9000) * (0.35 + 0.4 * m.big) * (0.6 + 0.4 * (cycle ? Math.sin(2 * th + m.ph) : Math.sin(t * 1.3 + m.ph)));
       return <circle key={i} cx={p[0]} cy={p[1]} r={Math.min(9, (1.6 + 2.6 * m.big) * p[2] + 0.5)} fill={m.big > 0.7 ? "#fff0c8" : "#ffd9a0"} opacity={a} />;
     })}
   </svg>
@@ -178,14 +180,16 @@ const Mark: React.FC<{ kind: "check" | "cross"; color: string; win: number }> = 
   );
 };
 
-const Slab: React.FC<{ o: Obj; frame: number; s: number; total: number }> = ({ o, frame, s, total }) => {
+const Slab: React.FC<{ o: Obj; frame: number; s: number; total: number; cycle?: number }> = ({ o, frame, s, total, cycle }) => {
   const st = stateAt(o, frame);
   const ta = textAlpha(s);
   const accent = ACCENT[st.accent];
   // soft bars only for a slab far away; one the camera comes too near just fades (no empty glass)
   const ghosts = s < 1 ? 1 - ta : 0;
   // a slight shine that runs across the glass every few seconds
-  const shine = frame > total - 40 ? 0 : ((frame - o.from) % 150) / 150;
+  // in a loop it runs on the cycle (never cut at the end); else it stops in the last 40 frames
+  const period = cyclePeriod(150, cycle);
+  const shine = cycle ? ((((frame - o.from) % period) + period) % period) / period : frame > total - 40 ? 0 : ((frame - o.from) % 150) / 150;
   // the right answer: the glass fills with its colour and its letters turn dark
   const win = st.win;
   return (
@@ -298,7 +302,7 @@ const Burst: React.FC<{ o: Obj; frame: number }> = ({ o, frame }) => {
 };
 
 /** An artifact turning in the light, a soft pool of light under it, and a slow bob so a held shot still breathes. */
-const ArtifactThing: React.FC<{ o: Obj; frame: number; cased: boolean }> = ({ o, frame, cased }) => {
+const ArtifactThing: React.FC<{ o: Obj; frame: number; cased: boolean; cycle?: number }> = ({ o, frame, cased, cycle }) => {
   const t = (frame - o.from) / 30;
   const turn = (o.spin?.from ?? 0) + (o.spin?.speed ?? 24) * t;
   // the museum's way: the object stands on a plinth in a glass case, a warm lamp over it; it turns slowly and does not float
@@ -313,7 +317,7 @@ const ArtifactThing: React.FC<{ o: Obj; frame: number; cased: boolean }> = ({ o,
             <Plinth w={Math.round(o.w * 1.16)} h={ph} />
           </div>
           <div style={{ position: "absolute", left: -o.w * 0.06, top: -o.h * 0.12, width: o.w * 1.12, height: o.h * 1.14 }}>
-            <Vitrine w={Math.round(o.w * 1.12)} h={Math.round(o.h * 1.14)} frame={frame} />
+            <Vitrine w={Math.round(o.w * 1.12)} h={Math.round(o.h * 1.14)} frame={frame} period={cyclePeriod(180, cycle)} />
           </div>
         </>
       ) : null}
@@ -325,7 +329,7 @@ const ArtifactThing: React.FC<{ o: Obj; frame: number; cased: boolean }> = ({ o,
 };
 
 /** One object where the camera sees it, with its light pool and its reflection on the floor. */
-const Thing: React.FC<{ o: Obj; pose: Pose; frame: number; total: number; cased: boolean }> = ({ o, pose, frame, total, cased }) => {
+const Thing: React.FC<{ o: Obj; pose: Pose; frame: number; total: number; cased: boolean; cycle?: number }> = ({ o, pose, frame, total, cased, cycle }) => {
   const pr = presence(o, frame);
   if (pr.a <= 0) return null;
   const st = stateAt(o, frame);
@@ -349,7 +353,7 @@ const Thing: React.FC<{ o: Obj; pose: Pose; frame: number; total: number; cased:
         <div style={{ position: "absolute", left: mirror[0] - (o.w * mirror[2]) / 2, top: mirror[1], width: o.w * mirror[2], height: o.h * mirror[2] * 0.5, borderRadius: 30 * mirror[2], background: `linear-gradient(180deg, ${accent}2a, rgba(216,178,90,.08) 40%, rgba(0,0,0,0))`, opacity: alpha * 0.9 }} />
       ) : null}
       <div style={{ position: "absolute", left: sx, top: sy, width: o.w, height: o.h, transform: `translate(-50%, -50%) scale(${s}) perspective(1600px) rotateY(${-pose.yaw * 0.5}deg)`, opacity: alpha }}>
-        {o.kind === "slab" ? <Slab o={o} frame={frame} s={s0} total={total} /> : o.kind === "artifact" ? <ArtifactThing o={o} frame={frame} cased={cased} /> : o.kind === "map" && o.map ? <MapBoard id={o.id} w={o.w} h={o.h} map={o.map} frame={frame} /> : o.kind === "ring" ? <Ring o={o} frame={frame} /> : o.kind === "stamp" ? <Stamp o={o} frame={frame} /> : o.kind === "medal" ? <Medal o={o} frame={frame} s={s0} /> : <Burst o={o} frame={frame} />}
+        {o.kind === "slab" ? <Slab o={o} frame={frame} s={s0} total={total} cycle={cycle} /> : o.kind === "artifact" ? <ArtifactThing o={o} frame={frame} cased={cased} cycle={cycle} /> : o.kind === "map" && o.map ? <MapBoard id={o.id} w={o.w} h={o.h} map={o.map} frame={frame} /> : o.kind === "ring" ? <Ring o={o} frame={frame} /> : o.kind === "stamp" ? <Stamp o={o} frame={frame} /> : o.kind === "medal" ? <Medal o={o} frame={frame} s={s0} /> : <Burst o={o} frame={frame} />}
       </div>
     </>
   );
@@ -436,9 +440,9 @@ export const Hall: React.FC<{ plan: Plan; tl: Timeline; music?: string }> = ({ p
           <Arch key={i} a={a} pose={pose} i={i} />
         ))}
         <Floor pose={pose} />
-        <Dust pose={pose} frame={frame} />
+        <Dust pose={pose} frame={frame} cycle={plan.cycle} />
         {order.map(({ o }) => (
-          <Thing key={o.id} o={o} pose={pose} frame={frame} total={plan.total} cased={cased} />
+          <Thing key={o.id} o={o} pose={pose} frame={frame} total={plan.total} cased={cased} cycle={plan.cycle} />
         ))}
       </AbsoluteFill>
       {/* the lamps' pool on the stone floor in front of the camera, so the lower part of the hall is lit, not black */}

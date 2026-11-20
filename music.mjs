@@ -56,6 +56,9 @@ const MOODS = {
   // the centuries, C, 90 bpm, the same steady bed a little brighter. Dark, minimal, no melody.
   belief: { root: 38, bpm: 84, voice: "steady", sub: true, tick: 0.03, level: 0.82 },
   frontier: { root: 36, bpm: 90, voice: "steady", sub: true, tick: 0.035, level: 0.85 },
+  // «یک دوره، یک نشان», the seamless loop (2026-11-20): G, a drone and a high fifth that swells once a bar like the object
+  // turning, a slow sub once a bar; four bars that are the whole film, folded into themselves (`cycle`): no start, no end
+  loop: { root: 43, bpm: 80, voice: "orbit", sub: true, level: 0.85, cycle: true },
 };
 
 // i  VI  III  VII
@@ -203,22 +206,46 @@ export const hasBed = (id) => typeof id === "string" && id.length > 0;
  */
 export const DUCK = { classic: 0.72, deep: 0.86 };
 
-export function score({ id, seconds, duck = [], deep = false }) {
+/**
+ * A bed that loops (`loop`, or a mood with `cycle`): exactly `seconds` long, a whole number of four-bar
+ * phrases with no bar that comes home, no fade in and none out. It is played with room on both sides and
+ * then folded onto one cycle (every sample past the end is added at the start, every one before the start at
+ * the end: the reverb's tail and the first pad's swell included), so the last sample runs into the first
+ * exactly as the music runs on: no click and no step of level at the wrap.
+ */
+export const LOOP_PRE = 2;
+export const LOOP_POST = 4.5;
+export function fold(channel, length, pre) {
+  const out = new Float32Array(length);
+  for (let n = 0; n < channel.length; n += 1) out[(((n - pre) % length) + length) % length] += channel[n];
+  return out;
+}
+
+export function score({ id, seconds, duck = [], deep = false, loop = false }) {
   const mood = MOODS[id] ?? MOODS.borders;
   const { root, bpm } = mood;
+  const cycle = Boolean(loop || mood.cycle);
   seed = 11;
-  const total = Math.ceil(seconds * RATE);
+  const length = cycle ? Math.round(seconds * RATE) : Math.ceil(seconds * RATE);
+  const PRE = cycle ? Math.round(LOOP_PRE * RATE) : 0;
+  const off = PRE / RATE;
+  const total = PRE + length + (cycle ? Math.round(LOOP_POST * RATE) : 0);
   const L = new Float32Array(total);
   const R = new Float32Array(total);
-  const bars = Math.max(2, Math.round(seconds / ((60 / bpm) * 4)));
+  const bars = cycle ? Math.max(4, 4 * Math.round(seconds / ((60 / bpm) * 16))) : Math.max(2, Math.round(seconds / ((60 / bpm) * 4)));
   const bar = seconds / bars;
   const beat = bar / 4;
-  const chordOf = (b) => (b === bars - 1 ? CHORDS[0] : CHORDS[b % 4]);
+  // the last bar comes home (the chord of the first), except in a loop, whose last bar leads into its first
+  const home = (b) => !cycle && b === bars - 1;
+  const chordOf = (b) => (home(b) ? CHORDS[0] : CHORDS[b % 4]);
+  // where the first bar begins on the buffer: a loop's bars are moved half a bar on, so the wrap falls in the middle of a
+  // held chord, not on a downbeat (the sub's hit and the chord's change come inside the film, never at its seam)
+  const at0 = off + (cycle ? bar / 2 : 0);
 
   for (let b = 0; b < bars; b += 1) {
     const chord = chordOf(b);
-    const from = b * bar;
-    const to = (b + 1) * bar;
+    const from = at0 + b * bar;
+    const to = at0 + (b + 1) * bar;
     if (mood.voice === "drone") {
       // the drone holds the key note and its fifth all through; the chord moves softly above it
       pad(L, R, from, to, root, 0.07);
@@ -229,7 +256,7 @@ export function score({ id, seconds, duck = [], deep = false }) {
       pad(L, R, from, to, root - 5, 0.018);
       // a line that walks the mode: two notes a beat, resting on the first of the bar
       for (let q = 0; q < 8; q += 1) {
-        if (b === bars - 1 && q > 0) break;
+        if (home(b) && q > 0) break;
         const step = [0, 2, 1, 3, 4, 3, 2, 1][(q + b * 3) % 8];
         const deg = SHUR[(step + (b % 2 ? 2 : 0)) % SHUR.length];
         if (q % 2 === 1 && (q + b) % 3 === 0) continue;
@@ -252,11 +279,11 @@ export function score({ id, seconds, duck = [], deep = false }) {
       chord.forEach((o) => pad(L, R, from, to, root + 12 + o, 0.01, 1.2));
       // the pulse: eight muted notes a bar on the key note an octave up, the fourth of each half on the fifth; the last bar only its first
       for (let q = 0; q < 8; q += 1) {
-        if (b === bars - 1 && q > 0) break;
+        if (home(b) && q > 0) break;
         mute(L, R, from + q * (beat / 2), root + 12 + (q % 4 === 3 ? 7 : 0), q % 2 ? 0.05 : 0.085, q % 2 ? 0.28 : -0.28);
       }
       // the clock: a tick on every off-beat
-      if (b < bars - 1) for (let q = 1; q < 8; q += 2) tick(L, R, from + q * (beat / 2), mood.tick ?? 0.04);
+      if (!home(b)) for (let q = 1; q < 8; q += 2) tick(L, R, from + q * (beat / 2), mood.tick ?? 0.04);
     } else if (mood.voice === "room") {
       // a far low pad, and a breath of brown noise: the room the book is read in
       pad(L, R, from, to, root, 0.03, 1.6);
@@ -291,16 +318,16 @@ export function score({ id, seconds, duck = [], deep = false }) {
       chord.forEach((o) => pad(L, R, from, to, root + o, 0.032));
       // a bell on the first and third beat, one note of the chord, an octave up
       for (const q of [0, 2]) {
-        if (b === bars - 1 && q > 0) break;
+        if (home(b) && q > 0) break;
         bell(L, R, from + q * beat, root + 24 + chord[(b + q / 2) % 3], q === 0 ? 0.07 : 0.05, q ? 0.35 : -0.35);
       }
     }
   }
   if (mood.pulse) {
     // a deep, soft heartbeat on the first and third beat; none in the last bar
-    for (let b = 0; b < bars - 1; b += 1) {
+    for (let b = 0; b < (cycle ? bars : bars - 1); b += 1) {
       for (const q of [0, 2]) {
-        const start = Math.round((b * bar + q * beat) * RATE);
+        const start = Math.round((at0 + b * bar + q * beat) * RATE);
         const length = Math.min(total - start, Math.round(0.6 * RATE));
         const gain = q === 0 ? 0.26 : 0.16;
         let phase = 0;
@@ -318,8 +345,8 @@ export function score({ id, seconds, duck = [], deep = false }) {
 
   if (mood.sub) {
     // a deep, slow sub pulse once a bar, longer and lower than the borders' heartbeat; none in the last bar
-    for (let b = 0; b < bars - 1; b += 1) {
-      const start = Math.round(b * bar * RATE);
+    for (let b = 0; b < (cycle ? bars : bars - 1); b += 1) {
+      const start = Math.round((at0 + b * bar) * RATE);
       const length = Math.min(total - start, Math.round(1.1 * RATE));
       let phase = 0;
       for (let n = 0; n < length; n += 1) {
@@ -337,20 +364,22 @@ export function score({ id, seconds, duck = [], deep = false }) {
   const wetR = room(R, 23);
   let peak = 0;
   for (let n = 0; n < total; n += 1) {
-    const t = n / RATE;
+    const t = n / RATE - off;
     const under = duck.reduce((m, [a, b]) => Math.max(m, Math.min(smooth((t - a + 0.25) / 0.25), smooth((b + 0.35 - t) / 0.35))), 0);
     // the set style loops: its bed does not fade out at the end, it comes home on the last bar
     const tail = smooth((seconds - t) / (deep ? 0.25 : 2.2));
-    const level = smooth(t / (deep ? 0.08 : 0.4)) * tail * (1 - (deep ? DUCK.deep : DUCK.classic) * under);
+    // a loop has no fade at either end (folded below); the duck still steps it down under a narrator, if one ever reads one
+    const level = (cycle ? 1 : smooth(t / (deep ? 0.08 : 0.4)) * tail) * (1 - (deep ? DUCK.deep : DUCK.classic) * under);
     L[n] = (L[n] + 0.3 * wetL[n]) * level;
     R[n] = (R[n] + 0.3 * wetR[n]) * level;
-    peak = Math.max(peak, Math.abs(L[n]), Math.abs(R[n]));
   }
+  const [FL, FR] = cycle ? [fold(L, length, PRE), fold(R, length, PRE)] : [L, R];
+  for (let n = 0; n < length; n += 1) peak = Math.max(peak, Math.abs(FL[n]), Math.abs(FR[n]));
   const gain = (peak ? 0.5 / peak : 1) * (mood.level ?? 1);
-  const data = Buffer.alloc(total * 4);
-  for (let n = 0; n < total; n += 1) {
-    data.writeInt16LE(Math.round(Math.max(-1, Math.min(1, L[n] * gain)) * 32767), n * 4);
-    data.writeInt16LE(Math.round(Math.max(-1, Math.min(1, R[n] * gain)) * 32767), n * 4 + 2);
+  const data = Buffer.alloc(length * 4);
+  for (let n = 0; n < length; n += 1) {
+    data.writeInt16LE(Math.round(Math.max(-1, Math.min(1, FL[n] * gain)) * 32767), n * 4);
+    data.writeInt16LE(Math.round(Math.max(-1, Math.min(1, FR[n] * gain)) * 32767), n * 4 + 2);
   }
   const head = Buffer.alloc(44);
   head.write("RIFF", 0);

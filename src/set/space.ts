@@ -249,7 +249,16 @@ export type Plan = {
   stamps?: { id: string; word: string }[];
   /** the call to comment at the close (gate `cta`): its object */
   cta?: string;
+  /**
+   * A seamless loop (set/loop.ts): the film is one cycle of this many frames, and everything that
+   * moves by itself (the dust, the glass's shine) runs on it, so the last frame flows into the first.
+   * The gate measures the seam (gate.mjs `seam-video`, `seam-audio`).
+   */
+  cycle?: number;
 };
+
+/** A period that divides `cycle` and is near `base` frames (the shine of the glass every ~5 s); `base` itself when there is no cycle. */
+export const cyclePeriod = (base: number, cycle?: number) => (cycle ? cycle / Math.max(1, Math.round(cycle / base)) : base);
 
 /** Words of a Persian text as a reader counts them («دربارهٔ» one word, a half-space joins). */
 export const wordsOf = (s: string) => s.replace(/[؟?!.،,؛:«»"()]/g, " ").split(/\s+/).filter(Boolean);
