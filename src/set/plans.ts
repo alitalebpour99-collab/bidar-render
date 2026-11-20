@@ -16,20 +16,21 @@ import type { FiveProps } from "../Five";
 import type { TrueFalseProps } from "../TrueFalse";
 import { fit, fitOne, linesHeight, measure } from "./fit";
 import { planBelief, planFrontier } from "./doc";
+import { planLoop } from "./loop";
 import { badgeCue, badgeFrom } from "./badge-sound";
 import { CHIP_SIZE, COL, COL_W, FPS, HZ, MIN_TEXT, TAG_ROOM, TOP_ROOM, ZONES, chipRoom, frameCover, orbit, poseAt, textBoxes, type Accent, type Hud, type Line, type Obj, type Plan, type Punch, type Sfx, type Shot, type V3 } from "./space";
 import { thingFor } from "./things";
 import { MODEL_SIZE } from "./models";
 
 /** The formats drawn in the set style. */
-export const SET_FORMATS = ["quiz", "truefalse", "five", "belief", "frontier"] as const;
+export const SET_FORMATS = ["quiz", "truefalse", "five", "belief", "frontier", "loop"] as const;
 export type SetFormat = (typeof SET_FORMATS)[number];
 export const isSetFormat = (f: string): f is SetFormat => (SET_FORMATS as readonly string[]).includes(f);
 
 /** How long each may run, in seconds (gate `length`): one idea each, the quiz the shortest; «درست یا غلط؟» two sentences in 30 s. */
-export const LENGTH: Record<SetFormat, [number, number]> = { quiz: [14, 30], truefalse: [16, 30], five: [22, 42], belief: [20, 30], frontier: [20, 30] };
+export const LENGTH: Record<SetFormat, [number, number]> = { quiz: [14, 30], truefalse: [16, 30], five: [22, 42], belief: [20, 30], frontier: [20, 30], loop: [8, 15] };
 /** The silent holds, at most (the quiz's countdown, the true-or-false pause): the audit's «nothing waits». */
-export const HOLD_CAP: Record<SetFormat, number> = { quiz: 3, truefalse: 2, five: 2, belief: 1.2, frontier: 1.4 };
+export const HOLD_CAP: Record<SetFormat, number> = { quiz: 3, truefalse: 2, five: 2, belief: 1.2, frontier: 1.4, loop: 0 };
 
 /** The slab column: centred in the safe column, a little narrower so a punch keeps it inside. */
 export const SX = COL.left + COL_W / 2 - 540;
@@ -431,6 +432,7 @@ export function planOf(format: SetFormat, props: unknown, tl: Timeline, opts: { 
   if (format === "quiz") return planQuiz(props as QuizProps, tl, opts);
   if (format === "belief") return planBelief(props as never, tl, opts);
   if (format === "frontier") return planFrontier(props as never, tl, opts);
+  if (format === "loop") return planLoop(props as never, tl, opts);
   if (format === "truefalse") return planTrueFalse(props as never, tl, opts);
   return planFive(props as never, tl, opts);
 }

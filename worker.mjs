@@ -27,8 +27,8 @@ const LOOP = process.argv.includes("--loop");
 const POLL_MS = Math.max(30, Number(process.env.POLL_SECONDS) || 120) * 1000;
 const CONCURRENCY = Math.max(1, Math.min(4, Number(process.env.RENDER_CONCURRENCY) || Math.min(4, os.cpus().length)));
 const GL = process.env.RENDER_GL || undefined;
-// what this bundle can draw beyond the Reels (docs/contract.md, `can`): the Story (src/Story.tsx) and the carousel (src/Cards.tsx)
-const CAN = process.env.RENDER_CAN ?? "story,cards";
+// what this bundle can draw beyond the Reels (docs/contract.md, `can`): the Story (src/Story.tsx), the carousel (src/Cards.tsx) and the seamless loop (src/set/loop.ts)
+const CAN = process.env.RENDER_CAN ?? "story,cards,loop";
 // the machine must have this much memory free before a Reel is started, and this much while it renders (Linux only)
 const START_FREE_MB = Number(process.env.START_FREE_MB) || 2200;
 const ABORT_FREE_MB = Number(process.env.ABORT_FREE_MB) || 450;
@@ -167,7 +167,7 @@ async function render(job) {
     const voiceIn = job.format === "book" ? await bookVoice(job.props, publicDir, job.name) : voiceFiles(job.voice, publicDir, job.name, { format: job.format });
     const first = await selectComposition({ serveUrl: serve, id: job.format, inputProps: { ...job.props, ...SWITCHES, voiceIn }, chromiumOptions, timeoutInMilliseconds });
     const seconds = first.durationInFrames / first.fps;
-    if (music) fs.writeFileSync(path.join(publicDir, music), score({ id: job.format, seconds, duck: duckOf(first), deep: Boolean(first.props.plan) }));
+    if (music) fs.writeFileSync(path.join(publicDir, music), score({ id: job.format, seconds, duck: duckOf(first), deep: Boolean(first.props.plan), loop: Boolean(first.props.plan?.cycle) }));
     const inputProps = { ...job.props, ...SWITCHES, voiceIn, ...(music ? { music } : {}) };
     const composition = await selectComposition({ serveUrl: serve, id: job.format, inputProps, chromiumOptions, timeoutInMilliseconds });
     step(`${composition.durationInFrames} frames`);
@@ -180,7 +180,7 @@ async function render(job) {
       }
     };
     await renderMedia({ composition, serveUrl: serve, codec: "h264", videoBitrate: process.env.RENDER_VBR ?? "2300k", pixelFormat: "yuv420p", audioCodec: "aac", audioBitrate: "160k", inputProps, outputLocation: video, concurrency: CONCURRENCY, chromiumOptions, cancelSignal, timeoutInMilliseconds, onProgress });
-    console.log(`Reel ${job.id}: ${finish(video, seconds)}`);
+    console.log(`Reel ${job.id}: ${finish(video, seconds, { loop: Boolean(composition.props.plan?.cycle) })}`);
     // the set style's gate: a Reel that fails it is not handed back (a FinalCheck: it would fail the same way again)
     if (composition.props.plan) {
       const result = enforce({ plan: composition.props.plan, file: video, cover: String(job.cover?.big ?? job.cover?.title ?? "") });

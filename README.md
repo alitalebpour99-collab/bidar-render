@@ -105,7 +105,17 @@ the model for how it works, not for how it looks.
 that fails is not handed back; the site is told why in plain Persian, as a
 final failure. Checks: hook-words, hook-camera, hook-motion, length, moves,
 still, loop-plan, loop, safe, text-size, source, persian, badge, sound-effects,
-loudness, cover. A sample render writes the report to `out/<name>.gate.json`.
+loudness, cover; for the seamless loop also seam-video and seam-audio. A sample
+render writes the report to `out/<name>.gate.json`.
+
+**The seamless loop «یک دوره، یک نشان»** (`src/set/loop.ts`, 2026-11-20): 8 to
+15 s (the site sends 12), one period of the atlas and its object turning a
+whole number of turns in its case, the camera round it and home again, the
+label and the source on screen all the time; music only, a bed of one cycle
+folded onto itself (`music.mjs` `loop`). The gate measures its seam on the file:
+the first and the last frame SSIM 0.97 or more; at the wrap the last and the
+first 50 ms within 3 dB and no click (`gate.mjs` `audioSeam`, tested on made-up
+sound in `tests/seam.test.mjs`). Sample: `samples/loop-1.json` (`loop:loop-1`).
 
 **Switches** (repository variables of this repository, read by `render.yml`):
 `BIDAR_STYLE=classic` draws these three formats in their old look;

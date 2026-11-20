@@ -62,8 +62,8 @@ not take it; a claim older than 90 minutes is given out again.
 ### `can`
 
 The comma-separated list of the optional compositions this bundle holds,
-beyond the Reels: `story`, `cards`. **This renderer sends `can=story,cards`**
-(since 6 November 2026; `RENDER_CAN` overrides it), and the workflow's cheap
+beyond the Reels: `story`, `cards`, `loop`. **This renderer sends `can=story,cards,loop`**
+(since 6 November 2026, `loop` since 20 November; `RENDER_CAN` overrides it), and the workflow's cheap
 look asks the same: it draws the Story that follows a Reel (`src/Story.tsx`,
 1080 × 1920, 9.5 s, a video like a Reel with its bed and no narrator) and the
 carousel (`src/Cards.tsx`, one JPEG of 1080 × 1350 per card, handed back as
@@ -210,6 +210,28 @@ Both write each source whole on two lines of 40 px across the text column
 while what it backs is on screen, and the gate fails a Reel without the
 data's stamp (`stamp`), the call to comment (`cta`) or a source whole on two
 lines (`source-lines`).
+
+### «یک دوره، یک نشان», the seamless loop (2026-11-20)
+
+A job of `format: "loop"` (bidar `lib/social/loop.ts`, props `LoopProps`) is
+handed out only to a renderer that says `can=…,loop`. It has no narrator
+(`voice: null`, never «made silent»): music only. Props: `kicker`, `hook
+{text, figure}`, `period`, `name`, `years`, `capitals[]` (three at most),
+`model`, `emblem?`, `seconds` (8 to 15), `source`, `foot`; its beats
+(`start`, `turn`, `end`) are not used for timing. Drawn only in the set
+(`src/set/loop.ts`): the film is one cycle of `seconds` (rounded to a
+multiple of 6 frames); the period's object turns a whole number of turns in
+its case, the camera goes round it and glides home in the last 19 frames, the
+label and the source are on screen the whole time, the badge comes and goes
+inside the second half, the dust and the glass's shine run on the cycle
+(`plan.cycle`). The bed (`music.mjs` `loop`) is one cycle long, its bars
+moved half a bar so the wrap is inside a held chord, and folded onto itself;
+`finish.mjs` cuts the sound to the picture's length to the sample. The gate
+adds `seam-video` (SSIM of the first and the last frame, 0.97 or more) and
+`seam-audio` (the last and the first 50 ms within 3 dB; the step from the
+last sample to the first no more than a tenth of the peak there or twice the
+largest neighbouring step there; the sound as long as the picture within
+50 ms). A loop that fails is a final failure, as every gate failure.
 
 ### «سخنِ ماندگار», «چهره‌ها», «حدس بزن»: the site's shape, and holds
 

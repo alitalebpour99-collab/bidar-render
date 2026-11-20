@@ -18,6 +18,7 @@ import storySample from "../samples/story.json";
 import cardsSample from "../samples/cards.json";
 import beliefSample from "../samples/belief-1.json";
 import frontierSample from "../samples/frontier-1.json";
+import loopSample from "../samples/loop-1.json";
 import { Book } from "./Book";
 import { Borders } from "./Borders";
 import { City } from "./City";
@@ -43,6 +44,7 @@ import { HOLD_CAP, isSetFormat, planOf, type SetFormat } from "./set/plans";
 import { fit, ready } from "./set/fit";
 import { badgeRoom } from "./set/badge-sound";
 import type { Plan } from "./set/space";
+import { loopFrames, loopTimeline, planLoop, type LoopSite } from "./set/loop";
 
 // One composition per format (the id is the format the site names in a job,
 // docs/contract.md), all 1080 × 1920 at 30 fps, plus the still grid tile.
@@ -83,6 +85,17 @@ const styled = (format: SetFormat) => async ({ props: given }: { props: Base & S
   const plan = planOf(format, { ...props, beats, count }, tl, { badge: given.badge !== false });
   return { durationInFrames: tl.total, props: { ...props, beats, count, tl, plan } };
 };
+/**
+ * «یک دوره، یک نشان», the seamless loop (the Ahura round of 2026-11-20): no narrator and no beats to time;
+ * the film is one cycle of the site's `seconds` (set/loop.ts), drawn only in the set.
+ */
+const loopMeta = async ({ props }: { props: LoopSite & Switches }) => {
+  const total = loopFrames(props.seconds);
+  const tl = loopTimeline(total);
+  await ready();
+  const plan = planLoop(props, tl, { badge: props.badge !== false });
+  return { durationInFrames: total, props: { ...props, tl, plan } };
+};
 /** A format of the set style: the hall when there is a plan, the classic look when there is not. */
 const either = <P,>(Classic: React.FC<P>) => {
   const Comp: React.FC<P & { plan?: Plan; tl?: Base["tl"]; music?: string }> = (p) => (p.plan && p.tl ? <Hall plan={p.plan} tl={p.tl} music={p.music} /> : <Classic {...(p as P & React.JSX.IntrinsicAttributes)} />);
@@ -120,6 +133,8 @@ export const Root: React.FC = () => (
     {/* the owner's two stars of 2026-11-15: «باور یا سند؟» and «مرز ایران، دوره به دوره», in the set only (src/set/doc.ts) */}
     <Composition id="belief" component={SetOnly} {...frame} durationInFrames={900} defaultProps={as<object>(beliefSample)} calculateMetadata={styled("belief") as never} />
     <Composition id="frontier" component={SetOnly} {...frame} durationInFrames={900} defaultProps={as<object>(frontierSample)} calculateMetadata={styled("frontier") as never} />
+    {/* the seamless loop of 2026-11-20: one cycle, its last frame its first (src/set/loop.ts) */}
+    <Composition id="loop" component={SetOnly} {...frame} durationInFrames={360} defaultProps={as<object>(loopSample)} calculateMetadata={loopMeta as never} />
     <Composition id="sweep" component={Sweep} {...frame} durationInFrames={1800} defaultProps={as<SweepProps>(sweepSample)} calculateMetadata={(x: { props: SweepProps }) => timed(x)} />
     <Composition id="cover" component={CoverAny} {...frame} durationInFrames={1} defaultProps={as<CoverProps>(coverSample)} calculateMetadata={coverMeta as never} />
     {/* the Story that follows a Reel onto the page (ported from Divan's), and the carousel: one picture per frame, saved as stills (worker.mjs) */}

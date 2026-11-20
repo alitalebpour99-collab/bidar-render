@@ -63,7 +63,7 @@ if (stillArg) {
   }
 } else {
   const music = hasBed(id) ? `music-${name}.wav` : null;
-  if (music) fs.writeFileSync(path.join(publicDir, music), score({ id, seconds, duck: duckOf(first), deep: Boolean(first.props.plan) }));
+  if (music) fs.writeFileSync(path.join(publicDir, music), score({ id, seconds, duck: duckOf(first), deep: Boolean(first.props.plan), loop: Boolean(first.props.plan?.cycle) }));
   const inputProps = { ...props, voiceIn, ...(music ? { music } : {}) };
   const composition = await selectComposition({ serveUrl, id, inputProps, timeoutInMilliseconds });
   const outputLocation = `out/${name}.mp4`;
@@ -71,7 +71,7 @@ if (stillArg) {
   // a fixed bitrate keeps a 30–40 s Reel near 8–12 MB, what Instagram takes without a second squeeze
   await renderMedia({ composition, serveUrl, codec: "h264", videoBitrate: process.env.RENDER_VBR ?? "2300k", pixelFormat: "yuv420p", audioCodec: "aac", audioBitrate: "160k", inputProps, outputLocation, concurrency: Number(process.env.RENDER_CONCURRENCY ?? 3), timeoutInMilliseconds, chromiumOptions: { gl: process.env.RENDER_GL || undefined }, onProgress: ({ renderedFrames, encodedFrames, stitchStage }) => { const step = Math.floor((10 * renderedFrames) / composition.durationInFrames); if (step !== lastStep) { lastStep = step; console.log(`  ${renderedFrames}/${composition.durationInFrames} frames drawn, ${encodedFrames} encoded, ${stitchStage}, ${Math.round((Date.now() - t0) / 1000)} s`); } } });
   if (music) fs.rmSync(path.join(publicDir, music), { force: true });
-  console.log(finish(outputLocation, seconds));
+  console.log(finish(outputLocation, seconds, { loop: Boolean(composition.props.plan?.cycle) }));
   // the gate of the set style: the plan the film was drawn from, the file, the tile's words
   const plan = composition.props.plan;
   if (plan) {

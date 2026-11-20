@@ -1,0 +1,39 @@
+{
+ "format": "loop",
+ "series": "حقیقت، با سند",
+ "lang": "fa",
+ "kicker": "یک دوره، یک نشان",
+ "hook": {
+  "text": "هخامنشی ۵۵۰–۳۳۰ پ.م",
+  "figure": null
+ },
+ "episode": 0,
+ "period": "achaemenid",
+ "name": "هخامنشی",
+ "years": "۵۵۰–۳۳۰ پ.م",
+ "capitals": [
+  "پاسارگاد",
+  "تخت‌جمشید",
+  "شوش"
+ ],
+ "model": "column",
+ "seconds": 12,
+ "source": "منبع: اطلسِ تاریخیِ بیدار، دوره‌ها و پایتخت‌ها",
+ "foot": "bidar.ahura.cloud",
+ "beats": [
+  {
+   "id": "start",
+   "say": "هخامنشی"
+  },
+  {
+   "id": "turn",
+   "say": "",
+   "min": 10.4
+  },
+  {
+   "id": "end",
+   "say": "",
+   "min": 0.6
+  }
+ ]
+}

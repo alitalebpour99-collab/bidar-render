@@ -54,7 +54,7 @@ export const holeReason = ([a, b]) => `صدای ویدیو از ثانیهٔ ${f
  * it the video is handed back as rendered. A check that fails throws, so the
  * render counts as failed; a hole is a FinalCheck (it would come back the same).
  */
-export function finish(file, seconds) {
+export function finish(file, seconds, { loop = false } = {}) {
   const has = (bin) => {
     try {
       execFileSync(bin, ["-version"], { stdio: "ignore" });
@@ -64,7 +64,8 @@ export function finish(file, seconds) {
     }
   };
   if (!has("ffmpeg") || !has("ffprobe")) return "not levelled (no ffmpeg)";
-  level(file);
+  // a loop's sound is cut to its picture's length to the sample, so the wrap has no tail and no gap
+  level(file, loop ? { exact: seconds } : {});
   const probe = JSON.parse(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration:stream=codec_type", "-of", "json", file]).toString());
   const length = Number(probe.format?.duration ?? 0);
   const audio = (probe.streams ?? []).some((s) => s.codec_type === "audio");
@@ -97,7 +98,7 @@ export function loudness(file) {
  * be), then measured on the encoded AAC: when the encoder lifted the true peak
  * over −1 dBTP, it is done once more a decibel lower.
  */
-export function level(file) {
+export function level(file, { exact } = {}) {
   const tmp = file.replace(/\.mp4$/, ".level.mp4");
   const pass = (tp) => {
     const first = spawnSync("ffmpeg", ["-hide_banner", "-nostats", "-i", file, "-vn", "-af", `loudnorm=I=${TARGET.lufs}:TP=${tp}:LRA=11:print_format=json`, "-f", "null", "-"], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 }).stderr ?? "";
@@ -109,7 +110,7 @@ export function level(file) {
       m = null;
     }
     const af = m && Number.isFinite(Number(m.input_i)) ? `loudnorm=I=${TARGET.lufs}:TP=${tp}:LRA=11:measured_I=${m.input_i}:measured_TP=${m.input_tp}:measured_LRA=${m.input_lra}:measured_thresh=${m.input_thresh}:offset=${m.target_offset}:linear=true` : `loudnorm=I=${TARGET.lufs}:TP=${tp}:LRA=11`;
-    execFileSync("ffmpeg", ["-v", "error", "-y", "-i", file, "-c:v", "copy", "-af", af, "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-movflags", "+faststart", tmp], { stdio: "inherit" });
+    execFileSync("ffmpeg", ["-v", "error", "-y", "-i", file, "-c:v", "copy", "-af", exact ? `${af},aresample=48000,asetpts=N/SR/TB,apad,atrim=end_sample=${Math.round(exact * 48000)}` : af, "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-movflags", "+faststart", tmp], { stdio: "inherit" });
   };
   pass(-1.5);
   if (loudness(tmp).tp > TARGET.tp) pass(-2.6);

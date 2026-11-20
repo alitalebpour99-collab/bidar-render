@@ -21,12 +21,12 @@ test("the Story and the carousel are compositions, each with its sample", () => 
 
 test("the worker says it can draw both, and the workflow's look asks the same", () => {
   const worker = read("worker.mjs");
-  assert.match(worker, /const CAN = process\.env\.RENDER_CAN \?\? "story,cards";/);
+  assert.match(worker, /const CAN = process\.env\.RENDER_CAN \?\? "story,cards,loop";/, "and the seamless loop since 2026-11-20");
   assert.match(worker, /if \(job\.format === "cards"\) return renderPictures\(job, serve, t0\);/, "a carousel is drawn as pictures");
   assert.match(worker, /file=slide\$\{i \+ 1\}/, "handed back as slide1, slide2, …");
   assert.match(worker, /file=cover`, \{ method: "POST", headers: \{ "content-type": "image\/jpeg" \}, body: fs\.readFileSync\(files\[0\]\) \}/, "the first card again as the cover");
-  assert.match(read(".github/workflows/render.yml"), /\/api\/social\/work\?peek=1&can=story,cards"/, "a waiting Story or carousel starts a run");
-  assert.match(read("docs/contract.md"), /This renderer sends `can=story,cards`/);
+  assert.match(read(".github/workflows/render.yml"), /\/api\/social\/work\?peek=1&can=story,cards,loop"/, "a waiting Story, carousel or loop starts a run");
+  assert.match(read("docs/contract.md"), /This renderer sends `can=story,cards,loop`/);
 });
 
 test("the samples are what the site sends (lib/social/formats.ts of bidar)", () => {

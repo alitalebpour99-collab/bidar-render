@@ -29,8 +29,9 @@ export const Plinth: React.FC<{ w: number; h: number }> = ({ w, h }) => (
   </svg>
 );
 
-export const Vitrine: React.FC<{ w: number; h: number; frame: number }> = ({ w, h, frame }) => {
-  const shine = ((frame % 180) / 180) * (w + 240) - 120;
+/** `period`: the frames of one sweep of the shine (180; a loop's divides its cycle, set/space.ts cyclePeriod). */
+export const Vitrine: React.FC<{ w: number; h: number; frame: number; period?: number }> = ({ w, h, frame, period = 180 }) => {
+  const shine = ((((frame % period) + period) % period) / period) * (w + 240) - 120;
   return (
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ position: "absolute", left: 0, top: 0, overflow: "visible" }}>
       <defs>
